@@ -3,7 +3,6 @@ package main
 import (
 	"na-cadence/config"
 	"na-cadence/handlers"
-	"na-cadence/stores"
 	"strconv"
 
 	"github.com/labstack/echo"
@@ -12,7 +11,6 @@ import (
 
 func main() {
 	config.InitConf()
-	stores.InitDbs()
 
 	e := echo.New()
 	e.Use(middleware.CORS())

@@ -6,6 +6,7 @@ import (
 	"na-cadence/config"
 	"na-cadence/models"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo"
 )
@@ -25,11 +26,35 @@ func GetTransactionByFilename(c echo.Context) error {
 		c.Logger().Error(err.Error())
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
+	fileStr := strings.Replace(
+		string(file),
+		SERVICE_ACCOUNT_ADDRESS,
+		config.Conf.FlowServiceAccountAddress,
+		-1,
+	)
+	fileStr = strings.Replace(
+		fileStr,
+		NON_FUNGIBLE_TOKEN_CONTRACT_ADDRESS,
+		config.Conf.NonFungibleTokenContractAddress,
+		-1,
+	)
+	fileStr = strings.Replace(
+		fileStr,
+		FUNGIBLE_TOKEN_CONTRACT_ADDRESS,
+		config.Conf.FungibleTokenContractAddress,
+		-1,
+	)
+	fileStr = strings.Replace(
+		fileStr,
+		FUSD_CONTRACT_ADDRESS,
+		config.Conf.FUSDContractAddress,
+		-1,
+	)
 
 	resp := new(models.File)
 	resp.Name = c.Param("filename")
-	resp.Type = "transaction"
-	resp.Data = string(file)
+	resp.Type = FILE_TYPE_TRANSACTION
+	resp.Data = fileStr
 
 	return c.JSON(http.StatusOK, resp)
 }
