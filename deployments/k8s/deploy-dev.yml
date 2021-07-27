@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: na-cadence
-          image: gcr.io/pineappleworkshop/na-cadence:0.0.2
+          image: gcr.io/pineappleworkshop/na-cadence:0.0.3
           env:
             - name: ENV
               value: "dev"

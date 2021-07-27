@@ -1,5 +1,5 @@
 service := na-cadence
-version := 0.0.2
+version := 0.0.3
 docker_org := pineappleworkshop
 cluster := pw-dev
 docker-image := gcr.io/${docker_org}/${service}:${version}

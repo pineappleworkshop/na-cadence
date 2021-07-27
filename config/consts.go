@@ -1,7 +1,7 @@
 package config
 
 const (
-	VERSION      = "0.0.2"
+	VERSION      = "0.0.3"
 	PORT         = 3444
 	SERVICE_NAME = "na-cadence"
 
@@ -36,8 +36,4 @@ const (
 	NON_FUNGIBLE_TOKEN_CONTRACT_ADDRESS_MAINNET = "./"
 
 	BLOCK_RECORDS_VERSION = "1"
-)
-
-var (
-	MONGOHOSTS_WORKSTATION = []string{"localhost:27017"}
 )

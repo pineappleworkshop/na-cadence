@@ -26,7 +26,6 @@ type Config struct {
 	Env                             string
 	ConsulHost                      string
 	ConsulPort                      string
-	MongoRC                         []string
 	FlowAccessNode                  string
 	FlowServiceAccountPrivateKey    string
 	FlowServiceAccountAddress       string
@@ -74,18 +73,6 @@ func (c *Config) setupViper() error {
 
 // setup config with premise to either running service on cluster vs locally
 func (c *Config) setupConfig() {
-	if c.GetEnv() == DEV || c.GetEnv() == PROD {
-		mongoRCI := viper.Get("mongo_rc").([]interface{})
-		var mongoRC []string
-		for _, mongoHost := range mongoRCI {
-			mongoRC = append(mongoRC, mongoHost.(string))
-		}
-
-		c.MongoRC = mongoRC
-	} else {
-		c.MongoRC = MONGOHOSTS_WORKSTATION
-	}
-
 	ipfsAccessNodeURL, err := GetIPFSAccessNodeURL()
 	if err != nil {
 		fmt.Println(err)
@@ -204,24 +191,6 @@ func GetNonFungibleTokenContractAddress() (*string, error) {
 		return nil, errors.New("no non fungible token contract address found")
 	}
 	return &pk, nil
-}
-
-// get mongo admin user
-func GetMongoUser() (*string, error) {
-	user := viper.GetString("mongo_user")
-	if user == "" {
-		return nil, errors.New("no mongo user found")
-	}
-	return &user, nil
-}
-
-// get mongo admin password
-func GetMongoPassword() (*string, error) {
-	password := viper.GetString("mongo_password")
-	if password == "" {
-		return nil, errors.New("no mongo password found")
-	}
-	return &password, nil
 }
 
 // get flow service account address

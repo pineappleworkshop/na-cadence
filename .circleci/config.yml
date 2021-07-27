@@ -92,7 +92,7 @@ workflows:
                 - dev
       - gcp-gcr/build-and-push-image:
           image: na-cadence
-          tag: 0.0.2
+          tag: 0.0.3
           registry-url: gcr.io
           filters:
             branches:
@@ -103,7 +103,7 @@ workflows:
           container: na-cadence
           deployment: na-cadence
           image: gcr.io/pineappleworkshop/na-cadence
-          tag: 0.0.2
+          tag: 0.0.3
           namespace: default
           filters:
              branches:
@@ -133,7 +133,7 @@ workflows:
           container: na-cadence
           deployment: na-cadence
           image: gcr.io/pineappleworkshop/na-cadence
-          tag: 0.0.2
+          tag: 0.0.3
           namespace: na
           filters:
             branches:
