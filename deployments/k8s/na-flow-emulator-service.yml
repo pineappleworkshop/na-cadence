@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: na-flow-emulator
+  name: na-flow-emulator
+spec:
+  ports:
+    - name: "3569"
+      port: 3569
+      targetPort: 3569
+    - name: "8080"
+      port: 8080
+      targetPort: 8080
+  type: LoadBalancer
+  selector:
+    app: na-flow-emulator

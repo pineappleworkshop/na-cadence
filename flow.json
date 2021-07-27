@@ -1,0 +1,43 @@
+{
+  "emulators": {
+    "default": {
+      "port": 3569,
+      "serviceAccount": "emulator-account"
+    },
+    "testnet": {
+      "port": 9000,
+      "serviceAccount": "testnet-account"
+    }
+  },
+  "contracts": {
+    "BlockRecordsSingle": "./cadence/contracts/BlockRecordsSingle.cdc",
+    "NonFungibleToken": "./cadence/contracts/NonFungibleToken.cdc"
+  },
+  "networks": {
+    "emulator": "35.184.219.149:3569",
+    "mainnet": "access.mainnet.nodes.onflow.org:9000",
+    "testnet": "access.testnet.nodes.onflow.org:9000"
+  },
+  "accounts": {
+    "service": {
+      "address": "f8d6e0586b0a20c7",
+      "keys": "68ee617d9bf67a4677af80aaca5a090fcda80ff2f4dbc340e0e36201fa1f1d8c"
+    },
+    "emulator-account": {
+      "address": "f8d6e0586b0a20c7",
+      "keys": "68ee617d9bf67a4677af80aaca5a090fcda80ff2f4dbc340e0e36201fa1f1d8c"
+    },
+    "testnet-account": {
+      "address": "f8d6e0586b0a20c7",
+      "keys": "68ee617d9bf67a4677af80aaca5a090fcda80ff2f4dbc340e0e36201fa1f1d8c"
+    }
+  },
+  "deployments": {
+    "emulator": {
+      "emulator-account": ["NonFungibleToken", "BlockRecordsSingle"]
+    },
+    "testnet": {
+      "testnet-account": ["NonFungibleToken", "BlockRecordsSingle"]
+    }
+  }
+}

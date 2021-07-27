@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: na-flow-emulator
+spec:
+  selector:
+    matchLabels:
+      app: na-flow-emulator
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: na-flow-emulator
+    spec:
+      containers:
+        - name: na-flow-emulator
+          image: gcr.io/flow-container-registry/emulator:latest
+          env:
+            - name: ENV
+              value: "dev"

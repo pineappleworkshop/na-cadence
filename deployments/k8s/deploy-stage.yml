@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: na-cadence
+  namespace: na
+spec:
+  selector:
+    matchLabels:
+      app: na-cadence
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: na-cadence
+    spec:
+      containers:
+        - name: na-cadence
+          image: gcr.io/pineappleworkshop/na-cadence:0.0.2
+          env:
+            - name: ENV
+              value: "stage"
