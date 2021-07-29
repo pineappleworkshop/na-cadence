@@ -1,5 +1,5 @@
 service := na-cadence
-version := 0.0.4
+version := 0.0.5
 docker_org := pineappleworkshop
 cluster := pw-dev
 docker-image := gcr.io/${docker_org}/${service}:${version}
@@ -52,27 +52,6 @@ flow-update-contracts-testnet:
 
 flow-update-contracts-mainnet:
 	go run cli/main.go update-contracts --env mainnet
-
-flow-deploy-nft-contract:
-	go run cli/main.go deploy-nft-contract
-
-flow-update-nft-contract:
-	go run cli/main.go update-nft-contract
-
-flow-deploy-single-contract:
-	go run cli/main.go deploy-single-contract
-
-flow-update-single-contract:
-	go run cli/main.go update-single-contract
-
-flow-deploy-market-contract:
-	go run cli/main.go deploy-market-contract
-
-flow-update-market-contract:
-	go run cli/main.go update-market-contract
-
-flow-update-all-contracts:
-	make flu
 
 docker-build:
 	docker build -t $(docker-image) .

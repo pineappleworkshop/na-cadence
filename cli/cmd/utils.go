@@ -46,7 +46,7 @@ func DeployContract(serviceAcctAddr, serviceAcctPrivKey, contractFilePath, contr
 		-1,
 	)
 
-	txFile, err := ioutil.ReadFile(LOCAL_FILE_PATH_CONTRACT_UPDATE)
+	txFile, err := ioutil.ReadFile(LOCAL_FILE_PATH_CONTRACT_DEPLOY)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +139,7 @@ func UpdateContract(serviceAcctAddr, serviceAcctPrivKey, contractFilePath, contr
 	}
 
 	tx.AddArgument(cadence.String(contractName))
-	tx.AddArgument(cadence.String([]byte(contractFileStr)))
+	tx.AddArgument(cadence.String(hex.EncodeToString([]byte(contractFileStr)))) // todo
 
 	//create signers
 	authorizerSigner, err := createSigner(authorizerAddress, serviceAcctPrivKey)
@@ -154,6 +154,48 @@ func UpdateContract(serviceAcctAddr, serviceAcctPrivKey, contractFilePath, contr
 	result, err := signAndSubmit(tx, signerAddrs, signers)
 	if err != nil {
 		return nil, err
+	}
+
+	return result, nil
+}
+
+func RemoveContract(serviceAcctAddr, serviceAcctPrivKey, contractName string) (*flow.TransactionResult, error) {
+	txFile, err := ioutil.ReadFile(LOCAL_FILE_PATH_CONTRACT_REMOVE)
+	if err != nil {
+		return nil, err
+	}
+
+	//create authorizers
+	authorizerAddress := flow.HexToAddress(serviceAcctAddr)
+	authorizers := []flow.Address{
+		authorizerAddress,
+	}
+
+	//create transaction
+	tx, err := createTransaction([]byte(string(txFile)), &authorizerAddress, &authorizers)
+	if err != nil {
+		return nil, err
+	}
+
+	tx.AddArgument(cadence.String(contractName))
+
+	//create signers
+	serviceAddr := flow.HexToAddress(serviceAcctAddr)
+	serviceSigner, err := createSigner(serviceAddr, serviceAcctPrivKey)
+	signers := []crypto.Signer{
+		serviceSigner,
+	}
+	signerAddrs := []flow.Address{
+		*&authorizerAddress,
+	}
+
+	//sign and submit transaction
+	result, err := signAndSubmit(tx, signerAddrs, signers)
+	if err != nil {
+		return nil, err
+	}
+	if result.Error != nil {
+		return nil, result.Error
 	}
 
 	return result, nil

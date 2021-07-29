@@ -2,9 +2,9 @@ import NonFungibleToken from NFT_CONTRACT_ADDRESS
 import BlockRecordsSingle from SERVICE_ACCOUNT_ADDRESS
 
 transaction(name: String, receiverAccountAddress: Address, royaltyAddress: Address, royaltyPercentage: UInt64, type: String, literation: String, imageUrl: String, audioUrl: String) {
-    let minter: &BlockRecordsSingle.NFTMinter
+    let minter: &BlockRecordsSingle.Creator
     prepare(signer: AuthAccount) {
-        self.minter = signer.borrow<&BlockRecordsSingle.NFTMinter>(from: /storage/BlockRecordsMinter002)!
+        self.minter = signer.borrow<&BlockRecordsSingle.Creator>(from: /storage/BlockRecordsCreator002)!
     }
     execute {
         let recipient = getAccount(receiverAccountAddress)

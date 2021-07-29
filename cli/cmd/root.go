@@ -31,6 +31,7 @@ var (
 	acctAddr     string
 	amount       int
 	env          string
+	name         string
 )
 
 var rootCmd = &cobra.Command{

@@ -33,6 +33,7 @@ const (
 	LOCAL_FILE_PATH_CONTRACT_UPDATE   = "./cadence/transactions/contract_update.cdc"
 	CLUSTER_FILE_PATH_CONTRACT_UPDATE = "./go/bin/transactions/contract_update.cdc"
 
+	// to be deleted
 	TEST_FILE_PATH_MINTER_AUTHORIZE    = "../cadence/transactions/minter_authorize.cdc"
 	LOCAL_FILE_PATH_MINTER_AUTHORIZE   = "./cadence/transactions/minter_authorize.cdc"
 	CLUSTER_FILE_PATH_MINTER_AUTHORIZE = "./go/bin/cadence/transactions/minter_authorize.cdc"
@@ -41,13 +42,17 @@ const (
 	LOCAL_FILE_PATH_ACCOUNT_INITIALIZE   = "./cadence/transactions/account_initialize.cdc"
 	CLUSTER_FILE_PATH_ACCOUNT_INITIALIZE = "go/bin/cadence/transactions/account_initialize.cdc"
 
+	TEST_FILE_PATH_CREATOR_SETUP    = "../cadence/transactions/creator_setup.cdc"
+	LOCAL_FILE_PATH_CREATOR_SETUP   = "./cadence/transactions/creator_setup.cdc"
+	CLUSTER_FILE_PATH_CREATOR_SETUP = "go/bin/cadence/transactions/creator_setup.cdc"
+
+	TEST_FILE_PATH_CREATOR_AUTHORIZE    = "../cadence/transactions/creator_authorize.cdc"
+	LOCAL_FILE_PATH_CREATOR_AUTHORIZE   = "./cadence/transactions/creator_authorize.cdc"
+	CLUSTER_FILE_PATH_CREATOR_AUTHORIZE = "go/bin/cadence/transactions/creator_authorize.cdc"
+
 	TEST_FILE_PATH_FUSD_DEPOSIT    = "../cadence/transactions/fusd_deposit.cdc"
 	LOCAL_FILE_PATH_FUSD_DEPOSIT   = "./cadence/transactions/fusd_deposit.cdc"
 	CLUSTER_FILE_PATH_FUSD_DEPOSIT = "./go/bin/cadence/transactions/fusd_deposit.cdc"
-
-	TEST_FILE_PATH_MINTER_SETUP    = "../cadence/transactions/account_minter_setup.cdc"
-	LOCAL_FILE_PATH_MINTER_SETUP   = "./cadence/transactions/account_minter_setup.cdc"
-	CLUSTER_FILE_PATH_MINTER_SETUP = "go/bin/cadence/transactions/account_minter_setup.cdc"
 
 	TEST_FILE_PATH_SALE_LISTING_CREATE    = "../cadence/transactions/sale_listing_create.cdc"
 	LOCAL_FILE_PATH_SALE_LISTING_CREATE   = "./cadence/transactions/sale_listing_create.cdc"

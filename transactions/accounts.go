@@ -7,6 +7,7 @@ import (
 	"na-cadence/config"
 	"strings"
 
+	"github.com/onflow/cadence"
 	tmps "github.com/onflow/flow-go-sdk/templates"
 
 	"github.com/onflow/flow-go-sdk/client"
@@ -176,14 +177,14 @@ func InitializeAccount(serviceAcctAddr string, targetAcctAddr flow.Address, targ
 	return txRes, nil
 }
 
-func AuthorizeMinter(serviceAcctAddr string, targetAcctAddress flow.Address, targetAcctPrivKey string) (*flow.TransactionResult, error) {
+func SetupCreator(serviceAcctAddr string, targetAcctAddress flow.Address, targetAcctPrivKey string) (*flow.TransactionResult, error) {
 	var filePath string
 	if config.Conf.GetEnv() == config.DEV || config.Conf.GetEnv() == config.PROD {
-		filePath = CLUSTER_FILE_PATH_MINTER_AUTHORIZE
+		filePath = CLUSTER_FILE_PATH_CREATOR_SETUP
 	} else if config.Conf.GetEnv() == config.TEST {
-		filePath = TEST_FILE_PATH_MINTER_AUTHORIZE
+		filePath = TEST_FILE_PATH_CREATOR_SETUP
 	} else {
-		filePath = LOCAL_FILE_PATH_MINTER_AUTHORIZE
+		filePath = LOCAL_FILE_PATH_CREATOR_SETUP
 	}
 
 	txFile, err := ioutil.ReadFile(filePath)
@@ -194,12 +195,6 @@ func AuthorizeMinter(serviceAcctAddr string, targetAcctAddress flow.Address, tar
 		string(txFile),
 		SERVICE_ACCOUNT_ADDRESS,
 		serviceAcctAddr,
-		-1,
-	)
-	txFileStr = strings.Replace(
-		string(txFileStr),
-		NFT_CONTRACT_ADDRESS,
-		config.Conf.NonFungibleTokenContractAddress,
 		-1,
 	)
 
@@ -219,6 +214,54 @@ func AuthorizeMinter(serviceAcctAddr string, targetAcctAddress flow.Address, tar
 	}
 	signerAddrs := []flow.Address{
 		targetAcctAddress,
+	}
+
+	result, err := signAndSubmit(tx, signerAddrs, signers)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func AuthorizeCreator(serviceAcctAddr string, serviceAcctPrivKey string, targetAcctAddress flow.Address) (*flow.TransactionResult, error) {
+	var filePath string
+	if config.Conf.GetEnv() == config.DEV || config.Conf.GetEnv() == config.PROD {
+		filePath = CLUSTER_FILE_PATH_CREATOR_AUTHORIZE
+	} else if config.Conf.GetEnv() == config.TEST {
+		filePath = TEST_FILE_PATH_CREATOR_AUTHORIZE
+	} else {
+		filePath = LOCAL_FILE_PATH_CREATOR_AUTHORIZE
+	}
+
+	txFile, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+	txFileStr := strings.Replace(
+		string(txFile),
+		SERVICE_ACCOUNT_ADDRESS,
+		serviceAcctAddr,
+		-1,
+	)
+
+	serviceAcctAddress := flow.HexToAddress(serviceAcctAddr)
+	authorizers := []flow.Address{
+		serviceAcctAddress,
+	}
+
+	tx, err := createTransaction([]byte(txFileStr), &serviceAcctAddress, &authorizers)
+	if err != nil {
+		return nil, err
+	}
+	tx.AddArgument(cadence.Address(targetAcctAddress))
+
+	authorizerSigner, err := createSigner(serviceAcctAddress, serviceAcctPrivKey)
+	signers := []crypto.Signer{
+		authorizerSigner,
+	}
+	signerAddrs := []flow.Address{
+		serviceAcctAddress,
 	}
 
 	result, err := signAndSubmit(tx, signerAddrs, signers)

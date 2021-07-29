@@ -5,9 +5,7 @@ import BlockRecordsSingle from SERVICE_ACCOUNT_ADDRESS
 /// create a minter
 
 transaction(custodyProviderAddress: Address) {
-
     prepare(admin: AuthAccount) {
-
         let custodyProvider = getAccount(custodyProviderAddress)
             
         let capabilityReceiver = custodyProvider.getCapability
