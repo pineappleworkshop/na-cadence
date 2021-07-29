@@ -49,7 +49,7 @@ func GetAccountStatus(serviceAcctAddr string, acctAddr flow.Address) (cadence.Va
 	)
 	scriptFileStr = strings.Replace(
 		scriptFileStr,
-		NON_FUNGIBLE_TOKEN_CONTRACT_ADDRESS,
+		NFT_CONTRACT_ADDRESS,
 		config.Conf.NonFungibleTokenContractAddress,
 		-1,
 	)
@@ -67,7 +67,7 @@ func GetAccountStatus(serviceAcctAddr string, acctAddr flow.Address) (cadence.Va
 	)
 	scriptFileStr = strings.Replace(
 		scriptFileStr,
-		NON_FUNGIBLE_TOKEN_CONTRACT_ADDRESS,
+		NFT_CONTRACT_ADDRESS,
 		config.Conf.NonFungibleTokenContractAddress,
 		-1,
 	)

@@ -232,7 +232,7 @@ func DeployContract(serviceAcctAddr, serviceAcctPrivKey, contractFilePath, contr
 	)
 	contractFileStr = strings.Replace(
 		contractFileStr,
-		NON_FUNGIBLE_TOKEN_CONTRACT_ADDRESS,
+		NFT_CONTRACT_ADDRESS,
 		config.Conf.NonFungibleTokenContractAddress,
 		-1,
 	)
@@ -310,7 +310,7 @@ func UpdateContract(serviceAcctAddr, serviceAcctPrivKey, contractFilePath, contr
 	)
 	contractFileStr = strings.Replace(
 		contractFileStr,
-		NON_FUNGIBLE_TOKEN_CONTRACT_ADDRESS,
+		NFT_CONTRACT_ADDRESS,
 		config.Conf.NonFungibleTokenContractAddress,
 		-1,
 	)

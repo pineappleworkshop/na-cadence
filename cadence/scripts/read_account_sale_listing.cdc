@@ -1,5 +1,5 @@
-import BlockRecordsMarket from 0xSERVICE_ACCOUNT_ADDRESS
-import BlockRecordsSingle from 0xSERVICE_ACCOUNT_ADDRESS
+import BlockRecordsMarket from SERVICE_ACCOUNT_ADDRESS
+import BlockRecordsSingle from SERVICE_ACCOUNT_ADDRESS
 
 pub struct SaleListing {
   pub let price: UFix64

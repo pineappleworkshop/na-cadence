@@ -44,7 +44,7 @@ func MintSingle(serviceAcctAddr, minterAcctAddr, minterAcctPrivKey string, nft N
 	)
 	txFileStr = strings.Replace(
 		txFileStr,
-		NON_FUNGIBLE_TOKEN_CONTRACT_ADDRESS,
+		NFT_CONTRACT_ADDRESS,
 		config.Conf.NonFungibleTokenContractAddress,
 		-1,
 	)

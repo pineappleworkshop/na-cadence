@@ -37,7 +37,7 @@ func CreateSaleListing(serviceAcctAddr, creatorAcctAddr, creatorAcctPrivKey stri
 	)
 	txFileStr = strings.Replace(
 		txFileStr,
-		NON_FUNGIBLE_TOKEN_CONTRACT_ADDRESS,
+		NFT_CONTRACT_ADDRESS,
 		config.Conf.NonFungibleTokenContractAddress,
 		-1,
 	)
@@ -165,7 +165,7 @@ func BuySaleListing(serviceAcctAddr, buyAcctAddr, buyerAcctPrivKey string, saleL
 	)
 	txFileStr = strings.Replace(
 		txFileStr,
-		NON_FUNGIBLE_TOKEN_CONTRACT_ADDRESS,
+		NFT_CONTRACT_ADDRESS,
 		config.Conf.NonFungibleTokenContractAddress,
 		-1,
 	)

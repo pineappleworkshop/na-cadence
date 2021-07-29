@@ -1,4 +1,4 @@
-import NonFungibleToken from 0xNON_FUNGIBLE_TOKEN_CONTRACT_ADDRESS
+import NonFungibleToken from NFT_CONTRACT_ADDRESS
 
 pub contract BlockRecordsSingle: NonFungibleToken {
 

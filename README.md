@@ -23,27 +23,19 @@ $ make flow-emulator
 ## Deploy/Update All Contracts
 
 ```bash
-# deploy all contracts
-$ make flow-deploy-contracts
-# update all contracts
-$ make flow-update-contracts
-```
+# deploy all contracts to emulator
+$ make flow-deploy-contracts-emulator
+# deploy all contracts to testnet
+$ make flow-deploy-contracts-testnet
+# deploy all contracts to mainnet
+$ make flow-deploy-contracts-mainnet
 
----
-
-## Deploy/Update Contracts Individually
-
-```bash
-# deploy NonFungibleToken
-$ make flow-deploy-nft-contract
-# deploy FungibleToken
-$ make flow-deploy-ft-contract
-# deploy FUSD
-$ make flow-deploy-fusd-contract
-# deploy BlockRecordsSingle (dependencies: NonFungibleToken)
-$ make flow-deploy-single-contract
-# deploy BlockRecordsMarket (dependencies: BlockRecordsSingle, FungibleToken, NonFungibleToken, FUSD)
-$ make flow-deploy-market-contract
+# update all contracts on emulator 
+$ make flow-update-contracts-emulator
+# update all contracts on testnet
+$ make flow-update-contracts-testnet
+# update all contracts on mainnet 
+$ make flow-update-contracts-mainnet
 ```
 
 ---
