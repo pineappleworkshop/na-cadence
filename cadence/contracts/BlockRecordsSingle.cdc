@@ -1,34 +1,35 @@
-import NonFungibleToken from NFT_CONTRACT_ADDRESS
+import NonFungibleToken from SERVICE_ACCOUNT_ADDRESS
+
 
 pub contract BlockRecordsSingle: NonFungibleToken {
 
-    // Events
+    //events
     //
     pub event ContractInitialized()
-
     pub event Withdraw(id: UInt64, from: Address?)
-
     pub event Deposit(id: UInt64, to: Address?)
-
     pub event Minted(
         id: UInt64, 
         metadata: {String: String}
     )
-
     pub event Event(type: String, metadata: {String: String})
 
-    // Named Paths
+    // named paths
     //
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath
-    pub let MinterStoragePath: StoragePath
-    pub let MinterPublicPath: PublicPath
+    pub let CreatorStoragePath: StoragePath
+    pub let CreatorPublicPath: PublicPath
+    pub let ReleaseCollectionStoragePath: StoragePath
+    pub let ReleaseCollectionPublicPath: PublicPath
+    pub let ReleaseCollectionPrivatePath: PrivatePath
     
-    // totalSupply
-    // The total number of BlockRecordsSingle that have been minted
+    // the total number of BlockRecordsSingle that have been minted
     //
     pub var totalSupply: UInt64
 
+    // the BlockRecordsSingle NFT resource
+    //
     pub resource NFT: NonFungibleToken.INFT {
         pub let id: UInt64
 
@@ -50,7 +51,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         }
     }
 
-    // This is the interface that users can cast their BlockRecordsSingle Collection as
+    // this is the interface that users can cast their BlockRecordsSingle Collection as
     // to allow others to deposit BlockRecordsSingle into their Collection. It also allows for reading
     // the details of BlockRecordsSingle in the Collection.
     pub resource interface BlockRecordsSingleCollectionPublic {
@@ -62,13 +63,12 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             // should be the same as the argument to the function
             post {
                 (result == nil) || (result?.id == id):
-                    "Cannot borrow BlockRecordsSingle reference: The ID of the returned reference is incorrect"
+                    "cannot borrow BlockRecordsSingle reference: The ID of the returned reference is incorrect"
             }
         }
     }
 
-    // Collection
-    // A collection of BlockRecordsSingle NFTs owned by an account
+    // a collection of BlockRecordsSingle NFTs owned by an account
     //
     pub resource Collection: BlockRecordsSingleCollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic {
         // dictionary of NFT conforming tokens
@@ -76,7 +76,6 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         //
         pub var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
 
-        // withdraw
         // Removes an NFT from the collection and moves it to the caller
         //
         pub fun withdraw(withdrawID: UInt64): @NonFungibleToken.NFT {
@@ -92,8 +91,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             return <-token
         }
 
-        // deposit
-        // Takes a NFT and adds it to the collections dictionary
+        // takes a NFT and adds it to the collections dictionary
         // and adds the ID to the id array
         //
         pub fun deposit(token: @NonFungibleToken.NFT) {
@@ -114,25 +112,22 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             destroy oldToken
         }
 
-        // getIDs
-        // Returns an array of the IDs that are in the collection
+        // returns an array of the IDs that are in the collection
         //
         pub fun getIDs(): [UInt64] {
             return self.ownedNFTs.keys
         }
 
-        // borrowNFT
-        // Gets a reference to an NFT in the collection
+        // gets a reference to an NFT in the collection
         // so that the caller can read its metadata and call its methods
         //
         pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT {
             return &self.ownedNFTs[id] as &NonFungibleToken.NFT
         }
 
-        // borrowBlockRecordsSingle
-        // Gets a reference to an NFT in the collection as a BlockRecordsSingle,
+        // gets a reference to an NFT in the collection as a BlockRecordsSingle,
         // exposing all of its fields (including the img).
-        // This is safe as there are no functions that can be called on the BlockRecordsSingle.
+        // his is safe as there are no functions that can be called on the BlockRecordsSingle.
         //
         pub fun borrowBlockRecordsSingle(id: UInt64): &BlockRecordsSingle.NFT? {
             if self.ownedNFTs[id] != nil {
@@ -162,51 +157,52 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         return <- create Collection()
     }
 
+    // todo: release stuff goes here
+    // any account in posession of a ReleaseCollection will be able to mint BlockRecords NFTs
+    pub resource ReleaseCollection {        
+        init(){}
+
+        // todo: pub fun create release 
+        // refer to https://github.com/versus-flow/versus-contracts/blob/master/contracts/Versus.cdc#L429
+    }
+
+    // potential creator accounts will create a public capability to this
+    // so that a BlockRecords admin can add the minter capability
+    pub resource interface CreatorPublic {
+        pub fun addCapability(cap: Capability<&ReleaseCollection>)
+    }
+
     // accounts can create nft minter but, will not be able to mint without
     // the minter capability
-    pub fun createNFTMinter(): @NFTMinter {
-        // todo: emit event
-        return <- create NFTMinter()
+    pub fun createCreator(): @Creator {
+        return <- create Creator()
     }
 
-    pub resource Minter {
-        // todo: what should go in here?
-    }
+    // resource that a creator would own to be able to mint their own NFTs
+    // 
+	pub resource Creator: CreatorPublic {
 
-    // potential minter accounts will create a public capability to this
-    // so that the admin can add the minter capability
-    pub resource interface NFTMinterPublic {
-        pub fun addMinterCapability(cap: Capability<&Minter>)
-    }
-
-    // NFTMinter
-    // Resource that an admin or something similar would own to be
-    // able to mint new NFTs
-    //
-	pub resource NFTMinter: NFTMinterPublic {
-
-        access(self) var minterCapability: Capability<&Minter>?
+        access(self) var releaseCollectionCapability: Capability<&ReleaseCollection>?
 
         init() {
-            self.minterCapability = nil
+            self.releaseCollectionCapability = nil
         }
 
-        pub fun addMinterCapability(cap: Capability<&Minter>) {
+        pub fun addCapability(cap: Capability<&ReleaseCollection>) {
             pre {
-                cap.borrow() != nil: "Invalid capability"
+                cap.borrow() != nil: "invalid capability"
             }
-            self.minterCapability = cap
+            self.releaseCollectionCapability = cap
         }
 
-		// mintNFT
-        // Mints a new NFT with a new ID
+        // mints a new NFT with a new ID
 		// and deposit it in the recipients collection using their collection reference
         //
 		pub fun mintNFT(recipient: &{NonFungibleToken.CollectionPublic}, name: String, royaltyAddress: Address, royaltyPercentage: UInt64, type: String, literation: String, imageURL: String, audioURL: String) {
 
             // accounts cannot mint without minter capability
              pre {
-                self.minterCapability != nil: "Cannot mint until the admin has deposited the minter capability"
+                self.releaseCollectionCapability != nil: "not an authorized creator"
             }
 
             let id =  BlockRecordsSingle.totalSupply
@@ -231,38 +227,34 @@ pub contract BlockRecordsSingle: NonFungibleToken {
 		}
 	}
 
-    // fetch
-    // Get a reference to a BlockRecordsSingle from an account's Collection, if available.
-    // If an account does not have a BlockRecordsSingle.Collection, panic.
-    // If it has a collection but does not contain the itemID, return nil.
-    // If it has a collection and that collection contains the itemID, return a reference to that.
+    // get a reference to a BlockRecordsSingle from an account's Collection, if available.
     //
     pub fun fetch(_ from: Address, itemID: UInt64): &BlockRecordsSingle.NFT? {
         let collection = getAccount(from)
             .getCapability(BlockRecordsSingle.CollectionPublicPath)!
             .borrow<&BlockRecordsSingle.Collection{BlockRecordsSingle.BlockRecordsSingleCollectionPublic}>()
-            ?? panic("Couldn't get collection")
+            ?? panic("couldn't get collection")
         // We trust BlockRecordsSingle.Collection.borowBlockRecords to get the correct itemID
         // (it checks it before returning it).
         return collection.borrowBlockRecordsSingle(id: itemID)
     }
 
-    // initializer
-    //
 	init() {
-        // Set our named paths
-        //FIXME: REMOVE SUFFIX BEFORE RELEASE
         self.CollectionStoragePath = /storage/BlockRecordsSingleCollection002
         self.CollectionPublicPath = /public/BlockRecordsSingleCollection002
-        self.MinterStoragePath = /storage/BlockRecordsMinter002
-        self.MinterPublicPath = /public/BlockRecordsMinter002
 
-        // Initialize the total supply
+        self.CreatorStoragePath = /storage/BlockRecordsCreator002
+        self.CreatorPublicPath = /public/BlockRecordsCreator002
+
+        self.ReleaseCollectionStoragePath = /storage/BlockRecordsReleaseCollection002
+        self.ReleaseCollectionPublicPath = /public/BlockRecordsReleaseCollection002
+        self.ReleaseCollectionPrivatePath = /private/BlockRecordsReleaseCollection002
+
         self.totalSupply = 0
 
-        // Create a Minter resource and save it to storage
-        let minter <- create NFTMinter()
-        self.account.save(<-minter, to: self.MinterStoragePath)
+        let releaseCollection <- create ReleaseCollection()
+        self.account.save(<- releaseCollection, to: self.ReleaseCollectionStoragePath)
+        self.account.link<&ReleaseCollection>(self.ReleaseCollectionPrivatePath, target: self.ReleaseCollectionStoragePath)
 
         emit ContractInitialized()
 	}

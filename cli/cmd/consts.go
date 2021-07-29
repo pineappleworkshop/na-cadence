@@ -14,6 +14,7 @@ const (
 
 	LOCAL_FILE_PATH_CONTRACT_DEPLOY = "./cadence/transactions/contract_deploy.cdc"
 	LOCAL_FILE_PATH_CONTRACT_UPDATE = "./cadence/transactions/contract_update.cdc"
+	LOCAL_FILE_PATH_CONTRACT_REMOVE = "./cadence/transactions/contract_remove.cdc"
 
 	// contracts
 	LOCAL_FILE_PATH_SINGLE_MINT                 = "./cadence/transactions/single_mint.cdc"

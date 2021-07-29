@@ -50,7 +50,7 @@ func TestInitializeAccount(t *testing.T) {
 	})
 }
 
-func TestSetupMinterAccount(t *testing.T) {
+func TestAuthorizeCreatorAccount(t *testing.T) {
 	config.InitConf()
 	config.Conf.Env = config.TEST
 
@@ -71,11 +71,18 @@ func TestSetupMinterAccount(t *testing.T) {
 				So(txRes, ShouldNotBeNil)
 				So(txRes.Error, ShouldBeNil)
 
-				Convey("Then we should be able to submit a transaction to grant the minter capability", func() {
-					txRes, err := AuthorizeMinter(config.Conf.FlowServiceAccountAddress, *acctAddr, privKey)
+				Convey("Then we should be able to submit a transaction to create the 'creator' resource", func() {
+					txRes, err := SetupCreator(config.Conf.FlowServiceAccountAddress, *acctAddr, privKey)
 					So(err, ShouldBeNil)
 					So(txRes, ShouldNotBeNil)
 					So(txRes.Error, ShouldBeNil)
+
+					Convey("Then we should be able to submit a transaction to deposit the ReleaseCollection capability - authorizing the creator", func() {
+						txRes, err := AuthorizeCreator(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, *acctAddr)
+						So(err, ShouldBeNil)
+						So(txRes, ShouldNotBeNil)
+						So(txRes.Error, ShouldBeNil)
+					})
 				})
 			})
 		})

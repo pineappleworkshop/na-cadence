@@ -29,18 +29,11 @@ func TestDepositFUSDIntoAccount(t *testing.T) {
 				So(txRes, ShouldNotBeNil)
 				So(txRes.Error, ShouldBeNil)
 
-				Convey("Then we should be able to submit a transaction to grant the minter capability", func() {
-					txRes, err := AuthorizeMinter(config.Conf.FlowServiceAccountAddress, *acctAddr, privKey)
+				Convey("Then we should be able to submit a transaction to deposit FUSD into the account's vault", func() {
+					txRes, err := DepositFUSDIntoAccount(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, *acctAddr, cadence.UFix64(TEST_FUSD_AMOUNT))
 					So(err, ShouldBeNil)
 					So(txRes, ShouldNotBeNil)
 					So(txRes.Error, ShouldBeNil)
-
-					Convey("Then we should be able to submit a transaction to deposit FUSD into the account's vault", func() {
-						txRes, err := DepositFUSDIntoAccount(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, *acctAddr, cadence.UFix64(TEST_FUSD_AMOUNT))
-						So(err, ShouldBeNil)
-						So(txRes, ShouldNotBeNil)
-						So(txRes.Error, ShouldBeNil)
-					})
 				})
 			})
 		})
