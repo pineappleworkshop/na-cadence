@@ -133,7 +133,7 @@ func InitializeAccount(serviceAcctAddr string, targetAcctAddr flow.Address, targ
 	)
 	txFileStr = strings.Replace(
 		txFileStr,
-		NON_FUNGIBLE_TOKEN_CONTRACT_ADDRESS,
+		NFT_CONTRACT_ADDRESS,
 		config.Conf.NonFungibleTokenContractAddress,
 		-1,
 	)
@@ -198,7 +198,7 @@ func AuthorizeMinter(serviceAcctAddr string, targetAcctAddress flow.Address, tar
 	)
 	txFileStr = strings.Replace(
 		string(txFileStr),
-		NON_FUNGIBLE_TOKEN_CONTRACT_ADDRESS,
+		NFT_CONTRACT_ADDRESS,
 		config.Conf.NonFungibleTokenContractAddress,
 		-1,
 	)

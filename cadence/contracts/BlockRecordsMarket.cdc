@@ -1,8 +1,7 @@
-// import FUSD from "./FUSD.cdc"
-import BlockRecordsSingle from 0xSERVICE_ACCOUNT_ADDRESS
-import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
-import NonFungibleToken from 0xNON_FUNGIBLE_TOKEN_CONTRACT_ADDRESS
-import FUSD from 0xFUSD_CONTRACT_ADDRESS
+import BlockRecordsSingle from SERVICE_ACCOUNT_ADDRESS
+import FungibleToken from FUNGIBLE_TOKEN_CONTRACT_ADDRESS
+import NonFungibleToken from NFT_CONTRACT_ADDRESS
+import FUSD from FUSD_CONTRACT_ADDRESS
 
 /*
     This is a simple BlockRecordsSingle initial sale contract for the DApp to use
@@ -200,7 +199,7 @@ pub contract BlockRecordsMarket {
             // conceptually, it makes sense that the fee and receiver
             // would be explicitly defined in the smart contract itself
             self.fee = 0.05
-            self.beneficiaryReceiver = getAccount(0xSERVICE_ACCOUNT_ADDRESS).getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)!
+            self.beneficiaryReceiver = getAccount(SERVICE_ACCOUNT_ADDRESS).getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)!
 
             emit SaleListingCreated(id: self.id, price: self.price)
 

@@ -16,7 +16,7 @@
   "networks": {
     "emulator": "35.184.219.149:3569",
     "mainnet": "access.mainnet.nodes.onflow.org:9000",
-    "testnet": "access.testnet.nodes.onflow.org:9000"
+    "testnet": "access.devnet.nodes.onflow.org:9000"
   },
   "accounts": {
     "service": {
@@ -28,7 +28,7 @@
       "keys": "68ee617d9bf67a4677af80aaca5a090fcda80ff2f4dbc340e0e36201fa1f1d8c"
     },
     "testnet-account": {
-      "address": "f8d6e0586b0a20c7",
+      "address": "0728411710f98d7b",
       "keys": "68ee617d9bf67a4677af80aaca5a090fcda80ff2f4dbc340e0e36201fa1f1d8c"
     }
   },

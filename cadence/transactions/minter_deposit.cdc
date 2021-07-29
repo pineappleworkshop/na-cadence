@@ -1,4 +1,4 @@
-import BlockRecordsSingle from 0xSERVICE_ACCOUNT_ADDRESS
+import BlockRecordsSingle from SERVICE_ACCOUNT_ADDRESS
 
 /// token admin signs this transaction to deposit a capability
 /// into a custody provider's account that allows them to

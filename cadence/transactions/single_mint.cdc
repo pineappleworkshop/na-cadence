@@ -1,5 +1,5 @@
-import NonFungibleToken from 0xNON_FUNGIBLE_TOKEN_CONTRACT_ADDRESS
-import BlockRecordsSingle from 0xSERVICE_ACCOUNT_ADDRESS
+import NonFungibleToken from NFT_CONTRACT_ADDRESS
+import BlockRecordsSingle from SERVICE_ACCOUNT_ADDRESS
 
 transaction(name: String, receiverAccountAddress: Address, royaltyAddress: Address, royaltyPercentage: UInt64, type: String, literation: String, imageUrl: String, audioUrl: String) {
     let minter: &BlockRecordsSingle.NFTMinter

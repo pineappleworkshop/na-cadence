@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"na-cadence/config"
 	"os"
 
 	"github.com/mitchellh/go-homedir"
@@ -29,6 +30,7 @@ var (
 	receiverAddr string
 	acctAddr     string
 	amount       int
+	env          string
 )
 
 var rootCmd = &cobra.Command{
@@ -42,6 +44,7 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
+	config.InitConf()
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.na-fusd.yaml)")
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"na-cadence/config"
@@ -34,7 +35,7 @@ func DeployContract(serviceAcctAddr, serviceAcctPrivKey, contractFilePath, contr
 	)
 	contractFileStr = strings.Replace(
 		contractFileStr,
-		NON_FUNGIBLE_TOKEN_CONTRACT_ADDRESS,
+		NFT_CONTRACT_ADDRESS,
 		config.Conf.NonFungibleTokenContractAddress,
 		-1,
 	)
@@ -64,7 +65,10 @@ func DeployContract(serviceAcctAddr, serviceAcctPrivKey, contractFilePath, contr
 	}
 
 	tx.AddArgument(cadence.String(contractName))
-	tx.AddArgument(cadence.String([]byte(contractFileStr)))
+	tx.AddArgument(cadence.String(hex.EncodeToString([]byte(contractFileStr)))) // todo
+
+	// fmt.Println(string(tx.Script))
+	// fmt.Println(contractFileStr)
 
 	//create signers
 	serviceAddr := flow.HexToAddress(serviceAcctAddr)
@@ -105,7 +109,7 @@ func UpdateContract(serviceAcctAddr, serviceAcctPrivKey, contractFilePath, contr
 	)
 	contractFileStr = strings.Replace(
 		contractFileStr,
-		NON_FUNGIBLE_TOKEN_CONTRACT_ADDRESS,
+		NFT_CONTRACT_ADDRESS,
 		config.Conf.NonFungibleTokenContractAddress,
 		-1,
 	)
@@ -185,7 +189,7 @@ func ReadAccountFUSDBalance(serviceAcctAddr, acctAddr string) (cadence.Value, er
 //depending on how many accounts the transaction needs to access.
 func createTransaction(script []byte, proposerAddr *flow.Address, authorizerAddresses *[]flow.Address) (*flow.Transaction, error) {
 	ctx := context.Background()
-	c, err := client.New(FLOW_ACCESS_NODE, grpc.WithInsecure())
+	c, err := client.New(config.Conf.FlowAccessNode, grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +228,7 @@ func createTransaction(script []byte, proposerAddr *flow.Address, authorizerAddr
 
 func createSigner(addr flow.Address, privKey string) (*crypto.InMemorySigner, error) {
 	ctx := context.Background()
-	c, err := client.New(FLOW_ACCESS_NODE, grpc.WithInsecure())
+	c, err := client.New(config.Conf.FlowAccessNode, grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}
@@ -282,11 +286,13 @@ func signAndSubmit(tx *flow.Transaction,
 		signer := signers[i]
 
 		if i == 0 {
-			err := tx.SignEnvelope(signerAddress, 0, signer)
-			fmt.Println(err)
+			if err := tx.SignEnvelope(signerAddress, 0, signer); err != nil {
+				fmt.Println(err)
+			}
 		} else {
-			err := tx.SignPayload(signerAddress, 0, signer)
-			fmt.Println(err)
+			if err := tx.SignPayload(signerAddress, 0, signer); err != nil {
+				fmt.Println(err)
+			}
 		}
 	}
 	result, err := submit(tx)
@@ -300,7 +306,7 @@ func signAndSubmit(tx *flow.Transaction,
 func submit(tx *flow.Transaction) (*flow.TransactionResult, error) {
 	ctx := context.Background()
 
-	c, err := client.New(FLOW_ACCESS_NODE, grpc.WithInsecure())
+	c, err := client.New(config.Conf.FlowAccessNode, grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}

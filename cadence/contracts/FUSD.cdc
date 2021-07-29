@@ -4,7 +4,7 @@
 
 */
 
-import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
+import FungibleToken from FUNGIBLE_TOKEN_CONTRACT_ADDRESS
 
 pub contract FUSD: FungibleToken {
 

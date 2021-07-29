@@ -1,7 +1,7 @@
 package config
 
 const (
-	VERSION      = "0.0.3"
+	VERSION      = "0.0.4"
 	PORT         = 3444
 	SERVICE_NAME = "na-cadence"
 
@@ -32,8 +32,8 @@ const (
 	FUNGIBLE_TOKEN_CONTRACT_ADDRESS_MAINNET = "0xf233dcee88fe0abe"
 
 	// todo: verify
-	NON_FUNGIBLE_TOKEN_CONTRACT_ADDRESS_TESTNET = "./"
-	NON_FUNGIBLE_TOKEN_CONTRACT_ADDRESS_MAINNET = "./"
+	NFT_CONTRACT_ADDRESS_TESTNET = "./"
+	NFT_CONTRACT_ADDRESS_MAINNET = "./"
 
 	BLOCK_RECORDS_VERSION = "1"
 )

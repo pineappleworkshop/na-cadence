@@ -4,8 +4,8 @@
 
 */
 
-import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
-import FUSD from 0xFUSD_CONTRACT_ADDRESS
+import FungibleToken from FUNGIBLE_TOKEN_CONTRACT_ADDRESS
+import FUSD from FUSD_CONTRACT_ADDRESS
 
 transaction(amount: UFix64, receiverAddress: Address) {
     let minterRef: @FUSD.Minter

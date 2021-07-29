@@ -1,5 +1,5 @@
-import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
-import FUSD from 0xFUSD_CONTRACT_ADDRESS
+import FungibleToken from FUNGIBLE_TOKEN_CONTRACT_ADDRESS
+import FUSD from FUSD_CONTRACT_ADDRESS
 
 pub fun main(address: Address): UFix64 {
   let account = getAccount(address)

@@ -34,7 +34,7 @@ func GetScriptByFilename(c echo.Context) error {
 	)
 	fileStr = strings.Replace(
 		fileStr,
-		NON_FUNGIBLE_TOKEN_CONTRACT_ADDRESS,
+		NFT_CONTRACT_ADDRESS,
 		config.Conf.NonFungibleTokenContractAddress,
 		-1,
 	)

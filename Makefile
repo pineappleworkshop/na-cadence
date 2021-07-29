@@ -1,5 +1,5 @@
 service := na-cadence
-version := 0.0.3
+version := 0.0.4
 docker_org := pineappleworkshop
 cluster := pw-dev
 docker-image := gcr.io/${docker_org}/${service}:${version}
@@ -35,11 +35,23 @@ test:
 flow-emulator:
 	flow emulator start
 
-flow-deploy-contracts:
-	go run cli/main.go deploy-contracts
+flow-deploy-contracts-emulator:
+	go run cli/main.go deploy-contracts --env emulator
 
-flow-update-contracts:
-	go run cli/main.go update-contracts
+flow-deploy-contracts-testnet:
+	go run cli/main.go deploy-contracts --env testnet
+
+flow-deploy-contracts-mainnet:
+	go run cli/main.go deploy-contracts --env mainnet
+
+flow-update-contracts-emulator:
+	go run cli/main.go update-contracts --env emulator
+
+flow-update-contracts-testnet:
+	go run cli/main.go update-contracts --env testnet
+
+flow-update-contracts-mainnet:
+	go run cli/main.go update-contracts --env mainnet
 
 flow-deploy-nft-contract:
 	go run cli/main.go deploy-nft-contract
