@@ -109,11 +109,11 @@ var updateContract = &cobra.Command{
 		} else if name == "FungibleToken" || name == "ft" {
 			contractFilePath = LOCAL_FILE_PATH_FUNGIBLE_TOKEN_CONTRACT
 		} else if name == "FUSD" || name == "fusd" {
-			contractFilePath = LOCAL_FILE_PATH_FUNGIBLE_TOKEN_CONTRACT
+			contractFilePath = LOCAL_FILE_PATH_FUSD_CONTRACT
 		} else if name == "BlockRecordsSingle" || name == "single" {
-			contractFilePath = LOCAL_FILE_PATH_FUNGIBLE_TOKEN_CONTRACT
+			contractFilePath = LOCAL_FILE_PATH_SINGLE_CONTRACT
 		} else if name == "BlockRecordsMarket" || name == "market" {
-			contractFilePath = LOCAL_FILE_PATH_FUNGIBLE_TOKEN_CONTRACT
+			contractFilePath = LOCAL_FILE_PATH_MARKET_CONTRACT
 		} else if name == "" {
 			fmt.Println("contract not found")
 			return

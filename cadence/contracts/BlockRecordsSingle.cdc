@@ -20,6 +20,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
     pub let CollectionPublicPath: PublicPath
     pub let CreatorStoragePath: StoragePath
     pub let CreatorPublicPath: PublicPath
+    pub let CreatorPrivatePathPrefix: String
     pub let ReleaseCollectionStoragePath: StoragePath
     pub let ReleaseCollectionPublicPath: PublicPath
     pub let ReleaseCollectionPrivatePath: PrivatePath
@@ -80,7 +81,6 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         //
         pub fun withdraw(withdrawID: UInt64): @NonFungibleToken.NFT {
             let token <- self.ownedNFTs.remove(key: withdrawID) ?? panic("missing NFT")
-
             let ownerAddress = self.owner?.address!.toString()
 
             emit Event(type: "withdrawn", metadata: {
@@ -96,12 +96,8 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         //
         pub fun deposit(token: @NonFungibleToken.NFT) {
             let token <- token as! @BlockRecordsSingle.NFT
-
             let id: UInt64 = token.id
-
             let ownerAddress = self.owner?.address!.toString()
-
-            // add the new token to the dictionary which removes the old one
             let oldToken <- self.ownedNFTs[id] <- token
 
             emit Event(type: "deposited", metadata: {
@@ -157,14 +153,21 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         return <- create Collection()
     }
 
-    // todo: release stuff goes here
     // any account in posession of a ReleaseCollection will be able to mint BlockRecords NFTs
+    // this is secure because "transactions cannot create resource types outside of containing contracts"
     pub resource ReleaseCollection {        
         init(){}
 
         // todo: pub fun create release 
         // refer to https://github.com/versus-flow/versus-contracts/blob/master/contracts/Versus.cdc#L429
     }
+
+    // accounts can create nft minter but, will not be able to mint without
+    //
+    access(account) fun createReleaseCollection(): @ReleaseCollection {
+        return <- create ReleaseCollection()
+    }
+
 
     // potential creator accounts will create a public capability to this
     // so that a BlockRecords admin can add the minter capability
@@ -182,7 +185,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
     // 
 	pub resource Creator: CreatorPublic {
 
-        access(self) var releaseCollectionCapability: Capability<&ReleaseCollection>?
+        access(contract) var releaseCollectionCapability: Capability<&ReleaseCollection>?
 
         init() {
             self.releaseCollectionCapability = nil
@@ -245,6 +248,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
 
         self.CreatorStoragePath = /storage/BlockRecordsCreator002
         self.CreatorPublicPath = /public/BlockRecordsCreator002
+        self.CreatorPrivatePathPrefix = "BlockRecordsCreator"
 
         self.ReleaseCollectionStoragePath = /storage/BlockRecordsReleaseCollection002
         self.ReleaseCollectionPublicPath = /public/BlockRecordsReleaseCollection002
@@ -254,7 +258,6 @@ pub contract BlockRecordsSingle: NonFungibleToken {
 
         let releaseCollection <- create ReleaseCollection()
         self.account.save(<- releaseCollection, to: self.ReleaseCollectionStoragePath)
-        self.account.link<&ReleaseCollection>(self.ReleaseCollectionPrivatePath, target: self.ReleaseCollectionStoragePath)
 
         emit ContractInitialized()
 	}

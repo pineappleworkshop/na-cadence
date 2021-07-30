@@ -33,11 +33,6 @@ const (
 	LOCAL_FILE_PATH_CONTRACT_UPDATE   = "./cadence/transactions/contract_update.cdc"
 	CLUSTER_FILE_PATH_CONTRACT_UPDATE = "./go/bin/transactions/contract_update.cdc"
 
-	// to be deleted
-	TEST_FILE_PATH_MINTER_AUTHORIZE    = "../cadence/transactions/minter_authorize.cdc"
-	LOCAL_FILE_PATH_MINTER_AUTHORIZE   = "./cadence/transactions/minter_authorize.cdc"
-	CLUSTER_FILE_PATH_MINTER_AUTHORIZE = "./go/bin/cadence/transactions/minter_authorize.cdc"
-
 	TEST_FILE_PATH_ACCOUNT_INITIALIZE    = "../cadence/transactions/account_initialize.cdc"
 	LOCAL_FILE_PATH_ACCOUNT_INITIALIZE   = "./cadence/transactions/account_initialize.cdc"
 	CLUSTER_FILE_PATH_ACCOUNT_INITIALIZE = "go/bin/cadence/transactions/account_initialize.cdc"
