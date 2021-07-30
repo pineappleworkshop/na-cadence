@@ -1,5 +1,5 @@
-  import BlockRecordsSingle from SERVICE_ACCOUNT_ADDRESS
-  import BlockRecordsMarket from SERVICE_ACCOUNT_ADDRESS
+  import BlockRecordsSingle from 0xSERVICE_ACCOUNT_ADDRESS
+  import BlockRecordsMarket from 0xSERVICE_ACCOUNT_ADDRESS
   
   transaction(id: UInt64) {
       prepare(account: AuthAccount) {

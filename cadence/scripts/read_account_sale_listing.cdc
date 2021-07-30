@@ -1,5 +1,5 @@
-import BlockRecordsMarket from SERVICE_ACCOUNT_ADDRESS
-import BlockRecordsSingle from SERVICE_ACCOUNT_ADDRESS
+import BlockRecordsMarket from 0xSERVICE_ACCOUNT_ADDRESS
+import BlockRecordsSingle from 0xSERVICE_ACCOUNT_ADDRESS
 
 pub struct SaleListing {
   pub let price: UFix64
@@ -14,9 +14,8 @@ pub struct SaleListing {
 }
 
 pub fun main(): SaleListing? {
-  
   let id = (SINGLE_ID as UInt64)
-
+  
   let seller = getAccount(0xACCOUNT_ADDRESS)
 
   let marketCollection = seller.getCapability(BlockRecordsMarket.CollectionPublicPath)!.borrow<&BlockRecordsMarket.Collection{BlockRecordsMarket.CollectionPublic}>()

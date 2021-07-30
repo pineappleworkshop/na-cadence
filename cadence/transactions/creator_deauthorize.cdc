@@ -1,4 +1,4 @@
-import BlockRecordsSingle from SERVICE_ACCOUNT_ADDRESS
+import BlockRecordsSingle from 0xSERVICE_ACCOUNT_ADDRESS
 
 transaction(newCreatorAddress: Address) {
     prepare(account: AuthAccount) {
