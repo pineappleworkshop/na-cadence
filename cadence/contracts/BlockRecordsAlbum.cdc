@@ -1,5 +1,5 @@
-import NonFungibleToken from NFT_CONTRACT_ADDRESS
-import BlockRecordsSingle from SERVICE_ACCOUNT_ADDRESS
+import NonFungibleToken from 0xNFT_CONTRACT_ADDRESS
+import BlockRecordsSingle from 0xSERVICE_ACCOUNT_ADDRESS
 
 // WORK IN PROGRESS, NOT CURRENTLY IN USE
 

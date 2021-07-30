@@ -1,4 +1,4 @@
-import NonFungibleToken from SERVICE_ACCOUNT_ADDRESS
+import NonFungibleToken from 0xSERVICE_ACCOUNT_ADDRESS
 
 
 pub contract BlockRecordsSingle: NonFungibleToken {

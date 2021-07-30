@@ -1,60 +1,37 @@
-import BlockRecordsSingle from SERVICE_ACCOUNT_ADDRESS
-import FungibleToken from FUNGIBLE_TOKEN_CONTRACT_ADDRESS
-import NonFungibleToken from NFT_CONTRACT_ADDRESS
-import FUSD from FUSD_CONTRACT_ADDRESS
-
-/*
-    This is a simple BlockRecordsSingle initial sale contract for the DApp to use
-    in order to list and sell BlockRecordsSingle.
-
-    Its structure is neither what it would be if it was the simplest possible
-    market contract or if it was a complete general purpose market contract.
-    Rather it's the simplest possible version of a more general purpose
-    market contract that indicates how that contract might function in
-    broad strokes. This has been done so that integrating with this contract
-    is a useful preparatory exercise for code that will integrate with the
-    later more general purpose market contract.
-
-    It allows:
-    - Anyone to create Sale Offers and place them in a collection, making it
-      publicly accessible.
-    - Anyone to accept the offer and buy the item.
-
-    It notably does not handle:
-    - Multiple different sale NFT contracts.
-    - Multiple different payment FT contracts.
-    - Splitting sale payments to multiple recipients.
-
- */
+import BlockRecordsSingle from 0xSERVICE_ACCOUNT_ADDRESS
+import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
+import NonFungibleToken from 0xNFT_CONTRACT_ADDRESS
+import FUSD from 0xFUSD_CONTRACT_ADDRESS
 
 pub contract BlockRecordsMarket {
+
+    pub let TransactionFeePercentage: UFix64
+
     // SaleListing events.
     //
-    // A sale offer has been created.
+    // a sale offer has been created.
     pub event SaleListingCreated(
         id: UInt64, 
         price: UFix64,
     )
 
-    // Someone has purchased an item that was offered for sale.
+    // an item was purchased
     pub event SaleListingAccepted(
         id: UInt64, 
         price: UFix64,
         seller: Address? 
     )
 
-    // A sale offer has been destroyed, with or without being accepted.
+    // a sale offer has been destroyed, with or without being accepted.
     pub event SaleListingFinished(id: UInt64)
     
-    // Collection events.
-    //
-    // A sale offer has been removed from the collection of Address.
+    // a sale offer has been removed from the collection of Address.
     pub event CollectionRemovedSaleListing(
         id: UInt64, 
         seller: Address?
     )
 
-    // A sale offer has been inserted into the collection of Address.
+    // a sale offer has been inserted into the collection of Address.
     pub event CollectionInsertedSaleListing(
         id: UInt64,
         price: UFix64, 
@@ -68,7 +45,6 @@ pub contract BlockRecordsMarket {
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath
 
-    // SaleListingPublicView
     // An interface providing a read-only view of a SaleListing
     //
     pub resource interface SaleListingPublicView {
@@ -76,47 +52,42 @@ pub contract BlockRecordsMarket {
         pub let price: UFix64
     }
 
-    // totalSupply
-    // The total number of SaleListings that have been created
+    // the total number of SaleListings that have been created
     //
     pub var totalSupply: UInt64
 
-    // SaleListing
-    // A BlockRecordsSingle NFT being offered to sale for a set fee paid in FUSD.
+    // a BlockRecordsSingle NFT being offered to sale for a set fee paid in FUSD.
     //
     pub resource SaleListing: SaleListingPublicView {
-        // Whether the sale has completed with someone purchasing the item.
+        // whether the sale has completed with someone purchasing the item.
         pub var saleCompleted: Bool
 
-        // The SaleListing ID
+        // the SaleListing ID
         pub let id: UInt64
 
-        // The BlockRecordsSingleID
+        // the BlockRecordsSingleID
         pub let nftID: UInt64
 
-        // The sale payment price.
+        // the sale payment price.
         pub let price: UFix64
 
-        // // The royalty percentage
+        // // the royalty percentage
         // pub let royalty: UFix64?
 
-        // The beneficiary fee percentage
-        pub var fee: UFix64
-
-        // The collection containing that ID.
+        // the collection containing that ID.
         access(self) let sellerItemProvider: Capability<&BlockRecordsSingle.Collection{BlockRecordsSingle.BlockRecordsSingleCollectionPublic, NonFungibleToken.Provider}>
 
-        // The seller FUSD vault
+        // the seller FUSD vault
         access(self) let sellerPaymentReceiver: Capability<&FUSD.Vault{FungibleToken.Receiver}>
 
-        // The beneficiary's FUSD vault 
+        // the beneficiary's FUSD vault 
         access(self) var beneficiaryReceiver: Capability<&FUSD.Vault{FungibleToken.Receiver}>
 
-        // The royalty receiver's FUSD vault
+        // the royalty receiver's FUSD vault
         // access(self) let royaltyReceiver: Capability<&FUSD.Vault{FungibleToken.Receiver}>?
 
-        // Called by a purchaser to accept the sale offer.
-        // If they send the correct payment in FUSD, and if the item is still available,
+        // called by a purchaser to accept the sale offer.
+        // if they send the correct payment in FUSD, and if the item is still available,
         // the BlockRecordsSingle NFT will be placed in their BlockRecordsSingle.Collection .
         //
         pub fun accept(
@@ -136,19 +107,19 @@ pub contract BlockRecordsMarket {
             let royaltyPercentage: UInt64 = blockRecordsSingle.metadata["royalty_percentage"]! as! UInt64
             let royalty: UFix64 = UFix64(UFix64(royaltyPercentage!) / UFix64(100))
 
-            // Distribute royalties
+            // distribute royalties
             let royaltyAmnt = self.price * royalty
             let royaltyFee <- buyerPayment.withdraw(amount: royaltyAmnt)
             let royaltyAccount = getAccount(royaltyAddress!)
             let royaltyReceiver = royaltyAccount.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)! 
             royaltyReceiver.borrow()!.deposit(from: <-royaltyFee)
 
-            // Pay BlockRecords fee
-            let beneficiaryAmnt = self.price * self.fee
+            // pay BlockRecords fee
+            let beneficiaryAmnt = self.price * BlockRecordsMarket.TransactionFeePercentage
             let beneficiaryFee <- buyerPayment.withdraw(amount: beneficiaryAmnt)
             self.beneficiaryReceiver.borrow()!.deposit(from: <-beneficiaryFee)
 
-            // Deposit the rest of the payment into Seller account vault
+            // deposit the rest of the payment into Seller account vault
             self.sellerPaymentReceiver.borrow()!.deposit(from: <-buyerPayment)
 
             // Withdraw nft from Seller account collection and deposit into Buyer's
@@ -162,19 +133,10 @@ pub contract BlockRecordsMarket {
             })
         }
 
-        // destructor
-        //
         destroy() {
-            // Whether the sale completed or not, publicize that it is being withdrawn.
+            // whether the sale completed or not, publicize that it is being withdrawn.
             emit SaleListingFinished(id: self.id)
         }
-
-        // initializer
-        // Take the information required to create a sale offer, notably the capability
-        // to transfer the BlockRecordsSingle NFT and the capability to receive FUSD in payment.
-        //
-        // TODO: we might want to hardcode the fee into the smart contract
-        // minters could potentially set the fee to whatever they want with this current implementation
         init(
             id: UInt64,
             nftID: UInt64,
@@ -195,11 +157,7 @@ pub contract BlockRecordsMarket {
             self.sellerPaymentReceiver = sellerPaymentReceiver
             self.price = price
 
-            // todo: should fee and beneficiary receiver go here?
-            // conceptually, it makes sense that the fee and receiver
-            // would be explicitly defined in the smart contract itself
-            self.fee = 0.05
-            self.beneficiaryReceiver = getAccount(SERVICE_ACCOUNT_ADDRESS).getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)!
+            self.beneficiaryReceiver = getAccount(0xSERVICE_ACCOUNT_ADDRESS).getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)!
 
             emit SaleListingCreated(id: self.id, price: self.price)
 
@@ -214,7 +172,7 @@ pub contract BlockRecordsMarket {
     }
 
     // createSaleListing
-    // Make creating a SaleListing publicly accessible.
+    // make creating a SaleListing publicly accessible.
     //
     pub fun createSaleListing (
         nftID: UInt64,
@@ -269,7 +227,7 @@ pub contract BlockRecordsMarket {
    }
 
     // Collection
-    // A resource that allows its owner to manage a list of SaleListings, and purchasers to interact with them.
+    // a resource that allows its owner to manage a list of SaleListings, and purchasers to interact with them.
     //
     pub resource Collection : CollectionManager, CollectionPurchaser, CollectionPublic {
         pub var saleOffers: @{UInt64: SaleListing}
@@ -292,8 +250,7 @@ pub contract BlockRecordsMarket {
             )
         }
 
-        // remove
-        // Remove and return a SaleListing from the collection.
+        // remove and return a SaleListing from the collection.
         pub fun remove(id: UInt64): @SaleListing {
             emit CollectionRemovedSaleListing(id: id, seller: self.owner?.address)
 
@@ -304,18 +261,6 @@ pub contract BlockRecordsMarket {
             return <-(self.saleOffers.remove(key: id) ?? panic("missing SaleListing"))
         }
  
-        // purchase
-        // If the caller passes a valid id and the item is still for sale, and passes a FUSD vault
-        // typed as a FungibleToken.Vault (FUSD.deposit() handles the type safety of this)
-        // containing the correct payment amount, this will transfer the KittyItem to the caller's
-        // BlockRecordsSingle collection.
-        // It will then remove and destroy the offer.
-        // Note that is means that events will be emitted in this order:
-        //   1. Collection.CollectionRemovedSaleListing
-        //   2. BlockRecordsSingle.Withdraw
-        //   3. BlockRecordsSingle.Deposit
-        //   4. SaleListing.SaleListingFinished
-        //
         pub fun purchase(
             id: UInt64,
             buyerCollection: &BlockRecordsSingle.Collection{NonFungibleToken.Receiver},
@@ -330,16 +275,14 @@ pub contract BlockRecordsMarket {
             destroy offer
         }
 
-        // getSaleListingIDs
-        // Returns an array of the IDs that are in the collection
+        // returns an array of the IDs that are in the collection
         //
         pub fun getSaleListingIDs(): [UInt64] {
             return self.saleOffers.keys
         }
 
-        // borrowSaleListing
-        // Returns an Optional read-only view of the SaleListing for the given id if it is contained by this collection.
-        // The optional will be nil if the provided id is not present in the collection.
+        // returns an Optional read-only view of the SaleListing for the given id if it is contained by this collection.
+        // the optional will be nil if the provided id is not present in the collection.
         //
         pub fun borrowSaleListing(id: UInt64): &SaleListing{SaleListingPublicView}? {
             if self.saleOffers[id] == nil {
@@ -349,32 +292,25 @@ pub contract BlockRecordsMarket {
             }
         }
 
-        // destructor
-        //
         destroy () {
             destroy self.saleOffers
         }
 
-        // constructor
-        //
         init () {
             self.saleOffers <- {}
         }
     }
 
-    // createEmptyCollection
-    // Make creating a Collection publicly accessible.
+    // make creating a Collection publicly accessible.
     //
     pub fun createEmptyCollection(): @Collection {
         return <-create Collection()
     }
 
     init () {
-        //FIXME: REMOVE SUFFIX BEFORE RELEASE
         self.CollectionStoragePath = /storage/BlockRecordsMarketCollection002
         self.CollectionPublicPath = /public/BlockRecordsMarketCollection002
-
-        // Initialize the total supply
+        self.TransactionFeePercentage = 0.05
         self.totalSupply = 0
     }
 }

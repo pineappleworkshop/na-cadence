@@ -1,5 +1,5 @@
-import NonFungibleToken from NFT_CONTRACT_ADDRESS
-import BlockRecordsSingle from SERVICE_ACCOUNT_ADDRESS
+import NonFungibleToken from 0xNFT_CONTRACT_ADDRESS
+import BlockRecordsSingle from 0xSERVICE_ACCOUNT_ADDRESS
 
 pub struct Single {
   pub let id: UInt64
@@ -12,7 +12,6 @@ pub struct Single {
 }
 
 pub fun main(): [Single?]{
-
     let owner = getAccount(0xACCOUNT_ADDRESS)
 
     let blockRecordsCollection = owner.getCapability(BlockRecordsSingle.CollectionPublicPath)!.borrow<&{BlockRecordsSingle.BlockRecordsSingleCollectionPublic}>()
