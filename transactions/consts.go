@@ -5,6 +5,7 @@ const (
 	FUSD_CONTRACT_ADDRESS           = "FUSD_CONTRACT_ADDRESS"
 	NFT_CONTRACT_ADDRESS            = "NFT_CONTRACT_ADDRESS"
 	FUNGIBLE_TOKEN_CONTRACT_ADDRESS = "FUNGIBLE_TOKEN_CONTRACT_ADDRESS"
+	CREATOR_ACCOUNT_ADDRESS         = "CREATOR_ACCOUNT_ADDRESS"
 
 	TEST_FILE_PATH_MARKET_CONTRACT    = "../cadence/contracts/BlockRecordsMarket.cdc"
 	LOCAL_FILE_PATH_MARKET_CONTRACT   = "./cadence/contracts/BlockRecordsMarket.cdc"
@@ -44,6 +45,10 @@ const (
 	TEST_FILE_PATH_CREATOR_AUTHORIZE    = "../cadence/transactions/creator_authorize.cdc"
 	LOCAL_FILE_PATH_CREATOR_AUTHORIZE   = "./cadence/transactions/creator_authorize.cdc"
 	CLUSTER_FILE_PATH_CREATOR_AUTHORIZE = "go/bin/cadence/transactions/creator_authorize.cdc"
+
+	TEST_FILE_PATH_CREATOR_DEAUTHORIZE    = "../cadence/transactions/creator_deauthorize.cdc"
+	LOCAL_FILE_PATH_CREATOR_DEAUTHORIZE   = "./cadence/transactions/creator_deauthorize.cdc"
+	CLUSTER_FILE_PATH_CREATOR_DEAUTHORIZE = "go/bin/cadence/transactions/creator_deauthorize.cdc"
 
 	TEST_FILE_PATH_FUSD_DEPOSIT    = "../cadence/transactions/fusd_deposit.cdc"
 	LOCAL_FILE_PATH_FUSD_DEPOSIT   = "./cadence/transactions/fusd_deposit.cdc"

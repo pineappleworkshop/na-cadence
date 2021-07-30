@@ -1,6 +1,5 @@
 import NonFungibleToken from 0xSERVICE_ACCOUNT_ADDRESS
 
-
 pub contract BlockRecordsSingle: NonFungibleToken {
 
     //events
@@ -20,10 +19,8 @@ pub contract BlockRecordsSingle: NonFungibleToken {
     pub let CollectionPublicPath: PublicPath
     pub let CreatorStoragePath: StoragePath
     pub let CreatorPublicPath: PublicPath
-    pub let CreatorPrivatePathPrefix: String
     pub let ReleaseCollectionStoragePath: StoragePath
     pub let ReleaseCollectionPublicPath: PublicPath
-    pub let ReleaseCollectionPrivatePath: PrivatePath
     
     // the total number of BlockRecordsSingle that have been minted
     //
@@ -193,7 +190,8 @@ pub contract BlockRecordsSingle: NonFungibleToken {
 
         pub fun addCapability(cap: Capability<&ReleaseCollection>) {
             pre {
-                cap.borrow() != nil: "invalid capability"
+                cap.check() : "invalid capability"
+                self.releaseCollectionCapability == nil : "capability already set"
             }
             self.releaseCollectionCapability = cap
         }
@@ -203,7 +201,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         //
 		pub fun mintNFT(recipient: &{NonFungibleToken.CollectionPublic}, name: String, royaltyAddress: Address, royaltyPercentage: UInt64, type: String, literation: String, imageURL: String, audioURL: String) {
 
-            // accounts cannot mint without minter capability
+            // accounts cannot mint without release collection capability
              pre {
                 self.releaseCollectionCapability != nil: "not an authorized creator"
             }
@@ -248,11 +246,9 @@ pub contract BlockRecordsSingle: NonFungibleToken {
 
         self.CreatorStoragePath = /storage/BlockRecordsCreator002
         self.CreatorPublicPath = /public/BlockRecordsCreator002
-        self.CreatorPrivatePathPrefix = "BlockRecordsCreator"
 
         self.ReleaseCollectionStoragePath = /storage/BlockRecordsReleaseCollection002
         self.ReleaseCollectionPublicPath = /public/BlockRecordsReleaseCollection002
-        self.ReleaseCollectionPrivatePath = /private/BlockRecordsReleaseCollection002
 
         self.totalSupply = 0
 

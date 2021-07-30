@@ -224,7 +224,7 @@ func SetupCreator(serviceAcctAddr string, targetAcctAddress flow.Address, target
 	return result, nil
 }
 
-func AuthorizeCreator(serviceAcctAddr string, serviceAcctPrivKey string, targetAcctAddress flow.Address) (*flow.TransactionResult, error) {
+func AuthorizeCreator(serviceAcctAddr string, serviceAcctPrivKey string, creatorAcctAddr flow.Address) (*flow.TransactionResult, error) {
 	var filePath string
 	if config.Conf.GetEnv() == config.DEV || config.Conf.GetEnv() == config.PROD {
 		filePath = CLUSTER_FILE_PATH_CREATOR_AUTHORIZE
@@ -244,6 +244,12 @@ func AuthorizeCreator(serviceAcctAddr string, serviceAcctPrivKey string, targetA
 		serviceAcctAddr,
 		-1,
 	)
+	txFileStr = strings.Replace(
+		txFileStr,
+		CREATOR_ACCOUNT_ADDRESS,
+		creatorAcctAddr.String(),
+		-1,
+	)
 
 	serviceAcctAddress := flow.HexToAddress(serviceAcctAddr)
 	authorizers := []flow.Address{
@@ -254,7 +260,61 @@ func AuthorizeCreator(serviceAcctAddr string, serviceAcctPrivKey string, targetA
 	if err != nil {
 		return nil, err
 	}
-	tx.AddArgument(cadence.Address(targetAcctAddress))
+	tx.AddArgument(cadence.Address(creatorAcctAddr))
+
+	authorizerSigner, err := createSigner(serviceAcctAddress, serviceAcctPrivKey)
+	signers := []crypto.Signer{
+		authorizerSigner,
+	}
+	signerAddrs := []flow.Address{
+		serviceAcctAddress,
+	}
+
+	result, err := signAndSubmit(tx, signerAddrs, signers)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func DeauthorizeCreator(serviceAcctAddr string, serviceAcctPrivKey string, creatorAcctAddr flow.Address) (*flow.TransactionResult, error) {
+	var filePath string
+	if config.Conf.GetEnv() == config.DEV || config.Conf.GetEnv() == config.PROD {
+		filePath = CLUSTER_FILE_PATH_CREATOR_DEAUTHORIZE
+	} else if config.Conf.GetEnv() == config.TEST {
+		filePath = TEST_FILE_PATH_CREATOR_DEAUTHORIZE
+	} else {
+		filePath = LOCAL_FILE_PATH_CREATOR_DEAUTHORIZE
+	}
+
+	txFile, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+	txFileStr := strings.Replace(
+		string(txFile),
+		SERVICE_ACCOUNT_ADDRESS,
+		serviceAcctAddr,
+		-1,
+	)
+	txFileStr = strings.Replace(
+		txFileStr,
+		CREATOR_ACCOUNT_ADDRESS,
+		creatorAcctAddr.String(),
+		-1,
+	)
+
+	serviceAcctAddress := flow.HexToAddress(serviceAcctAddr)
+	authorizers := []flow.Address{
+		serviceAcctAddress,
+	}
+
+	tx, err := createTransaction([]byte(txFileStr), &serviceAcctAddress, &authorizers)
+	if err != nil {
+		return nil, err
+	}
+	tx.AddArgument(cadence.Address(creatorAcctAddr))
 
 	authorizerSigner, err := createSigner(serviceAcctAddress, serviceAcctPrivKey)
 	signers := []crypto.Signer{
