@@ -22,7 +22,7 @@ type NFTCreate struct {
 	AudioURL               cadence.String
 }
 
-func MintSingle(serviceAcctAddr, minterAcctAddr, minterAcctPrivKey string, nft NFTCreate) (*flow.TransactionResult, error) {
+func MintSingle(serviceAcctAddr, creatorAcctAddr, creatorAcctPrivKey string, nft NFTCreate) (*flow.TransactionResult, error) {
 	var filePath string
 	if config.Conf.GetEnv() == config.DEV || config.Conf.GetEnv() == config.PROD {
 		filePath = CLUSTER_FILE_PATH_SINGLE_MINT
@@ -50,7 +50,7 @@ func MintSingle(serviceAcctAddr, minterAcctAddr, minterAcctPrivKey string, nft N
 	)
 
 	//create authorizers
-	authorizerAddress := flow.HexToAddress(minterAcctAddr)
+	authorizerAddress := flow.HexToAddress(creatorAcctAddr)
 	var authorizers []flow.Address
 	authorizers = []flow.Address{
 		authorizerAddress,
@@ -73,7 +73,7 @@ func MintSingle(serviceAcctAddr, minterAcctAddr, minterAcctPrivKey string, nft N
 	tx.AddArgument(nft.AudioURL)
 
 	//create signers
-	authorizerSigner, err := createSigner(authorizerAddress, minterAcctPrivKey)
+	authorizerSigner, err := createSigner(authorizerAddress, creatorAcctPrivKey)
 	signers := []crypto.Signer{
 		authorizerSigner,
 	}

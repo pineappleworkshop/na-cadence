@@ -91,7 +91,7 @@ func TestNonCreatorMintSingle(t *testing.T) {
 					So(txRes, ShouldNotBeNil)
 					So(txRes.Error, ShouldBeNil)
 
-					Convey("Then we should not be able to mint an nft becuase we haven't been authorized", func() {
+					Convey("Then we should not be able to mint an nft because we haven't been authorized", func() {
 						nft := NFTCreate{
 							Name:                   TEST_SINGLE_NAME,
 							ReceiverAccountAddress: cadence.Address(*acctAddr),
