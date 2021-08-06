@@ -1,6 +1,6 @@
 import NonFungibleToken from 0xSERVICE_ACCOUNT_ADDRESS
 import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
-
+import FUSD from 0xFUSD_CONTRACT_ADDRESS
 
 // todo: change name of contract to BlockRecords
 // 
@@ -41,7 +41,17 @@ pub contract BlockRecordsSingle: NonFungibleToken {
 
         pub var metadata: {String: AnyStruct}
 
-        init(id: UInt64, minterAddress: Address, name: String, royaltyAddress: Address, royaltyPercentage: UInt64, type: String, literation: String, imageURL: String, audioURL: String) {
+        init(
+            id: UInt64, 
+            minterAddress: Address, 
+            name: String, 
+            royaltyAddress: Address, 
+            royaltyPercentage: UInt64, 
+            type: String, 
+            literation: String, 
+            imageURL: String, 
+            audioURL: String
+        ) {
             self.id = id
 
             // todo: validate type
@@ -172,7 +182,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         pub let royaltyVault: Capability<&{FungibleToken.Receiver}>
 
         // percentage fee of the sale that will be paid out to the royalty address
-        pub let royaltyFee: UInt64
+        pub let royaltyFee: UFix64
 
         // ids of nfts associated with release
         pub let nftIDs: [UInt64]
@@ -183,7 +193,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
 
         init(
             royaltyVault: Capability<&{FungibleToken.Receiver}>,
-            royaltyFee: UInt64
+            royaltyFee: UFix64
         ){
             self.royaltyVault = royaltyVault
             self.royaltyFee = royaltyFee
@@ -231,7 +241,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
                 "audio_url": audioURL
             })
 
-            let collection = BlockRecordsSingle.account!.getCapability(BlockRecordsSingle.CollectionPublicPath)!.borrow<&{NonFungibleToken.CollectionPublic}>()
+            let singleCollectionCapability = BlockRecordsSingle.account.getCapability<&{NonFungibleToken.CollectionPublic}>(BlockRecordsSingle.CollectionPublicPath)
 
             let single <- create BlockRecordsSingle.NFT(
                 id: id, 
@@ -249,7 +259,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             self.nftIDs.append(single.id)
 
             // deposit into minter's own collection
-			collection.deposit(
+			singleCollectionCapability.borrow()!.deposit(
                 token: <- single
             )
 
@@ -269,11 +279,11 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         pub let marketplaceVault: Capability<&{FungibleToken.Receiver}>
 
         // percentage fee of the sale that will be paid out to the marketplace address
-        pub let marketplaceFee: UInt64 
+        pub let marketplaceFee: UFix64 
 
         init(
             marketplaceVault: Capability<&{FungibleToken.Receiver}>,
-            marketplaceFee: UInt64
+            marketplaceFee: UFix64
         ){
             self.marketplaceVault = marketplaceVault
             self.marketplaceFee = marketplaceFee
@@ -283,7 +293,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         // refer to https://github.com/versus-flow/versus-contracts/blob/master/contracts/Versus.cdc#L429
         pub fun createAndAddRelease(
             royaltyVault: Capability<&{FungibleToken.Receiver}>,
-            royaltyFee: UInt64
+            royaltyFee: UFix64
         ){
             pre {
                 royaltyVault.check() == true : "Vault capability should exist"
@@ -310,7 +320,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
     //
     access(account) fun createReleaseCollection(
         marketplaceVault: Capability<&{FungibleToken.Receiver}>,
-        marketplaceFee: UInt64
+        marketplaceFee: UFix64
     ): @ReleaseCollection {
         return <- create ReleaseCollection(
             marketplaceVault: marketplaceVault,
@@ -356,7 +366,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
 
         pub fun createRelease(
             royaltyVault: Capability<&{FungibleToken.Receiver}>,
-            royaltyFee: UInt64
+            royaltyFee: UFix64
         ){
             // accounts cannot create new releases without release collection capability
              pre {
@@ -400,9 +410,23 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         self.NFTTypes = []
         self.NFTTypes.append(NFT_TYPE_SINGLE)
 
-        // we can probably remove this
-        // let releaseCollection <- create ReleaseCollection()
-        // self.account.save(<- releaseCollection, to: self.ReleaseCollectionStoragePath)
+        // initialize FUSD vault for service account so that we can receive 
+        // sale fees and check balance
+        self.account.save(<-FUSD.createEmptyVault(), to: /storage/fusdVault)
+        self.account.link<&FUSD.Vault{FungibleToken.Receiver}>(
+          /public/fusdReceiver,
+          target: /storage/fusdVault
+        )
+        self.account.link<&FUSD.Vault{FungibleToken.Balance}>(
+          /public/fusdBalance,
+          target: /storage/fusdVault
+        )
+
+        let marketplaceVault = self.account.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)!
+        let marketplaceFee = 0.05
+
+        let releaseCollection <- create ReleaseCollection(marketplaceVault: marketplaceVault,  marketplaceFee: marketplaceFee)
+        self.account.save(<- releaseCollection, to: self.ReleaseCollectionStoragePath)
 
         emit ContractInitialized()
 	}
