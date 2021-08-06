@@ -222,8 +222,6 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             receiverCollection: &{NonFungibleToken.CollectionPublic}
         ){
             pre {
-                // todo
-                // BlockRecordsSingle.account!.getCapability(BlockRecordsSingle.CollectionPublicPath)!.check() : "cannot get collection capability"
                 !self.completed : "cannot add to completed release"
             }
 
@@ -265,7 +263,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             BlockRecordsSingle.totalSupply = BlockRecordsSingle.totalSupply + (1 as UInt64)
 		}
 
-        // todo: mintAlbum
+        // todo: album
     }
 
     // any account in posession of a ReleaseCollection will be able to mint BlockRecords NFTs
