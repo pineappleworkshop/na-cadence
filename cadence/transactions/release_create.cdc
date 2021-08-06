@@ -1,12 +1,11 @@
 import BlockRecordsSingle from 0xSERVICE_ACCOUNT_ADDRESS
 import FUSD from 0xFUSD_CONTRACT_ADDRESS
-import FungibleToken from 0xFUNGIBLE_TOKEN
+import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
 
 transaction(
   royaltyAddress: Address,
-  royaltyFee: UInt64
+  royaltyFee: UFix64
 ){
-    
     let creator: &BlockRecordsSingle.Creator
     
     prepare(signer: AuthAccount) {

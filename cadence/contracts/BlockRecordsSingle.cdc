@@ -218,12 +218,13 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             type: String, 
             literation: String, 
             imageURL: String, 
-            audioURL: String
+            audioURL: String,
+            receiverCollection: &{NonFungibleToken.CollectionPublic}
         ){
             pre {
                 // todo
                 // BlockRecordsSingle.account!.getCapability(BlockRecordsSingle.CollectionPublicPath)!.check() : "cannot get collection capability"
-                self.completed : "cannot add to completed release"
+                !self.completed : "cannot add to completed release"
             }
 
             let id =  BlockRecordsSingle.totalSupply
@@ -241,8 +242,6 @@ pub contract BlockRecordsSingle: NonFungibleToken {
                 "audio_url": audioURL
             })
 
-            let singleCollectionCapability = BlockRecordsSingle.account.getCapability<&{NonFungibleToken.CollectionPublic}>(BlockRecordsSingle.CollectionPublicPath)
-
             let single <- create BlockRecordsSingle.NFT(
                 id: id, 
                 minterAddress: minterAddress, 
@@ -259,7 +258,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             self.nftIDs.append(single.id)
 
             // deposit into minter's own collection
-			singleCollectionCapability.borrow()!.deposit(
+			receiverCollection.deposit(
                 token: <- single
             )
 
@@ -273,6 +272,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
     // this is secure because "transactions cannot create resource types outside of containing contracts"
     pub resource ReleaseCollection {  
 
+        // dictionary of releases in the collection
         pub var releases: @{UInt64: Release}
 
         // the BlockRecords address that the sale fees will be paid out to
@@ -306,9 +306,20 @@ pub contract BlockRecordsSingle: NonFungibleToken {
 
             // todo: emit release created
 
+            // todo: is this correct?
             // add release to release collection dictionary
             let oldRelease <- self.releases[release.id] <- release
             destroy oldRelease
+        }
+
+        // todo: review this... should be pub or access(contract)?
+        // access(contract) fun getRelease(_ id:UInt64) : &Release {
+        pub fun getRelease(_ id: UInt64) : &Release {
+            pre {
+                self.releases[id] != nil:
+                    "release doesn't exist"
+            }
+            return &self.releases[id] as &Release
         }
 
         destroy(){
@@ -377,6 +388,33 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             self.releaseCollectionCapability!.borrow()!.createAndAddRelease(
                 royaltyVault: royaltyVault,
                 royaltyFee: royaltyFee 
+            )
+        }
+
+        pub fun mintSingle(
+            name: String, 
+            royaltyAddress: Address, 
+            royaltyPercentage: UInt64, 
+            type: String, 
+            literation: String, 
+            imageURL: String, 
+            audioURL: String,
+            releaseID: UInt64,
+            receiverCollection: &{NonFungibleToken.CollectionPublic}
+        ){
+             pre {
+                self.releaseCollectionCapability != nil: "not an authorized creator"
+            }
+
+            self.releaseCollectionCapability!.borrow()!.getRelease(releaseID).mintAndAddSingle(
+                name: name, 
+                royaltyAddress: royaltyAddress, 
+                royaltyPercentage: royaltyPercentage, 
+                type: type, 
+                literation: literation, 
+                imageURL: imageURL, 
+                audioURL: audioURL,
+                receiverCollection: receiverCollection
             )
         }
 	}

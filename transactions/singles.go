@@ -12,14 +12,15 @@ import (
 )
 
 type NFTCreate struct {
-	Name                   cadence.String
-	ReceiverAccountAddress cadence.Address
-	RoyaltyAddress         cadence.Address
-	RoyaltyPercentage      cadence.UInt64
-	Type                   cadence.String
-	Literation             cadence.String
-	ImageURL               cadence.String
-	AudioURL               cadence.String
+	Name cadence.String
+	// ReceiverAccountAddress cadence.Address
+	RoyaltyAddress    cadence.Address
+	RoyaltyPercentage cadence.UInt64
+	Type              cadence.String
+	Literation        cadence.String
+	ImageURL          cadence.String
+	AudioURL          cadence.String
+	ReleaseID         cadence.UInt64
 }
 
 func MintSingle(serviceAcctAddr, creatorAcctAddr, creatorAcctPrivKey string, nft NFTCreate) (*flow.TransactionResult, error) {
@@ -44,6 +45,12 @@ func MintSingle(serviceAcctAddr, creatorAcctAddr, creatorAcctPrivKey string, nft
 	)
 	txFileStr = strings.Replace(
 		txFileStr,
+		CREATOR_ACCOUNT_ADDRESS,
+		creatorAcctAddr,
+		-1,
+	)
+	txFileStr = strings.Replace(
+		txFileStr,
 		NFT_CONTRACT_ADDRESS,
 		config.Conf.NonFungibleTokenContractAddress,
 		-1,
@@ -64,13 +71,14 @@ func MintSingle(serviceAcctAddr, creatorAcctAddr, creatorAcctPrivKey string, nft
 
 	// todo: cleaner way to do this
 	tx.AddArgument(nft.Name)
-	tx.AddArgument(nft.ReceiverAccountAddress)
+	// tx.AddArgument(nft.ReceiverAccountAddress)
 	tx.AddArgument(nft.RoyaltyAddress)
 	tx.AddArgument(nft.RoyaltyPercentage)
 	tx.AddArgument(nft.Type)
 	tx.AddArgument(nft.Literation)
 	tx.AddArgument(nft.ImageURL)
 	tx.AddArgument(nft.AudioURL)
+	tx.AddArgument(nft.ReleaseID)
 
 	//create signers
 	authorizerSigner, err := createSigner(authorizerAddress, creatorAcctPrivKey)

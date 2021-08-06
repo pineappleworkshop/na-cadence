@@ -13,7 +13,7 @@ import (
 
 type ReleaseCreate struct {
 	RoyaltyAddress cadence.Address
-	RoyaltyFee     cadence.UInt64
+	RoyaltyFee     cadence.UFix64
 }
 
 func CreateRelease(serviceAcctAddr, creatorAcctAddr, creatorAcctPrivKey string, release ReleaseCreate) (*flow.TransactionResult, error) {

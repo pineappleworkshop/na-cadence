@@ -131,14 +131,14 @@ func TestDeauthorizeCreatorAccount(t *testing.T) {
 
 							Convey("Then we should not be able to mint an nft because we haven't been authorized", func() {
 								nft := NFTCreate{
-									Name:                   TEST_SINGLE_NAME,
-									ReceiverAccountAddress: cadence.Address(*acctAddr),
-									RoyaltyAddress:         cadence.Address(*acctAddr),
-									RoyaltyPercentage:      cadence.UInt64(TEST_SINGLE_ROYALTY_PERCENTAGE),
-									Type:                   TEST_SINGLE_TYPE,
-									Literation:             TEST_SINGLE_LITERATION,
-									AudioURL:               TEST_SINGLE_AUDIO_URL,
-									ImageURL:               TEST_SINGLE_IMAGE_URL,
+									Name: TEST_SINGLE_NAME,
+
+									RoyaltyAddress:    cadence.Address(*acctAddr),
+									RoyaltyPercentage: cadence.UInt64(TEST_SINGLE_ROYALTY_PERCENTAGE),
+									Type:              TEST_SINGLE_TYPE,
+									Literation:        TEST_SINGLE_LITERATION,
+									AudioURL:          TEST_SINGLE_AUDIO_URL,
+									ImageURL:          TEST_SINGLE_IMAGE_URL,
 								}
 								txRes, err := MintSingle(config.Conf.FlowServiceAccountAddress, acctAddr.String(), privKey, nft)
 								So(err, ShouldBeNil)
