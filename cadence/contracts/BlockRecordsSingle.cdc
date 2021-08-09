@@ -110,7 +110,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             return <-token
         }
 
-        // takes a NFT and adds it to the collections dictionary
+        // takes an NFT and adds it to the collections dictionary
         // and adds the ID to the id array
         //
         pub fun deposit(token: @NonFungibleToken.NFT) {
@@ -190,6 +190,9 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         // specifies that all NFTs that should be added, were added
         // maybe: allows the associated nfts to be listed for sale
         pub var completed: Bool
+
+        // todo (IMPORTANT): create capability and save to account so that only
+        // the creator can modify the release
 
         init(
             royaltyVault: Capability<&{FungibleToken.Receiver}>,
@@ -352,7 +355,6 @@ pub contract BlockRecordsSingle: NonFungibleToken {
     // resource that a creator would own to be able to mint their own NFTs
     // 
 	pub resource Creator: CreatorPublic {
-
         access(contract) var releaseCollectionCapability: Capability<&ReleaseCollection>?
 
         init() {
