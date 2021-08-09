@@ -2,6 +2,10 @@ import NonFungibleToken from 0xSERVICE_ACCOUNT_ADDRESS
 import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
 import FUSD from 0xFUSD_CONTRACT_ADDRESS
 
+// todo: currently, any authorized creator can add an NFT to any release
+// we need to create capabilities for each new release so that only the owner
+// can modify it
+
 // todo: change name of contract to BlockRecords
 // 
 pub contract BlockRecordsSingle: NonFungibleToken {
@@ -29,6 +33,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
     // global constants
     //
     pub let NFTTypes: [String]
+    pub let Fee: UFix64
     
     // the total number of BlockRecordsSingle that have been minted
     //
@@ -190,10 +195,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         // specifies that all NFTs that should be added, were added
         // maybe: allows the associated nfts to be listed for sale
         pub var completed: Bool
-
-        // todo (IMPORTANT): create capability and save to account so that only
-        // the creator can modify the release
-
+        
         init(
             royaltyVault: Capability<&{FungibleToken.Receiver}>,
             royaltyFee: UFix64
@@ -328,9 +330,8 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         }
     }
 
-    // accounts can create nft minter but, will not be able to mint without
-    //
-    access(account) fun createReleaseCollection(
+    // todo: this can only be called by the contract owner
+    pub fun createReleaseCollection(
         marketplaceVault: Capability<&{FungibleToken.Receiver}>,
         marketplaceFee: UFix64
     ): @ReleaseCollection {
@@ -448,6 +449,8 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         self.NFTTypes = []
         self.NFTTypes.append(NFT_TYPE_SINGLE)
 
+        self.Fee = 0.05
+
         // initialize FUSD vault for service account so that we can receive 
         // sale fees and check balance
         self.account.save(<-FUSD.createEmptyVault(), to: /storage/fusdVault)
@@ -460,11 +463,10 @@ pub contract BlockRecordsSingle: NonFungibleToken {
           target: /storage/fusdVault
         )
 
-        let marketplaceVault = self.account.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)!
-        let marketplaceFee = 0.05
+        // let marketplaceVault = self.account.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)!
 
-        let releaseCollection <- create ReleaseCollection(marketplaceVault: marketplaceVault,  marketplaceFee: marketplaceFee)
-        self.account.save(<- releaseCollection, to: self.ReleaseCollectionStoragePath)
+        // let releaseCollection <- create ReleaseCollection(marketplaceVault: marketplaceVault,  marketplaceFee: marketplaceFee)
+        // self.account.save(<- releaseCollection, to: self.ReleaseCollectionStoragePath)
 
         emit ContractInitialized()
 	}

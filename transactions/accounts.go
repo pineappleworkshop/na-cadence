@@ -250,6 +250,18 @@ func AuthorizeCreator(serviceAcctAddr string, serviceAcctPrivKey string, creator
 		creatorAcctAddr.String(),
 		-1,
 	)
+	txFileStr = strings.Replace(
+		txFileStr,
+		FUNGIBLE_TOKEN_CONTRACT_ADDRESS,
+		config.Conf.FungibleTokenContractAddress,
+		-1,
+	)
+	txFileStr = strings.Replace(
+		txFileStr,
+		FUSD_CONTRACT_ADDRESS,
+		config.Conf.FUSDContractAddress,
+		-1,
+	)
 
 	serviceAcctAddress := flow.HexToAddress(serviceAcctAddr)
 	authorizers := []flow.Address{
