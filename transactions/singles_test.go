@@ -69,6 +69,7 @@ func TestCreatorMintSingle(t *testing.T) {
 								So(err, ShouldBeNil)
 								So(txRes, ShouldNotBeNil)
 								So(txRes.Error, ShouldBeNil)
+
 							})
 						})
 					})

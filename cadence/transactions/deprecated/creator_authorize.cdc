@@ -6,26 +6,20 @@ import FUSD from 0xFUSD_CONTRACT_ADDRESS
 // then, creates a new revocable release collection capability and saves to private storage
 // after, gives the revocable capability to the creator
 
-transaction(
-    creatorStageName: String,
-    creatorLegalName: String,
-    creatorImageURL: String,
-    creatorAddress: Address 
-) {
+transaction(newCreatorAddress: Address) {
+
     prepare(account: AuthAccount) {
 
         // get creator capability receiver
-        let creator = getAccount(creatorAddress)
+        let creator = getAccount(newCreatorAddress)
         let creatorReceiver = creator.getCapability<&{BlockRecordsSingle.CreatorPublic}>(BlockRecordsSingle.CreatorPublicPath).borrow() ?? panic("Could not borrow capability receiver")
+
+        // get service acct FUSD vault
+        let fusdVault = account.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver) 
 
         // create unique storage path for Release Collection
         let releaseCollStoragePath = /storage/BlockRecordsReleaseCollectionCREATOR_ACCOUNT_ADDRESS
-        let releaseCollection <- BlockRecordsSingle.createReleaseCollection(
-            creatorStageName: creatorStageName,
-            creatorLegalName: creatorLegalName,
-            creatorImageURL: creatorImageURL,
-            creatorAddress: creatorAddress
-        )
+        let releaseCollection <- BlockRecordsSingle.createReleaseCollection(marketplaceVault: fusdVault, marketplaceFee: BlockRecordsSingle.Fee)
         account.save(<- releaseCollection, to: releaseCollStoragePath)
 
         // create unique private path for Release Collection so that we can revoke the capability if
@@ -38,6 +32,6 @@ transaction(
 
         // add release capability to creator so that they may create releases and mint NFTs
         let releaseCollectionCap = account.getCapability<&BlockRecordsSingle.ReleaseCollection>(releaseCollPrivPath)
-        creatorReceiver.addCapability(cap: releaseCollectionCap, address: creatorAddress)
+        creatorReceiver.addCapability(cap: releaseCollectionCap)
     }
 }
