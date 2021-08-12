@@ -2,10 +2,6 @@ import NonFungibleToken from 0xSERVICE_ACCOUNT_ADDRESS
 import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
 import FUSD from 0xFUSD_CONTRACT_ADDRESS
 
-// todo: currently, any authorized creator can add an NFT to any release
-// we need to create capabilities for each new release so that only the owner
-// can modify it
-
 // todo: encapsulate much of this funcationality into different smart contracts
 // 
 pub contract BlockRecordsSingle: NonFungibleToken {
@@ -403,7 +399,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
                 self.releaseCollectionCapability != nil: "not an authorized creator"
             }
 
-            // create release
+            // create release and add to release collection
             self.releaseCollectionCapability!.borrow()!.createAndAddRelease(
                 name: name,
                 description: description,
