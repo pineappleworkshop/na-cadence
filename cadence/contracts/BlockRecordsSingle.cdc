@@ -15,9 +15,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
     pub event ContractInitialized()
     pub event Withdraw(id: UInt64, from: Address?)
     pub event Deposit(id: UInt64, to: Address?)
-    pub event Minted(
-        id: UInt64, 
-        metadata: {String: String}
+    pub event Minted(id: UInt64, metadata: {String: String}
     )
     pub event Event(type: String, metadata: {String: String})
 
@@ -25,41 +23,70 @@ pub contract BlockRecordsSingle: NonFungibleToken {
     //
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath
+
     pub let CreatorStoragePath: StoragePath
     pub let CreatorPublicPath: PublicPath
+
     pub let ReleaseCollectionStoragePath: StoragePath
     pub let ReleaseCollectionPublicPath: PublicPath
+
+    pub let MarketplaceStoragePath: StoragePath
+    pub let MarketplacePublicPath: PublicPath
+    pub let MarketplacePrivatePath: PrivatePath
+
+    pub let AdminPrivatePath: PrivatePath
+    pub let AdminStoragePath: StoragePath
 
     // global constants
     //
     pub let NFTTypes: [String]
-    pub let Fee: UFix64
     
     // the total number of BlockRecordsSingle that have been minted
     //
     pub var totalSupply: UInt64
 
-    // any account in posession of a Marketplace capability will be able to create releases
+    pub struct Payout {
+        // the vault that  on the payout will be distributed to
+        pub let fusdVault: Capability<&{FungibleToken.Receiver}>
+
+        // percentage percentFee of the sale that will be paid out to the marketplace vault
+        pub let percentFee: UFix64 
+
+        init(
+            fusdVault: Capability<&{FungibleToken.Receiver}>,
+            percentFee: UFix64
+        ){
+            self.fusdVault = fusdVault
+            self.percentFee = percentFee
+        }
+    }
+
+    pub resource interface MarketplacePublic {
+        pub let name: String
+        pub let payout: Payout
+    }
+
+    // any account in posession of a Marketplace capability will be able to create release collections
     // 
-    pub resource Marketplace {  
+    pub resource Marketplace: MarketplacePublic {  
 
         // name of the marketplace
         pub let name: String
 
-        // the vault that sale fees on the marketplace will be paid out to
-        pub let fusdVault: Capability<&{FungibleToken.Receiver}>
-
-        // percentage fee of the sale that will be paid out to the marketplace vault
-        pub let fee: UFix64 
+        // the sale fee cut of the marketplace
+        pub let payout: Payout
 
         init(
             name: String,
             fusdVault: Capability<&{FungibleToken.Receiver}>,
-            fee: UFix64
+            percentFee: UFix64
         ){
             self.name = name
-            self.fusdVault = fusdVault
-            self.fee = fee
+
+            self.payout = Payout(
+                fusdVault: fusdVault,
+                percentFee: percentFee
+            )
         }
     }
 
@@ -75,6 +102,8 @@ pub contract BlockRecordsSingle: NonFungibleToken {
     // resource that a admin would own to be able to create Release Collections
     // 
 	pub resource Admin: AdminPublic {
+
+        //ownership of this capability allows for the creation of Release Collections
         access(contract) var marketplaceCapability: Capability<&Marketplace>?
 
         init() {
@@ -86,7 +115,6 @@ pub contract BlockRecordsSingle: NonFungibleToken {
                 cap.check() : "invalid capability"
                 self.marketplaceCapability == nil : "capability already set"
             }
-
             self.marketplaceCapability = cap
         }
 
@@ -137,13 +165,15 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             self.imageURL = imageURL
             self.address = address
         }
+    }
 
-        // todo: methods to update values
+    pub resource interface ReleaseCollectionPublic {
+        pub fun borrowRelease(_ id: UInt64): &Release
     }
 
     // any account in posession of a ReleaseCollection will be able to mint BlockRecords NFTs
     // this is secure because "transactions cannot create resource types outside of containing contracts"
-    pub resource ReleaseCollection {  
+    pub resource ReleaseCollection: ReleaseCollectionPublic {  
 
         // creator profile resource
         pub var creatorProfile: CreatorProfile
@@ -171,7 +201,9 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         pub fun createAndAddRelease(
             name: String,
             description: String,
-            type: String
+            type: String,
+            fusdVault: Capability<&{FungibleToken.Receiver}>,
+            percentFee: UFix64
         ){
             // pre {
             //     royaltyVault.check() == true : "Vault capability should exist"
@@ -180,7 +212,9 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             let release <- create Release(
                 name: name,
                 description: description,
-                type: type
+                type: type,
+                fusdVault: fusdVault,
+                percentFee: percentFee
             )
 
             // todo: emit release created
@@ -192,7 +226,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
 
         // todo: review this... should be pub or access(contract)?
         // access(contract) fun getRelease(_ id:UInt64) : &Release {
-        pub fun getRelease(_ id: UInt64) : &Release {
+        pub fun borrowRelease(_ id: UInt64) : &Release {
             pre {
                 self.releases[id] != nil:
                     "release doesn't exist"
@@ -205,10 +239,19 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         }
     }
 
+    pub resource interface ReleasePublic {
+        pub let id: UInt64
+        pub let name: String
+        pub let description: String
+        pub let type: String
+        pub var nftIDs: [UInt64]
+        pub var completed: Bool
+        pub let payout: Payout
+    }
 
     // acts as the root resource for any NFT minted by a creator
     // all singles, albums, etc... must be associated with a release
-    pub resource Release {
+    pub resource Release: ReleasePublic {
 
         // unique id of the release
         pub let id: UInt64
@@ -223,20 +266,31 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         pub let type: String
 
         // ids of nfts associated with release
-        pub let nftIDs: [UInt64]
+        pub var nftIDs: [UInt64]
 
         // specifies that all NFTs that should be added, were added
         // maybe: allows the associated nfts to be listed for sale
         pub var completed: Bool
-        
+
+        // the sale fee cut for the release creator
+        pub let payout: Payout
+
         init(
             name: String,
             description: String,
-            type: String
+            type: String,
+            fusdVault: Capability<&{FungibleToken.Receiver}>,
+            percentFee: UFix64
         ){
             self.name = name
             self.description = description
             self.type = type
+
+            self.payout = Payout(
+                fusdVault: fusdVault,
+                percentFee: percentFee
+            )
+
             self.nftIDs = []
             self.completed = false
 
@@ -253,8 +307,6 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         // mints a new BlockRecordsSingle, adds ID to release, and deposits into minter's nft collection
 		pub fun mintAndAddSingle(
             name: String, 
-            royaltyAddress: Address, 
-            royaltyPercentage: UInt64, 
             type: String, 
             literation: String, 
             imageURL: String, 
@@ -274,8 +326,6 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             emit Event(type: "minted", metadata: {
                 "id" : id.toString(),
                 "name": name,
-                "royalty_address": royaltyAddress.toString(),
-                "royalty_percentage": royaltyPercentage.toString(),
                 "type": type,
                 "literation": literation,
                 "image_url": imageURL,
@@ -286,8 +336,6 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             let single <- create BlockRecordsSingle.NFT(
                 id: id, 
                 name: name, 
-                royaltyAddress: royaltyAddress, 
-                royaltyPercentage: royaltyPercentage, 
                 type: type, 
                 literation: literation, 
                 imageURL: imageURL, 
@@ -346,7 +394,9 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         pub fun createRelease(
             name: String,
             description: String,
-            type: String
+            type: String,
+            fusdVault: Capability<&{FungibleToken.Receiver}>,
+            percentFee: UFix64
         ){
             // accounts cannot create new releases without release collection capability
              pre {
@@ -357,14 +407,14 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             self.releaseCollectionCapability!.borrow()!.createAndAddRelease(
                 name: name,
                 description: description,
-                type:type
+                type:type,
+                fusdVault: fusdVault,
+                percentFee: percentFee
             )
         }
 
         pub fun mintSingle(
             name: String, 
-            royaltyAddress: Address, 
-            royaltyPercentage: UInt64, 
             type: String, 
             literation: String, 
             imageURL: String, 
@@ -376,10 +426,8 @@ pub contract BlockRecordsSingle: NonFungibleToken {
                 self.releaseCollectionCapability != nil: "not an authorized creator"
             }
 
-            self.releaseCollectionCapability!.borrow()!.getRelease(releaseID).mintAndAddSingle(
+            self.releaseCollectionCapability!.borrow()!.borrowRelease(releaseID).mintAndAddSingle(
                 name: name, 
-                royaltyAddress: royaltyAddress, 
-                royaltyPercentage: royaltyPercentage, 
                 type: type, 
                 literation: literation, 
                 imageURL: imageURL, 
@@ -403,8 +451,6 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         init(
             id: UInt64, 
             name: String, 
-            royaltyAddress: Address, 
-            royaltyPercentage: UInt64, 
             type: String, 
             literation: String, 
             imageURL: String, 
@@ -415,8 +461,6 @@ pub contract BlockRecordsSingle: NonFungibleToken {
 
             self.metadata = {
                 "name":name,
-                "royalty_address": royaltyAddress,
-                "royalty_percentage": royaltyPercentage,
                 "type": type,
                 "literation": literation,
                 "image_url": imageURL,
@@ -549,17 +593,22 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         self.ReleaseCollectionStoragePath = /storage/BlockRecordsReleaseCollection002
         self.ReleaseCollectionPublicPath = /public/BlockRecordsReleaseCollection002
 
+        self.MarketplaceStoragePath = /storage/BlockRecordsMarketplace002
+        self.MarketplacePublicPath = /public/BlockRecordsMarketplace002
+        self.MarketplacePrivatePath = /private/BlockRecordsMarketplace002
+        
+        self.AdminPrivatePath = /private/BlockRecordsAdmin002
+        self.AdminStoragePath = /storage/BlockRecordsAdmin002
+        
+        // total supply of all block records resources: releases, nfts, etc...
         self.totalSupply = 0
 
         // supported NFT types
-        let NFT_TYPE_SINGLE = "single"
-        self.NFTTypes = []
-        self.NFTTypes.append(NFT_TYPE_SINGLE)
+        self.NFTTypes = [
+            "single"
+        ]
 
-        self.Fee = 0.05
-
-        // initialize FUSD vault for service account so that we can receive 
-        // sale fees and check balance
+        // initialize FUSD vault for service account so that we can receive sale percentFees and check balance
         self.account.save(<-FUSD.createEmptyVault(), to: /storage/fusdVault)
         self.account.link<&FUSD.Vault{FungibleToken.Receiver}>(
           /public/fusdReceiver,
@@ -570,10 +619,30 @@ pub contract BlockRecordsSingle: NonFungibleToken {
           target: /storage/fusdVault
         )
 
-        // let marketplaceVault = self.account.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)!
+        // initialize and save marketplace resource to account storage
+        let marketplaceFUSDVault = self.account.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)!
+        let marketplace <- create Marketplace(
+            name: "Block Records",
+            fusdVault: marketplaceFUSDVault,
+            percentFee: 0.05
+        )
+        self.account.save(<- marketplace, to: self.MarketplaceStoragePath)
+        self.account.link<&BlockRecordsSingle.Marketplace>(
+            self.MarketplacePrivatePath,
+            target: self.MarketplaceStoragePath
+        )
+        self.account.link<&BlockRecordsSingle.Marketplace{BlockRecordsSingle.MarketplacePublic}>(
+            self.MarketplacePrivatePath,
+            target: self.MarketplaceStoragePath
+        )       
 
-        // let releaseCollection <- create ReleaseCollection(marketplaceVault: marketplaceVault,  marketplaceFee: marketplaceFee)
-        // self.account.save(<- releaseCollection, to: self.ReleaseCollectionStoragePath)
+        // add marketplace capability to admin resource
+        let marketplaceCap = self.account.getCapability<&BlockRecordsSingle.Marketplace>(self.MarketplacePrivatePath)!
+        
+        // initialize and save admin resource
+        let admin <- create Admin()
+        admin.addCapability(cap: marketplaceCap)
+        self.account.save(<- admin, to: self.AdminStoragePath)
 
         emit ContractInitialized()
 	}
