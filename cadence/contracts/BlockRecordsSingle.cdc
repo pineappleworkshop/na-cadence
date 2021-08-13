@@ -213,6 +213,11 @@ pub contract BlockRecordsSingle: NonFungibleToken {
                 percentFee: percentFee
             )
 
+            // emit event
+            emit Event(type: "release_created", metadata: {
+                "id" : release.id.toString()
+            })
+
             // add release to release collection dictionary
             let oldRelease <- self.releases[release.id] <- release
             destroy oldRelease
@@ -313,7 +318,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
                 !self.completed : "cannot add to completed release"
                 
                 // validate nft type
-                BlockRecordsSingle.NFTTypes.contains(type) : "invalid nft type"
+                // BlockRecordsSingle.NFTTypes.contains(type) : "invalid nft type"
             }
                 
             let id =  BlockRecordsSingle.totalSupply
@@ -329,11 +334,6 @@ pub contract BlockRecordsSingle: NonFungibleToken {
                 releaseID: releaseID
             )
 
-            // emit event
-            emit Event(type: "release_created", metadata: {
-                "id" : id.toString()
-            })
-
             // append id to release collection
             self.nftIDs.append(single.id)
 
@@ -341,6 +341,17 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             receiverCollection.deposit(
                 token: <- single
             )
+
+            emit Event(type: "minted", metadata: {
+                "id" : id.toString(),
+                "name": name,
+                "type": type,
+                "literation": literation,
+                "image_url": imageURL,
+                "audio_url": audioURL,
+                "serial_number": serialNumber.toString(),
+                "release_id": releaseID.toString()
+            })
         }
     }
 

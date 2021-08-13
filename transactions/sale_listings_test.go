@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/onflow/cadence"
+	"github.com/onflow/flow-go-sdk"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -50,42 +51,75 @@ func TestCreateSaleListing(t *testing.T) {
 						So(txRes, ShouldNotBeNil)
 						So(txRes.Error, ShouldBeNil)
 
-						Convey("Then we should be able to mint an nft and deposit it into the account's collection", func() {
-							nft := NFTCreate{
-								Name:       TEST_SINGLE_NAME,
-								Type:       TEST_SINGLE_TYPE,
-								Literation: TEST_SINGLE_LITERATION,
-								AudioURL:   TEST_SINGLE_AUDIO_URL,
-								ImageURL:   TEST_SINGLE_IMAGE_URL,
+						Convey("Then we should be able to create a release and deposit it into the release collection", func() {
+							payoutAddress := flow.HexToAddress(config.Conf.FlowServiceAccountAddress)
+							payoutPercentFee := 0.05
+							release := ReleaseCreate{
+								Name:             cadence.String("flowin'"),
+								Description:      cadence.String("debut release"),
+								Type:             cadence.String("single"),
+								PayoutAddress:    cadence.Address(payoutAddress),
+								PayoutPercentFee: cadence.UFix64(payoutPercentFee),
 							}
-							txRes, err := MintSingle(config.Conf.FlowServiceAccountAddress, acctAddr.String(), privKey, nft)
+							txRes, err := CreateRelease(config.Conf.FlowServiceAccountAddress, acctAddr.String(), privKey, release)
 							So(err, ShouldBeNil)
 							So(txRes, ShouldNotBeNil)
 							So(txRes.Error, ShouldBeNil)
 
-							var nftID cadence.UInt64
+							var releaseID cadence.UInt64
 							for _, e := range txRes.Events {
 								fieldName := e.Value.Fields[0].String()
-								if strings.Contains(fieldName, "minted") {
+								if strings.Contains(fieldName, "release_created") {
 									value := e.Value.Fields[1].String()
 									body := make(map[string]string)
 									_ = json.Unmarshal([]byte(value), &body)
 									u64, _ := strconv.ParseUint(body["id"], 10, 64)
-									nftID = cadence.UInt64(u64)
+									releaseID = cadence.UInt64(u64)
 									break
 								}
 							}
-							So(nftID, ShouldNotBeNil)
 
-							Convey("Then we should be able to create a sale listing for the new nft", func() {
-								saleListing := SaleListingCreate{
-									ID:    nftID,
-									Price: cadence.UFix64(100),
+							So(releaseID, ShouldNotBeNil)
+
+							Convey("Then we should be able to mint an nft and deposit it into the account's collection", func() {
+								nft := NFTCreate{
+									Name:        TEST_SINGLE_NAME,
+									Type:        TEST_SINGLE_TYPE,
+									Literation:  TEST_SINGLE_LITERATION,
+									AudioURL:    TEST_SINGLE_AUDIO_URL,
+									ImageURL:    TEST_SINGLE_IMAGE_URL,
+									CopiesCount: cadence.NewInt(1),
+									ReleaseID:   releaseID,
 								}
-								txRes, err := CreateSaleListing(config.Conf.FlowServiceAccountAddress, acctAddr.String(), privKey, saleListing)
+								txRes, err := MintSingle(config.Conf.FlowServiceAccountAddress, acctAddr.String(), privKey, nft)
 								So(err, ShouldBeNil)
 								So(txRes, ShouldNotBeNil)
 								So(txRes.Error, ShouldBeNil)
+
+								var nftID cadence.UInt64
+								for _, e := range txRes.Events {
+									fieldName := e.Value.Fields[0].String()
+									if strings.Contains(fieldName, "minted") {
+										value := e.Value.Fields[1].String()
+										body := make(map[string]string)
+										_ = json.Unmarshal([]byte(value), &body)
+										u64, _ := strconv.ParseUint(body["id"], 10, 64)
+										nftID = cadence.UInt64(u64)
+										break
+									}
+								}
+								So(nftID, ShouldNotBeNil)
+
+								Convey("Then we should be able to create a sale listing for the new nft", func() {
+									saleListing := SaleListingCreate{
+										ID:    nftID,
+										Price: cadence.UFix64(100),
+									}
+									txRes, err := CreateSaleListing(config.Conf.FlowServiceAccountAddress, acctAddr.String(), privKey, saleListing)
+									So(err, ShouldBeNil)
+									So(txRes, ShouldNotBeNil)
+									So(txRes.Error, ShouldBeNil)
+								})
 							})
 						})
 					})
@@ -134,65 +168,96 @@ func TestDestroySaleListing(t *testing.T) {
 						So(txRes, ShouldNotBeNil)
 						So(txRes.Error, ShouldBeNil)
 
-						Convey("Then we should be able to mint an nft and deposit it into the account's collection", func() {
-							nft := NFTCreate{
-								Name:        TEST_SINGLE_NAME,
-								Type:        TEST_SINGLE_TYPE,
-								Literation:  TEST_SINGLE_LITERATION,
-								AudioURL:    TEST_SINGLE_AUDIO_URL,
-								ImageURL:    TEST_SINGLE_IMAGE_URL,
-								CopiesCount: cadence.NewInt(1),
-								ReleaseID:   cadence.UInt64(1),
+						Convey("Then we should be able to create a release and deposit it into the release collection", func() {
+							payoutAddress := flow.HexToAddress(config.Conf.FlowServiceAccountAddress)
+							payoutPercentFee := 0.05
+							release := ReleaseCreate{
+								Name:             cadence.String("flowin'"),
+								Description:      cadence.String("debut release"),
+								Type:             cadence.String("single"),
+								PayoutAddress:    cadence.Address(payoutAddress),
+								PayoutPercentFee: cadence.UFix64(payoutPercentFee),
 							}
-							txRes, err := MintSingle(config.Conf.FlowServiceAccountAddress, acctAddr.String(), privKey, nft)
+							txRes, err := CreateRelease(config.Conf.FlowServiceAccountAddress, acctAddr.String(), privKey, release)
 							So(err, ShouldBeNil)
 							So(txRes, ShouldNotBeNil)
 							So(txRes.Error, ShouldBeNil)
 
-							var nftID cadence.UInt64
+							var releaseID cadence.UInt64
 							for _, e := range txRes.Events {
 								fieldName := e.Value.Fields[0].String()
-								if strings.Contains(fieldName, "minted") {
+								if strings.Contains(fieldName, "release_created") {
 									value := e.Value.Fields[1].String()
 									body := make(map[string]string)
 									_ = json.Unmarshal([]byte(value), &body)
 									u64, _ := strconv.ParseUint(body["id"], 10, 64)
-									nftID = cadence.UInt64(u64)
+									releaseID = cadence.UInt64(u64)
 									break
 								}
 							}
-							So(nftID, ShouldNotBeNil)
 
-							Convey("Then we should be able to create a sale listing for the new nft", func() {
-								saleListing := SaleListingCreate{
-									ID:    nftID,
-									Price: cadence.UFix64(100),
+							So(releaseID, ShouldNotBeNil)
+
+							Convey("Then we should be able to mint an nft and deposit it into the account's collection", func() {
+								nft := NFTCreate{
+									Name:        TEST_SINGLE_NAME,
+									Type:        TEST_SINGLE_TYPE,
+									Literation:  TEST_SINGLE_LITERATION,
+									AudioURL:    TEST_SINGLE_AUDIO_URL,
+									ImageURL:    TEST_SINGLE_IMAGE_URL,
+									CopiesCount: cadence.NewInt(1),
+									ReleaseID:   cadence.UInt64(1),
 								}
-
-								txRes, err := CreateSaleListing(config.Conf.FlowServiceAccountAddress, acctAddr.String(), privKey, saleListing)
+								txRes, err := MintSingle(config.Conf.FlowServiceAccountAddress, acctAddr.String(), privKey, nft)
 								So(err, ShouldBeNil)
 								So(txRes, ShouldNotBeNil)
 								So(txRes.Error, ShouldBeNil)
 
-								var listingID cadence.UInt64
+								var nftID cadence.UInt64
 								for _, e := range txRes.Events {
 									fieldName := e.Value.Fields[0].String()
-									if strings.Contains(fieldName, "sale_listing_for_sale") {
+									if strings.Contains(fieldName, "minted") {
 										value := e.Value.Fields[1].String()
 										body := make(map[string]string)
 										_ = json.Unmarshal([]byte(value), &body)
 										u64, _ := strconv.ParseUint(body["id"], 10, 64)
-										listingID = cadence.UInt64(u64)
+										nftID = cadence.UInt64(u64)
 										break
 									}
 								}
-								So(listingID, ShouldNotBeNil)
+								So(nftID, ShouldNotBeNil)
 
-								Convey("Then we should be able to destroy the new sale listing", func() {
-									txRes, err := DestroySaleListing(config.Conf.FlowServiceAccountAddress, acctAddr.String(), privKey, listingID)
+								Convey("Then we should be able to create a sale listing for the new nft", func() {
+									saleListing := SaleListingCreate{
+										ID:    nftID,
+										Price: cadence.UFix64(100),
+									}
+
+									txRes, err := CreateSaleListing(config.Conf.FlowServiceAccountAddress, acctAddr.String(), privKey, saleListing)
 									So(err, ShouldBeNil)
 									So(txRes, ShouldNotBeNil)
 									So(txRes.Error, ShouldBeNil)
+
+									var listingID cadence.UInt64
+									for _, e := range txRes.Events {
+										fieldName := e.Value.Fields[0].String()
+										if strings.Contains(fieldName, "sale_listing_for_sale") {
+											value := e.Value.Fields[1].String()
+											body := make(map[string]string)
+											_ = json.Unmarshal([]byte(value), &body)
+											u64, _ := strconv.ParseUint(body["id"], 10, 64)
+											listingID = cadence.UInt64(u64)
+											break
+										}
+									}
+									So(listingID, ShouldNotBeNil)
+
+									Convey("Then we should be able to destroy the new sale listing", func() {
+										txRes, err := DestroySaleListing(config.Conf.FlowServiceAccountAddress, acctAddr.String(), privKey, listingID)
+										So(err, ShouldBeNil)
+										So(txRes, ShouldNotBeNil)
+										So(txRes.Error, ShouldBeNil)
+									})
 								})
 							})
 						})
@@ -256,70 +321,101 @@ func TestBuySaleListing(t *testing.T) {
 						So(txRes, ShouldNotBeNil)
 						So(txRes.Error, ShouldBeNil)
 
-						Convey("Then we should be able to mint an nft and deposit it into the seller account's collection", func() {
-							nft := NFTCreate{
-								Name:        TEST_SINGLE_NAME,
-								Type:        TEST_SINGLE_TYPE,
-								Literation:  TEST_SINGLE_LITERATION,
-								AudioURL:    TEST_SINGLE_AUDIO_URL,
-								ImageURL:    TEST_SINGLE_IMAGE_URL,
-								CopiesCount: cadence.NewInt(1),
-								ReleaseID:   cadence.UInt64(1),
+						Convey("Then we should be able to create a release and deposit it into the release collection", func() {
+							payoutAddress := flow.HexToAddress(config.Conf.FlowServiceAccountAddress)
+							payoutPercentFee := 0.05
+							release := ReleaseCreate{
+								Name:             cadence.String("flowin'"),
+								Description:      cadence.String("debut release"),
+								Type:             cadence.String("single"),
+								PayoutAddress:    cadence.Address(payoutAddress),
+								PayoutPercentFee: cadence.UFix64(payoutPercentFee),
 							}
-							txRes, err := MintSingle(config.Conf.FlowServiceAccountAddress, acctAddrSeller.String(), privKeySeller, nft)
+							txRes, err := CreateRelease(config.Conf.FlowServiceAccountAddress, acctAddrSeller.String(), privKeySeller, release)
 							So(err, ShouldBeNil)
 							So(txRes, ShouldNotBeNil)
 							So(txRes.Error, ShouldBeNil)
 
-							var nftID cadence.UInt64
+							var releaseID cadence.UInt64
 							for _, e := range txRes.Events {
 								fieldName := e.Value.Fields[0].String()
-								if strings.Contains(fieldName, "minted") {
+								if strings.Contains(fieldName, "release_created") {
 									value := e.Value.Fields[1].String()
 									body := make(map[string]string)
 									_ = json.Unmarshal([]byte(value), &body)
 									u64, _ := strconv.ParseUint(body["id"], 10, 64)
-									nftID = cadence.UInt64(u64)
+									releaseID = cadence.UInt64(u64)
 									break
 								}
 							}
-							So(nftID, ShouldNotBeNil)
 
-							Convey("Then we should be able to create a sale listing for the new nft", func() {
-								saleListing := SaleListingCreate{
-									ID:    nftID,
-									Price: cadence.UFix64(100),
+							So(releaseID, ShouldNotBeNil)
+
+							Convey("Then we should be able to mint an nft and deposit it into the seller account's collection", func() {
+								nft := NFTCreate{
+									Name:        TEST_SINGLE_NAME,
+									Type:        TEST_SINGLE_TYPE,
+									Literation:  TEST_SINGLE_LITERATION,
+									AudioURL:    TEST_SINGLE_AUDIO_URL,
+									ImageURL:    TEST_SINGLE_IMAGE_URL,
+									CopiesCount: cadence.NewInt(1),
+									ReleaseID:   cadence.UInt64(1),
 								}
-								txRes, err := CreateSaleListing(config.Conf.FlowServiceAccountAddress, acctAddrSeller.String(), privKeySeller, saleListing)
+								txRes, err := MintSingle(config.Conf.FlowServiceAccountAddress, acctAddrSeller.String(), privKeySeller, nft)
 								So(err, ShouldBeNil)
 								So(txRes, ShouldNotBeNil)
 								So(txRes.Error, ShouldBeNil)
 
-								var listingID cadence.UInt64
+								var nftID cadence.UInt64
 								for _, e := range txRes.Events {
 									fieldName := e.Value.Fields[0].String()
-									if strings.Contains(fieldName, "sale_listing_for_sale") {
+									if strings.Contains(fieldName, "minted") {
 										value := e.Value.Fields[1].String()
 										body := make(map[string]string)
 										_ = json.Unmarshal([]byte(value), &body)
 										u64, _ := strconv.ParseUint(body["id"], 10, 64)
-										listingID = cadence.UInt64(u64)
+										nftID = cadence.UInt64(u64)
 										break
 									}
 								}
-								So(listingID, ShouldNotBeNil)
+								So(nftID, ShouldNotBeNil)
 
-								Convey("Then we should be able to submit a transaction to deposit FUSD into buyer account's vault", func() {
-									txRes, err := DepositFUSDIntoAccount(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, *acctAddrBuyer, cadence.UFix64(TEST_FUSD_AMOUNT))
+								Convey("Then we should be able to create a sale listing for the new nft", func() {
+									saleListing := SaleListingCreate{
+										ID:    nftID,
+										Price: cadence.UFix64(100),
+									}
+									txRes, err := CreateSaleListing(config.Conf.FlowServiceAccountAddress, acctAddrSeller.String(), privKeySeller, saleListing)
 									So(err, ShouldBeNil)
 									So(txRes, ShouldNotBeNil)
 									So(txRes.Error, ShouldBeNil)
 
-									Convey("Then the buyer should be able to purchase the nft for FUSD and deposit it into their collection", func() {
-										txRes, err := BuySaleListing(config.Conf.FlowServiceAccountAddress, acctAddrBuyer.String(), privKeyBuyer, listingID, cadence.Address(*acctAddrSeller))
+									var listingID cadence.UInt64
+									for _, e := range txRes.Events {
+										fieldName := e.Value.Fields[0].String()
+										if strings.Contains(fieldName, "sale_listing_for_sale") {
+											value := e.Value.Fields[1].String()
+											body := make(map[string]string)
+											_ = json.Unmarshal([]byte(value), &body)
+											u64, _ := strconv.ParseUint(body["id"], 10, 64)
+											listingID = cadence.UInt64(u64)
+											break
+										}
+									}
+									So(listingID, ShouldNotBeNil)
+
+									Convey("Then we should be able to submit a transaction to deposit FUSD into buyer account's vault", func() {
+										txRes, err := DepositFUSDIntoAccount(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, *acctAddrBuyer, cadence.UFix64(TEST_FUSD_AMOUNT))
 										So(err, ShouldBeNil)
 										So(txRes, ShouldNotBeNil)
 										So(txRes.Error, ShouldBeNil)
+
+										Convey("Then the buyer should be able to purchase the nft for FUSD and deposit it into their collection", func() {
+											txRes, err := BuySaleListing(config.Conf.FlowServiceAccountAddress, acctAddrBuyer.String(), privKeyBuyer, listingID, cadence.Address(*acctAddrSeller))
+											So(err, ShouldBeNil)
+											So(txRes, ShouldNotBeNil)
+											So(txRes.Error, ShouldBeNil)
+										})
 									})
 								})
 							})
