@@ -18,9 +18,11 @@ transaction(
         let creator = getAccount(creatorAddress)
         let creatorReceiver = creator.getCapability<&{BlockRecordsSingle.CreatorPublic}>(BlockRecordsSingle.CreatorPublicPath).borrow() ?? panic("Could not borrow capability receiver")
 
-        // create unique storage path for Release Collection
+        // create a unique storage path for release collection
+        // create a new release collection
+        // save to storage
         let releaseCollStoragePath = /storage/BlockRecordsReleaseCollectionCREATOR_ACCOUNT_ADDRESS
-        let releaseCollection <- BlockRecordsSingle.createReleaseCollection(
+        let releaseCollection <- account.getCapability<&BlockRecordsSingle.Admin>(BlockRecordsSingle.AdminPrivatePath).borrow()!.createReleaseCollection(
             creatorStageName: creatorStageName,
             creatorLegalName: creatorLegalName,
             creatorImageURL: creatorImageURL,

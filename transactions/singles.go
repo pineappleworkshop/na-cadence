@@ -12,15 +12,13 @@ import (
 )
 
 type NFTCreate struct {
-	Name cadence.String
-	// ReceiverAccountAddress cadence.Address
-	RoyaltyAddress    cadence.Address
-	RoyaltyPercentage cadence.UInt64
-	Type              cadence.String
-	Literation        cadence.String
-	ImageURL          cadence.String
-	AudioURL          cadence.String
-	ReleaseID         cadence.UInt64
+	Name        cadence.String
+	Type        cadence.String
+	Literation  cadence.String
+	ImageURL    cadence.String
+	AudioURL    cadence.String
+	CopiesCount cadence.Int
+	ReleaseID   cadence.UInt64
 }
 
 func MintSingle(serviceAcctAddr, creatorAcctAddr, creatorAcctPrivKey string, nft NFTCreate) (*flow.TransactionResult, error) {
@@ -69,15 +67,12 @@ func MintSingle(serviceAcctAddr, creatorAcctAddr, creatorAcctPrivKey string, nft
 		return nil, err
 	}
 
-	// todo: cleaner way to do this
 	tx.AddArgument(nft.Name)
-	// tx.AddArgument(nft.ReceiverAccountAddress)
-	tx.AddArgument(nft.RoyaltyAddress)
-	tx.AddArgument(nft.RoyaltyPercentage)
 	tx.AddArgument(nft.Type)
 	tx.AddArgument(nft.Literation)
 	tx.AddArgument(nft.ImageURL)
 	tx.AddArgument(nft.AudioURL)
+	tx.AddArgument(nft.CopiesCount)
 	tx.AddArgument(nft.ReleaseID)
 
 	//create signers

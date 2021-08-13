@@ -3,12 +3,11 @@ import NonFungibleToken from 0xNFT_CONTRACT_ADDRESS
 
 transaction(
     name: String, 
-    royaltyAddress: Address, 
-    royaltyPercentage: UInt64, 
     type: String, 
     literation: String, 
     imageURL: String, 
     audioURL: String,
+    copiesCount: Int,
     releaseID: UInt64
 ) {    
     let creator: &BlockRecordsSingle.Creator
@@ -24,12 +23,11 @@ transaction(
     execute {
         self.creator.mintSingle(
             name: name, 
-            royaltyAddress: royaltyAddress, 
-            royaltyPercentage: royaltyPercentage, 
             type: type, 
             literation: literation, 
             imageURL: imageURL, 
             audioURL: audioURL,
+            copiesCount: copiesCount,
             releaseID: releaseID,
             receiverCollection: self.receiverCollection
         )

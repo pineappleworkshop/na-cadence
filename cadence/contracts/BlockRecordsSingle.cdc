@@ -95,7 +95,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         return <- create Admin()
     }
 
-    // resource that a admin would own to be able to create Release Collections
+    // resource that an admin would own to be able to create Release Collections
     // 
 	pub resource Admin: AdminPublic {
 
@@ -213,7 +213,9 @@ pub contract BlockRecordsSingle: NonFungibleToken {
                 percentFee: percentFee
             )
 
-            // todo: emit release created
+            emit Event(type: "release_created", metadata: {
+                "id" : id.toString()
+            })
 
             // add release to release collection dictionary
             let oldRelease <- self.releases[release.id] <- release
@@ -307,6 +309,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             literation: String, 
             imageURL: String, 
             audioURL: String,
+            serialNumber: UInt64,
             releaseID: UInt64,
             receiverCollection: &{NonFungibleToken.CollectionPublic}
         ){
@@ -316,18 +319,8 @@ pub contract BlockRecordsSingle: NonFungibleToken {
                 // validate nft type
                 BlockRecordsSingle.NFTTypes.contains(type) : "invalid nft type"
             }
-
+                
             let id =  BlockRecordsSingle.totalSupply
-
-            emit Event(type: "minted", metadata: {
-                "id" : id.toString(),
-                "name": name,
-                "type": type,
-                "literation": literation,
-                "image_url": imageURL,
-                "audio_url": audioURL,
-                "release_id": releaseID.toString()
-            })
 
             let single <- create BlockRecordsSingle.NFT(
                 id: id, 
@@ -336,6 +329,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
                 literation: literation, 
                 imageURL: imageURL, 
                 audioURL: audioURL,
+                serialNumber: serialNumber,
                 releaseID: releaseID
             )
 
@@ -343,14 +337,10 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             self.nftIDs.append(single.id)
 
             // deposit into minter's own collection
-			receiverCollection.deposit(
+            receiverCollection.deposit(
                 token: <- single
             )
-
-            BlockRecordsSingle.totalSupply = BlockRecordsSingle.totalSupply + (1 as UInt64)
-		}
-
-        // todo: album
+        }
     }
 
     // potential creator accounts will create a public capability to this
@@ -415,22 +405,33 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             literation: String, 
             imageURL: String, 
             audioURL: String,
+            copiesCount: Int,
             releaseID: UInt64,
             receiverCollection: &{NonFungibleToken.CollectionPublic}
         ){
-             pre {
+            pre {
                 self.releaseCollectionCapability != nil: "not an authorized creator"
             }
 
-            self.releaseCollectionCapability!.borrow()!.borrowRelease(releaseID).mintAndAddSingle(
-                name: name, 
-                type: type, 
-                literation: literation, 
-                imageURL: imageURL, 
-                audioURL: audioURL,
-                releaseID: releaseID,
-                receiverCollection: receiverCollection
-            )
+            var serialNumber = 1
+            while serialNumber <= copiesCount {
+
+                let id =  BlockRecordsSingle.totalSupply
+
+                self.releaseCollectionCapability!.borrow()!.borrowRelease(releaseID).mintAndAddSingle(
+                    name: name, 
+                    type: type, 
+                    literation: literation, 
+                    imageURL: imageURL, 
+                    audioURL: audioURL,
+                    serialNumber: UInt64(serialNumber),
+                    releaseID: releaseID,
+                    receiverCollection: receiverCollection
+                )
+
+                // increment serial number
+                serialNumber = serialNumber + 1
+            }
         }
 	}
 
@@ -451,18 +452,23 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             literation: String, 
             imageURL: String, 
             audioURL: String,
+            serialNumber: UInt64,
             releaseID: UInt64
         ) {
             self.id = id
 
             self.metadata = {
-                "name":name,
+                "name": name,
                 "type": type,
                 "literation": literation,
                 "image_url": imageURL,
                 "audio_url": audioURL,
+                "serial_number": serialNumber,
                 "release_id": releaseID
             }
+
+            // increment id
+            BlockRecordsSingle.totalSupply = BlockRecordsSingle.totalSupply + (1 as UInt64)
         }
     }
 
@@ -627,8 +633,10 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             self.MarketplacePrivatePath,
             target: self.MarketplaceStoragePath
         )
+
+        // todo: store public interface private?
         self.account.link<&BlockRecordsSingle.Marketplace{BlockRecordsSingle.MarketplacePublic}>(
-            self.MarketplacePrivatePath,
+            self.MarketplacePublicPath,
             target: self.MarketplaceStoragePath
         )       
 
@@ -639,6 +647,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         let admin <- create Admin()
         admin.addCapability(cap: marketplaceCap)
         self.account.save(<- admin, to: self.AdminStoragePath)
+        self.account.link<&BlockRecordsSingle.Admin>(self.AdminPrivatePath, target: self.AdminStoragePath)  
 
         emit ContractInitialized()
 	}

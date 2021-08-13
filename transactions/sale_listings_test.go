@@ -39,20 +39,24 @@ func TestCreateSaleListing(t *testing.T) {
 					So(txRes.Error, ShouldBeNil)
 
 					Convey("Then we should be able to submit a transaction to deposit the ReleaseCollection capability - authorizing the creator", func() {
-						txRes, err := AuthorizeCreator(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, *acctAddr)
+						creator := Creator{
+							"robbie wasabi",
+							"Robert Rossilli",
+							"https://ipfs.io/ipfs/Qmc4EA9rNdHVDKQUDWDgeGyL7pL1FDFMkT2ZnWC61DvaQd",
+							cadence.Address(*acctAddr),
+						}
+						txRes, err := CreateReleaseCollectionForCreator(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, creator)
 						So(err, ShouldBeNil)
 						So(txRes, ShouldNotBeNil)
 						So(txRes.Error, ShouldBeNil)
 
 						Convey("Then we should be able to mint an nft and deposit it into the account's collection", func() {
 							nft := NFTCreate{
-								Name:              TEST_SINGLE_NAME,
-								RoyaltyAddress:    cadence.Address(*acctAddr),
-								RoyaltyPercentage: cadence.UInt64(TEST_SINGLE_ROYALTY_PERCENTAGE),
-								Type:              TEST_SINGLE_TYPE,
-								Literation:        TEST_SINGLE_LITERATION,
-								AudioURL:          TEST_SINGLE_AUDIO_URL,
-								ImageURL:          TEST_SINGLE_IMAGE_URL,
+								Name:       TEST_SINGLE_NAME,
+								Type:       TEST_SINGLE_TYPE,
+								Literation: TEST_SINGLE_LITERATION,
+								AudioURL:   TEST_SINGLE_AUDIO_URL,
+								ImageURL:   TEST_SINGLE_IMAGE_URL,
 							}
 							txRes, err := MintSingle(config.Conf.FlowServiceAccountAddress, acctAddr.String(), privKey, nft)
 							So(err, ShouldBeNil)
@@ -119,21 +123,26 @@ func TestDestroySaleListing(t *testing.T) {
 					So(txRes.Error, ShouldBeNil)
 
 					Convey("Then we should be able to submit a transaction to deposit the ReleaseCollection capability - authorizing the creator", func() {
-						txRes, err := AuthorizeCreator(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, *acctAddr)
+						creator := Creator{
+							"robbie wasabi",
+							"Robert Rossilli",
+							"https://ipfs.io/ipfs/Qmc4EA9rNdHVDKQUDWDgeGyL7pL1FDFMkT2ZnWC61DvaQd",
+							cadence.Address(*acctAddr),
+						}
+						txRes, err := CreateReleaseCollectionForCreator(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, creator)
 						So(err, ShouldBeNil)
 						So(txRes, ShouldNotBeNil)
 						So(txRes.Error, ShouldBeNil)
 
 						Convey("Then we should be able to mint an nft and deposit it into the account's collection", func() {
 							nft := NFTCreate{
-								Name: TEST_SINGLE_NAME,
-
-								RoyaltyAddress:    cadence.Address(*acctAddr),
-								RoyaltyPercentage: cadence.UInt64(TEST_SINGLE_ROYALTY_PERCENTAGE),
-								Type:              TEST_SINGLE_TYPE,
-								Literation:        TEST_SINGLE_LITERATION,
-								AudioURL:          TEST_SINGLE_AUDIO_URL,
-								ImageURL:          TEST_SINGLE_IMAGE_URL,
+								Name:        TEST_SINGLE_NAME,
+								Type:        TEST_SINGLE_TYPE,
+								Literation:  TEST_SINGLE_LITERATION,
+								AudioURL:    TEST_SINGLE_AUDIO_URL,
+								ImageURL:    TEST_SINGLE_IMAGE_URL,
+								CopiesCount: cadence.NewInt(1),
+								ReleaseID:   cadence.UInt64(1),
 							}
 							txRes, err := MintSingle(config.Conf.FlowServiceAccountAddress, acctAddr.String(), privKey, nft)
 							So(err, ShouldBeNil)
@@ -236,20 +245,26 @@ func TestBuySaleListing(t *testing.T) {
 					So(txRes.Error, ShouldBeNil)
 
 					Convey("Then we should be able to submit a transaction to deposit the ReleaseCollection capability - authorizing the creator", func() {
-						txRes, err := AuthorizeCreator(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, *acctAddrSeller)
+						creator := Creator{
+							"robbie wasabi",
+							"Robert Rossilli",
+							"https://ipfs.io/ipfs/Qmc4EA9rNdHVDKQUDWDgeGyL7pL1FDFMkT2ZnWC61DvaQd",
+							cadence.Address(*acctAddrSeller),
+						}
+						txRes, err := CreateReleaseCollectionForCreator(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, creator)
 						So(err, ShouldBeNil)
 						So(txRes, ShouldNotBeNil)
 						So(txRes.Error, ShouldBeNil)
 
 						Convey("Then we should be able to mint an nft and deposit it into the seller account's collection", func() {
 							nft := NFTCreate{
-								Name:              TEST_SINGLE_NAME,
-								RoyaltyAddress:    cadence.Address(*acctAddrSeller),
-								RoyaltyPercentage: cadence.UInt64(TEST_SINGLE_ROYALTY_PERCENTAGE),
-								Type:              TEST_SINGLE_TYPE,
-								Literation:        TEST_SINGLE_LITERATION,
-								AudioURL:          TEST_SINGLE_AUDIO_URL,
-								ImageURL:          TEST_SINGLE_IMAGE_URL,
+								Name:        TEST_SINGLE_NAME,
+								Type:        TEST_SINGLE_TYPE,
+								Literation:  TEST_SINGLE_LITERATION,
+								AudioURL:    TEST_SINGLE_AUDIO_URL,
+								ImageURL:    TEST_SINGLE_IMAGE_URL,
+								CopiesCount: cadence.NewInt(1),
+								ReleaseID:   cadence.UInt64(1),
 							}
 							txRes, err := MintSingle(config.Conf.FlowServiceAccountAddress, acctAddrSeller.String(), privKeySeller, nft)
 							So(err, ShouldBeNil)

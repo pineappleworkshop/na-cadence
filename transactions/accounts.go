@@ -224,7 +224,14 @@ func SetupCreator(serviceAcctAddr string, targetAcctAddress flow.Address, target
 	return result, nil
 }
 
-func AuthorizeCreator(serviceAcctAddr string, serviceAcctPrivKey string, creatorAcctAddr flow.Address) (*flow.TransactionResult, error) {
+type Creator struct {
+	StageName cadence.String
+	LegalName cadence.String
+	ImageURL  cadence.String
+	Address   cadence.Address
+}
+
+func CreateReleaseCollectionForCreator(serviceAcctAddr string, serviceAcctPrivKey string, creator Creator) (*flow.TransactionResult, error) {
 	var filePath string
 	if config.Conf.GetEnv() == config.DEV || config.Conf.GetEnv() == config.PROD {
 		filePath = CLUSTER_FILE_PATH_CREATOR_AUTHORIZE
@@ -247,7 +254,7 @@ func AuthorizeCreator(serviceAcctAddr string, serviceAcctPrivKey string, creator
 	txFileStr = strings.Replace(
 		txFileStr,
 		CREATOR_ACCOUNT_ADDRESS,
-		creatorAcctAddr.String(),
+		creator.Address.Hex(),
 		-1,
 	)
 	txFileStr = strings.Replace(
@@ -272,7 +279,11 @@ func AuthorizeCreator(serviceAcctAddr string, serviceAcctPrivKey string, creator
 	if err != nil {
 		return nil, err
 	}
-	tx.AddArgument(cadence.Address(creatorAcctAddr))
+
+	tx.AddArgument(creator.StageName)
+	tx.AddArgument(creator.LegalName)
+	tx.AddArgument(creator.ImageURL)
+	tx.AddArgument(creator.Address)
 
 	authorizerSigner, err := createSigner(serviceAcctAddress, serviceAcctPrivKey)
 	signers := []crypto.Signer{

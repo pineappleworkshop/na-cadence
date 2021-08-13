@@ -3,8 +3,11 @@ import FUSD from 0xFUSD_CONTRACT_ADDRESS
 import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
 
 transaction(
-  royaltyAddress: Address,
-  royaltyFee: UFix64
+  name: String,
+  description: String,
+  type: String,
+  payoutAddress: Address,
+  payoutPercentFee: UFix64
 ){
     let creator: &BlockRecordsSingle.Creator
     
@@ -13,12 +16,15 @@ transaction(
     }
 
     execute {
-      let royaltyAccount = getAccount(royaltyAddress)
-      let royaltyVault = royaltyAccount.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)! 
+      let payoutFUSDVault = getAccount(payoutAddress).getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)! 
+      let percentFee = 0.05
 
       self.creator.createRelease(
-        royaltyVault: royaltyVault,
-        royaltyFee: royaltyFee
+        name: name,
+        description: description,
+        type: type,
+        fusdVault: payoutFUSDVault,
+        percentFee: percentFee
       )
     }
 }

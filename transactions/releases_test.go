@@ -36,18 +36,27 @@ func TestCreatorCreateRelease(t *testing.T) {
 					So(txRes, ShouldNotBeNil)
 					So(txRes.Error, ShouldBeNil)
 
-					Convey("Then we should be able to submit a transaction to deposit the ReleaseCollection capability; authorizing the creator", func() {
-						txRes, err := AuthorizeCreator(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, *acctAddr)
+					Convey("Then we should be able to submit a transaction to deposit the ReleaseCollection capability - authorizing the creator", func() {
+						creator := Creator{
+							"robbie wasabi",
+							"Robert Rossilli",
+							"https://ipfs.io/ipfs/Qmc4EA9rNdHVDKQUDWDgeGyL7pL1FDFMkT2ZnWC61DvaQd",
+							cadence.Address(*acctAddr),
+						}
+						txRes, err := CreateReleaseCollectionForCreator(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, creator)
 						So(err, ShouldBeNil)
 						So(txRes, ShouldNotBeNil)
 						So(txRes.Error, ShouldBeNil)
 
 						Convey("Then we should be able to create a release and deposit it into the release collection", func() {
-							royaltyAddress := flow.HexToAddress(config.Conf.FlowServiceAccountAddress)
-							royaltyFee := 0.05
+							payoutAddress := flow.HexToAddress(config.Conf.FlowServiceAccountAddress)
+							payoutPercentFee := 0.05
 							release := ReleaseCreate{
-								RoyaltyAddress: cadence.Address(royaltyAddress),
-								RoyaltyFee:     cadence.UFix64(royaltyFee),
+								Name:             cadence.String("flowin'"),
+								Description:      cadence.String("debut release"),
+								Type:             cadence.String("single"),
+								PayoutAddress:    cadence.Address(payoutAddress),
+								PayoutPercentFee: cadence.UFix64(payoutPercentFee),
 							}
 							txRes, err := CreateRelease(config.Conf.FlowServiceAccountAddress, acctAddr.String(), privKey, release)
 							So(err, ShouldBeNil)
