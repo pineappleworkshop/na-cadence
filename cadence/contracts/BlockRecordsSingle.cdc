@@ -213,10 +213,6 @@ pub contract BlockRecordsSingle: NonFungibleToken {
                 percentFee: percentFee
             )
 
-            emit Event(type: "release_created", metadata: {
-                "id" : id.toString()
-            })
-
             // add release to release collection dictionary
             let oldRelease <- self.releases[release.id] <- release
             destroy oldRelease
@@ -332,6 +328,11 @@ pub contract BlockRecordsSingle: NonFungibleToken {
                 serialNumber: serialNumber,
                 releaseID: releaseID
             )
+
+            // emit event
+            emit Event(type: "release_created", metadata: {
+                "id" : id.toString()
+            })
 
             // append id to release collection
             self.nftIDs.append(single.id)
