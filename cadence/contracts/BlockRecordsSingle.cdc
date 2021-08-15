@@ -60,6 +60,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
     pub resource interface MarketplacePublic {
         pub let name: String
         pub let payout: Payout
+        pub fun borrowReleaseCollections(): [&ReleaseCollection]
     }
 
     // any account in posession of a Marketplace capability will be able to create release collections
@@ -72,6 +73,9 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         // the sale fee cut of the marketplace
         pub let payout: Payout
 
+        // todo: release collection capabilities
+        pub var releaseCollectionCapabilities: [Capability<&ReleaseCollection>]
+
         init(
             name: String,
             fusdVault: Capability<&{FungibleToken.Receiver}>,
@@ -83,7 +87,19 @@ pub contract BlockRecordsSingle: NonFungibleToken {
                 fusdVault: fusdVault,
                 percentFee: percentFee
             )
+
+            self.releaseCollectionCapabilities = []
         }
+
+        pub fun borrowReleaseCollections(): [&ReleaseCollection] {
+            let releaseCollections: [&ReleaseCollection] = []
+            for r in self.releaseCollectionCapabilities {
+                let releaseCollection = r!.borrow()!
+                releaseCollections.append(releaseCollection)
+            }
+            return releaseCollections as [&ReleaseCollection]
+        }
+
     }
 
     pub resource interface AdminPublic {
