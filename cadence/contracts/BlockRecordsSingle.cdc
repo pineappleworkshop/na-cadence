@@ -61,6 +61,8 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         pub let name: String
         pub let payout: Payout
         pub fun borrowReleaseCollections(): [&ReleaseCollection]
+        pub fun borrowReleaseCollectionByProfileAddress(_ address: Address): &ReleaseCollection
+        pub fun borrowReleaseByNFTID(_ nftID: UInt64): &Release
     }
 
     // any account in posession of a Marketplace capability will be able to create release collections
@@ -73,8 +75,8 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         // the sale fee cut of the marketplace
         pub let payout: Payout
 
-        // todo: release collection capabilities
-        pub var releaseCollectionCapabilities: [Capability<&ReleaseCollection>]
+        // todo: change this to dict
+        access(account) var releaseCollectionCapabilities: [Capability<&ReleaseCollection>]
 
         init(
             name: String,
@@ -91,15 +93,48 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             self.releaseCollectionCapabilities = []
         }
 
+        pub fun addReleaseCollectionCapability(cap: Capability<&ReleaseCollection>) {
+            self.releaseCollectionCapabilities.append(cap)
+        }
+
         pub fun borrowReleaseCollections(): [&ReleaseCollection] {
             let releaseCollections: [&ReleaseCollection] = []
-            for r in self.releaseCollectionCapabilities {
-                let releaseCollection = r!.borrow()!
+            for rc in self.releaseCollectionCapabilities {
+                let releaseCollection = rc!.borrow()!
                 releaseCollections.append(releaseCollection)
             }
             return releaseCollections as [&ReleaseCollection]
         }
 
+        // borrow release collection by creator profile address
+        pub fun borrowReleaseCollectionByProfileAddress(_ address: Address) : &ReleaseCollection {
+            var releaseCollection: &ReleaseCollection? = nil
+            let releaseCollections = self.borrowReleaseCollections()
+            for rc in releaseCollections {
+                if rc.creatorProfile.address == address {
+                    releaseCollection = rc as &ReleaseCollection
+                    break
+                }
+            }
+            return releaseCollection! as &ReleaseCollection
+        }
+
+        // borrow release by nft id
+        pub fun borrowReleaseByNFTID(_ nftID: UInt64) : &Release {
+            var releaseCollection: &ReleaseCollection? = nil
+            var release: &Release? = nil
+            let releaseCollections = self.borrowReleaseCollections()
+            for rc in releaseCollections {
+                for key in rc.releases.keys {
+                    let r: &Release = &rc.releases[key] as &Release
+                    if r.nftIDs.contains(nftID) {
+                        release = r as &Release
+                        break
+                    }
+                }
+            }
+            return release! as &Release
+        }
     }
 
     pub resource interface AdminPublic {
@@ -116,7 +151,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
 	pub resource Admin: AdminPublic {
 
         //ownership of this capability allows for the creation of Release Collections
-        access(contract) var marketplaceCapability: Capability<&Marketplace>?
+        access(account) var marketplaceCapability: Capability<&Marketplace>?
 
         init() {
             self.marketplaceCapability = nil
@@ -386,7 +421,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
     // resource that a creator would own to be able to mint their own NFTs
     // 
 	pub resource Creator: CreatorPublic {
-        access(contract) var releaseCollectionCapability: Capability<&ReleaseCollection>?
+        access(account) var releaseCollectionCapability: Capability<&ReleaseCollection>?
 
         init() {
             self.releaseCollectionCapability = nil

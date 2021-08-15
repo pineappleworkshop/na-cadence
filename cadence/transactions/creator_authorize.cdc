@@ -41,5 +41,8 @@ transaction(
         // add release capability to creator so that they may create releases and mint NFTs
         let releaseCollectionCap = account.getCapability<&BlockRecordsSingle.ReleaseCollection>(releaseCollPrivPath)
         creatorReceiver.addCapability(cap: releaseCollectionCap, address: creatorAddress)
+
+        let marketplaceCap = account.getCapability<&BlockRecordsSingle.Marketplace>(BlockRecordsSingle.MarketplacePrivatePath).borrow()!
+        marketplaceCap.addReleaseCollectionCapability(cap: releaseCollectionCap)
     }
 }

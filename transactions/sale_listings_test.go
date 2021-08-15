@@ -326,7 +326,7 @@ func TestBuySaleListing(t *testing.T) {
 							payoutPercentFee := 0.05
 							release := ReleaseCreate{
 								Name:             cadence.String("flowin'"),
-								Description:      cadence.String("debut release"),
+								Description:      cadence.String("my debut release"),
 								Type:             cadence.String("single"),
 								PayoutAddress:    cadence.Address(payoutAddress),
 								PayoutPercentFee: cadence.UFix64(payoutPercentFee),
@@ -359,7 +359,7 @@ func TestBuySaleListing(t *testing.T) {
 									AudioURL:    TEST_SINGLE_AUDIO_URL,
 									ImageURL:    TEST_SINGLE_IMAGE_URL,
 									CopiesCount: cadence.NewInt(1),
-									ReleaseID:   cadence.UInt64(1),
+									ReleaseID:   cadence.UInt64(releaseID),
 								}
 								txRes, err := MintSingle(config.Conf.FlowServiceAccountAddress, acctAddrSeller.String(), privKeySeller, nft)
 								So(err, ShouldBeNil)
