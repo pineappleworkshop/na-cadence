@@ -5,8 +5,6 @@ import FUSD from 0xFUSD_CONTRACT_ADDRESS
 
 pub contract BlockRecordsMarket {
 
-    pub let TransactionFeePercentage: UFix64
-
     // SaleListing events.
     //
     // a sale offer has been created.
@@ -306,7 +304,6 @@ pub contract BlockRecordsMarket {
     init () {
         self.CollectionStoragePath = /storage/BlockRecordsMarketCollection002
         self.CollectionPublicPath = /public/BlockRecordsMarketCollection002
-        self.TransactionFeePercentage = 0.05
         self.totalSupply = 0
     }
 }
