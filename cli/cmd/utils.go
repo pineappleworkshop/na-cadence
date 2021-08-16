@@ -214,8 +214,18 @@ func ReadAccountFUSDBalance(serviceAcctAddr, acctAddr string) (cadence.Value, er
 		serviceAcctAddr,
 		-1,
 	)
-
-	// todo: add params
+	scriptFileStr = strings.Replace(
+		scriptFileStr,
+		FUNGIBLE_TOKEN_CONTRACT_ADDRESS,
+		config.Conf.FungibleTokenContractAddress,
+		-1,
+	)
+	scriptFileStr = strings.Replace(
+		scriptFileStr,
+		FUSD_CONTRACT_ADDRESS,
+		config.Conf.FUSDContractAddress,
+		-1,
+	)
 
 	scriptResult, err := ExecuteScript([]byte(scriptFileStr))
 	if err != nil {

@@ -11,24 +11,22 @@ import (
 	"github.com/onflow/flow-go-sdk"
 )
 
-type NFTCreate struct {
-	Name        cadence.String
-	Type        cadence.String
-	Literation  cadence.String
-	ImageURL    cadence.String
-	AudioURL    cadence.String
-	CopiesCount cadence.Int
-	ReleaseID   cadence.UInt64
+type ReleaseCreate struct {
+	Name             cadence.String
+	Description      cadence.String
+	Type             cadence.String
+	PayoutAddress    cadence.Address
+	PayoutPercentFee cadence.UFix64
 }
 
-func MintSingle(serviceAcctAddr, creatorAcctAddr, creatorAcctPrivKey string, nft NFTCreate) (*flow.TransactionResult, error) {
+func CreateRelease(serviceAcctAddr, creatorAcctAddr, creatorAcctPrivKey string, release ReleaseCreate) (*flow.TransactionResult, error) {
 	var filePath string
 	if config.Conf.GetEnv() == config.DEV || config.Conf.GetEnv() == config.PROD {
-		filePath = CLUSTER_FILE_PATH_SINGLE_MINT
+		filePath = CLUSTER_FILE_PATH_RELEASE_CREATE
 	} else if config.Conf.GetEnv() == config.TEST {
-		filePath = TEST_FILE_PATH_SINGLE_MINT
+		filePath = TEST_FILE_PATH_RELEASE_CREATE
 	} else {
-		filePath = LOCAL_FILE_PATH_SINGLE_MINT
+		filePath = LOCAL_FILE_PATH_RELEASE_CREATE
 	}
 
 	txFile, err := ioutil.ReadFile(filePath)
@@ -43,14 +41,14 @@ func MintSingle(serviceAcctAddr, creatorAcctAddr, creatorAcctPrivKey string, nft
 	)
 	txFileStr = strings.Replace(
 		txFileStr,
-		CREATOR_ACCOUNT_ADDRESS,
-		creatorAcctAddr,
+		FUSD_CONTRACT_ADDRESS,
+		config.Conf.FUSDContractAddress,
 		-1,
 	)
 	txFileStr = strings.Replace(
 		txFileStr,
-		NFT_CONTRACT_ADDRESS,
-		config.Conf.NonFungibleTokenContractAddress,
+		FUNGIBLE_TOKEN_CONTRACT_ADDRESS,
+		config.Conf.FungibleTokenContractAddress,
 		-1,
 	)
 
@@ -67,13 +65,11 @@ func MintSingle(serviceAcctAddr, creatorAcctAddr, creatorAcctPrivKey string, nft
 		return nil, err
 	}
 
-	tx.AddArgument(nft.Name)
-	tx.AddArgument(nft.Type)
-	tx.AddArgument(nft.Literation)
-	tx.AddArgument(nft.ImageURL)
-	tx.AddArgument(nft.AudioURL)
-	tx.AddArgument(nft.CopiesCount)
-	tx.AddArgument(nft.ReleaseID)
+	tx.AddArgument(release.Name)
+	tx.AddArgument(release.Description)
+	tx.AddArgument(release.Type)
+	tx.AddArgument(release.PayoutAddress)
+	tx.AddArgument(release.PayoutPercentFee)
 
 	//create signers
 	authorizerSigner, err := createSigner(authorizerAddress, creatorAcctPrivKey)

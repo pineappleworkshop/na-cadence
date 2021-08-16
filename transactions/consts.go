@@ -22,10 +22,6 @@ const (
 	CLUSTER_FILE_PATH_NON_FUNGIBLE_TOKEN_CONTRACT = "./go/bin/contracts/NonFungibleToken.cdc"
 	NON_FUNGIBLE_TOKEN_CONTRACT_NAME              = "NonFungibleToken"
 
-	TEST_FILE_PATH_SINGLE_MINT    = "../cadence/transactions/single_mint.cdc"
-	LOCAL_FILE_PATH_SINGLE_MINT   = "./cadence/transactions/single_mint.cdc"
-	CLUSTER_FILE_PATH_SINGLE_MINT = "./go/bin/cadence/transactions/single_mint.cdc"
-
 	TEST_FILE_PATH_CONTRACT_DEPLOY    = "../cadence/transactions/contract_deploy.cdc"
 	LOCAL_FILE_PATH_CONTRACT_DEPLOY   = "./cadence/transactions/contract_deploy.cdc"
 	CLUSTER_FILE_PATH_CONTRACT_DEPLOY = "./go/bin/transactions/contract_deploy.cdc"
@@ -50,9 +46,17 @@ const (
 	LOCAL_FILE_PATH_CREATOR_DEAUTHORIZE   = "./cadence/transactions/creator_deauthorize.cdc"
 	CLUSTER_FILE_PATH_CREATOR_DEAUTHORIZE = "go/bin/cadence/transactions/creator_deauthorize.cdc"
 
+	TEST_FILE_PATH_SINGLE_MINT    = "../cadence/transactions/single_mint.cdc"
+	LOCAL_FILE_PATH_SINGLE_MINT   = "./cadence/transactions/single_mint.cdc"
+	CLUSTER_FILE_PATH_SINGLE_MINT = "./go/bin/cadence/transactions/single_mint.cdc"
+
 	TEST_FILE_PATH_FUSD_DEPOSIT    = "../cadence/transactions/fusd_deposit.cdc"
 	LOCAL_FILE_PATH_FUSD_DEPOSIT   = "./cadence/transactions/fusd_deposit.cdc"
 	CLUSTER_FILE_PATH_FUSD_DEPOSIT = "./go/bin/cadence/transactions/fusd_deposit.cdc"
+
+	TEST_FILE_PATH_RELEASE_CREATE    = "../cadence/transactions/release_create.cdc"
+	LOCAL_FILE_PATH_RELEASE_CREATE   = "./cadence/transactions/release_create.cdc"
+	CLUSTER_FILE_PATH_RELEASE_CREATE = "./go/bin/cadence/transactions/release_create.cdc"
 
 	TEST_FILE_PATH_SALE_LISTING_CREATE    = "../cadence/transactions/sale_listing_create.cdc"
 	LOCAL_FILE_PATH_SALE_LISTING_CREATE   = "./cadence/transactions/sale_listing_create.cdc"

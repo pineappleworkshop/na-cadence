@@ -5,8 +5,6 @@ import FUSD from 0xFUSD_CONTRACT_ADDRESS
 
 pub contract BlockRecordsMarket {
 
-    pub let TransactionFeePercentage: UFix64
-
     // SaleListing events.
     //
     // a sale offer has been created.
@@ -90,6 +88,7 @@ pub contract BlockRecordsMarket {
         // if they send the correct payment in FUSD, and if the item is still available,
         // the BlockRecordsSingle NFT will be placed in their BlockRecordsSingle.Collection .
         //
+
         pub fun accept(
             buyerCollection: &BlockRecordsSingle.Collection{NonFungibleToken.Receiver},
             buyerPayment: @FungibleToken.Vault
@@ -103,21 +102,16 @@ pub contract BlockRecordsMarket {
 
             let blockRecordsSingle = self.sellerItemProvider.borrow()!.borrowBlockRecordsSingle(id: self.nftID)!
 
-            let royaltyAddress: Address = blockRecordsSingle.metadata["royalty_address"]! as! Address
-            let royaltyPercentage: UInt64 = blockRecordsSingle.metadata["royalty_percentage"]! as! UInt64
-            let royalty: UFix64 = UFix64(UFix64(royaltyPercentage!) / UFix64(100))
+            let marketplace = getAccount(0xSERVICE_ACCOUNT_ADDRESS).getCapability<&BlockRecordsSingle.Marketplace{BlockRecordsSingle.MarketplacePublic}>(BlockRecordsSingle.MarketplacePublicPath).borrow()!
 
-            // distribute royalties
-            let royaltyAmnt = self.price * royalty
-            let royaltyFee <- buyerPayment.withdraw(amount: royaltyAmnt)
-            let royaltyAccount = getAccount(royaltyAddress!)
-            let royaltyReceiver = royaltyAccount.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)! 
-            royaltyReceiver.borrow()!.deposit(from: <-royaltyFee)
+            // distribute release payouts
+            let release = marketplace.borrowReleaseByNFTID(1)
+            let releaseFee <- buyerPayment.withdraw(amount: self.price * release.payout.percentFee)
+            release.payout.fusdVault.borrow()!.deposit(from: <- releaseFee)
 
-            // pay BlockRecords fee
-            let beneficiaryAmnt = self.price * BlockRecordsMarket.TransactionFeePercentage
-            let beneficiaryFee <- buyerPayment.withdraw(amount: beneficiaryAmnt)
-            self.beneficiaryReceiver.borrow()!.deposit(from: <-beneficiaryFee)
+            // distribute marketplace payouts
+            let marketplaceFee <- buyerPayment.withdraw(amount: self.price * marketplace.payout.percentFee)
+            marketplace.payout.fusdVault.borrow()!.deposit(from: <- marketplaceFee)
 
             // deposit the rest of the payment into Seller account vault
             self.sellerPaymentReceiver.borrow()!.deposit(from: <-buyerPayment)
@@ -310,7 +304,6 @@ pub contract BlockRecordsMarket {
     init () {
         self.CollectionStoragePath = /storage/BlockRecordsMarketCollection002
         self.CollectionPublicPath = /public/BlockRecordsMarketCollection002
-        self.TransactionFeePercentage = 0.05
         self.totalSupply = 0
     }
 }

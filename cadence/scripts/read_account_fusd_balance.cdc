@@ -1,8 +1,8 @@
 import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
 import FUSD from 0xFUSD_CONTRACT_ADDRESS
 
-pub fun main(address: Address): UFix64 {
-  let account = getAccount(address)
+pub fun main(): UFix64 {
+  let account = getAccount(0xTARGET_ADDRESS)
 
   let vaultRef = account
     .getCapability(/public/fusdBalance)!
