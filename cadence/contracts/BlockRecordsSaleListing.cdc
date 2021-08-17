@@ -5,6 +5,17 @@ import NonFungibleToken from 0xNFT_CONTRACT_ADDRESS
 import FUSD from 0xFUSD_CONTRACT_ADDRESS
 import BlockRecordsMarketplace from 0xSERVICE_ACCOUNT_ADDRESS
 
+/* 
+	SaleListings allow BlockRecordsNFT owners to create a resource that effectively puts 
+  their NFTs up for sale. 
+  
+  Buyers can purchase these NFTs for sale by providing a capability to an FUSD vault
+  with a sufficient balance. Payouts will be distributed to the BlockRecordsMarketplace 
+  facilitating the transaction and to the vault provided by the BlockRecordsRelease 
+  associated with the NFT. The leftover FUSD will be deposited into the vault provided 
+  by the seller and the NFT will be transferred into the collection provided by the buyer.
+*/
+
 pub contract BlockRecordsSaleListing {
 
   // SaleListing events.
@@ -82,15 +93,11 @@ pub contract BlockRecordsSaleListing {
 
     // the beneficiary's FUSD vault 
     access(self) var beneficiaryReceiver: Capability<&FUSD.Vault{FungibleToken.Receiver}>
-
-    // the royalty receiver's FUSD vault
-    // access(self) let royaltyReceiver: Capability<&FUSD.Vault{FungibleToken.Receiver}>?
-
+    
     // called by a purchaser to accept the sale offer.
     // if they send the correct payment in FUSD, and if the item is still available,
     // the BlockRecordsNFT NFT will be placed in their BlockRecordsNFT.Collection .
     //
-
     pub fun accept(
         buyerCollection: &BlockRecordsNFT.Collection{NonFungibleToken.Receiver},
         buyerPayment: @FungibleToken.Vault

@@ -41,9 +41,9 @@ func TestCreatorMintSingle(t *testing.T) {
 
 					Convey("Then we should be able to submit a transaction to deposit the ReleaseCollection capability - authorizing the creator", func() {
 						creator := Creator{
-							"robbie wasabi",
-							"Robert Rossilli",
-							"https://ipfs.io/ipfs/Qmc4EA9rNdHVDKQUDWDgeGyL7pL1FDFMkT2ZnWC61DvaQd",
+							TEST_CREATOR_PROFILE_STAGE_NAME,
+							TEST_CREATOR_PROFILE_FULL_NAME,
+							TEST_CREATOR_PROFILE_IMAGE,
 							cadence.Address(*acctAddr),
 						}
 						txRes, err := CreateReleaseCollectionForCreator(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, creator)

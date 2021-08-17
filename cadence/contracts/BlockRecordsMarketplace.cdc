@@ -4,6 +4,15 @@ import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
 import FUSD from 0xFUSD_CONTRACT_ADDRESS
 import BlockRecordsRelease from 0xSERVICE_ACCOUNT_ADDRESS
 
+/* 
+	Marketplaces are storefronts for BlockRecords service accounts.
+
+	potential "admins" will create and save the admin resource to their storage and expose
+	its capability receiver function publicly. this allows the service account to create a unique
+ 	Marketplace, and send that capability to the admin. the service account maintains the right to revoke this capability - blocking the
+	admin's access to the marketplace - in the event that the admin violates our terms and agreements.
+*/
+
 pub contract BlockRecordsMarketplace {
 
 	//events

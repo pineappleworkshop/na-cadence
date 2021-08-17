@@ -1,27 +1,27 @@
   import NonFungibleToken from 0xNFT_CONTRACT_ADDRESS
-  import BlockRecordsSingle from 0xSERVICE_ACCOUNT_ADDRESS
+  import BlockRecordsNFT from 0xSERVICE_ACCOUNT_ADDRESS
   import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
   import FUSD from 0xFUSD_CONTRACT_ADDRESS
-  import BlockRecordsMarket from 0xSERVICE_ACCOUNT_ADDRESS
+  import BlockRecordsSaleListing from 0xSERVICE_ACCOUNT_ADDRESS
   
   transaction {
   
       prepare(acct: AuthAccount) {
         
-        // BlockRecordsSingle Collection
+        // BlockRecordsNFT Collection
         // account resource collection for nfts
         //
-        if acct.borrow<&BlockRecordsSingle.Collection>(from: /storage/BlockRecordsSingleCollection) != nil {
+        if acct.borrow<&BlockRecordsNFT.Collection>(from: /storage/BlockRecordsNFTCollection) != nil {
             return
         }
 
-        let collection <- BlockRecordsSingle.createEmptyCollection()
-        acct.save(<-collection, to: /storage/BlockRecordsSingleCollection)
+        let collection <- BlockRecordsNFT.createEmptyCollection()
+        acct.save(<-collection, to: /storage/BlockRecordsNFTCollection)
         
-        acct.unlink(/public/BlockRecordsSingleCollection)
-        acct.link<&{NonFungibleToken.CollectionPublic, BlockRecordsSingle.BlockRecordsSingleCollectionPublic}>(
-            /public/BlockRecordsSingleCollection,
-            target: /storage/BlockRecordsSingleCollection
+        acct.unlink(/public/BlockRecordsNFTCollection)
+        acct.link<&{NonFungibleToken.CollectionPublic, BlockRecordsNFT.BlockRecordsNFTCollectionPublic}>(
+            /public/BlockRecordsNFTCollection,
+            target: /storage/BlockRecordsNFTCollection
         )    
           
         // FUSD
@@ -43,15 +43,15 @@
           target: /storage/fusdVault
         )
         
-        // BlockRecordsMarket Collection
+        // BlockRecordsSaleListing Collection
         // account resource collection for nft sale listings
         //
-        if acct.borrow<&BlockRecordsMarket.Collection>(from: BlockRecordsMarket.CollectionStoragePath) == nil {
+        if acct.borrow<&BlockRecordsSaleListing.Collection>(from: BlockRecordsSaleListing.CollectionStoragePath) == nil {
             // create a new empty collection
-            let collection <- BlockRecordsMarket.createEmptyCollection() as! @BlockRecordsMarket.Collection
-            acct.save(<-collection, to: BlockRecordsMarket.CollectionStoragePath)
+            let collection <- BlockRecordsSaleListing.createEmptyCollection() as! @BlockRecordsSaleListing.Collection
+            acct.save(<-collection, to: BlockRecordsSaleListing.CollectionStoragePath)
 
-            acct.link<&BlockRecordsMarket.Collection{BlockRecordsMarket.CollectionPublic}>(BlockRecordsMarket.CollectionPublicPath, target: BlockRecordsMarket.CollectionStoragePath)
+            acct.link<&BlockRecordsSaleListing.Collection{BlockRecordsSaleListing.CollectionPublic}>(BlockRecordsSaleListing.CollectionPublicPath, target: BlockRecordsSaleListing.CollectionStoragePath)
         }
       }
   }

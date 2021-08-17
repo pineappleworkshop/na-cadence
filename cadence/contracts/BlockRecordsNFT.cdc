@@ -3,8 +3,12 @@ import NonFungibleToken from 0xSERVICE_ACCOUNT_ADDRESS
 import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
 import FUSD from 0xFUSD_CONTRACT_ADDRESS
 
-// todo: encapsulate much of this funcationality into different smart contracts
-// 
+/* 
+	BlockRecords NFTs
+  - single
+  - album (not yet implemented)
+*/
+
 pub contract BlockRecordsNFT: NonFungibleToken {
 
   //events

@@ -77,5 +77,9 @@ const (
 	TEST_SINGLE_IMAGE_URL          = "https://test.image.com"
 	TEST_SINGLE_AUDIO_URL          = "https://test.audio.com"
 
+	TEST_CREATOR_PROFILE_STAGE_NAME = "robbie wasabi"
+	TEST_CREATOR_PROFILE_FULL_NAME  = "Robert Rossilli"
+	TEST_CREATOR_PROFILE_IMAGE      = "https://ipfs.io/ipfs/Qmc4EA9rNdHVDKQUDWDgeGyL7pL1FDFMkT2ZnWC61DvaQd"
+
 	TEST_FUSD_AMOUNT = 10000
 )

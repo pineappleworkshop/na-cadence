@@ -1,4 +1,4 @@
-import BlockRecordsSingle from 0xSERVICE_ACCOUNT_ADDRESS
+import BlockRecordsRelease from 0xSERVICE_ACCOUNT_ADDRESS
 import FUSD from 0xFUSD_CONTRACT_ADDRESS
 import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
 
@@ -9,10 +9,10 @@ transaction(
   payoutAddress: Address,
   payoutPercentFee: UFix64
 ){
-    let creator: &BlockRecordsSingle.Creator
+    let creator: &BlockRecordsRelease.Creator
     
     prepare(signer: AuthAccount) {
-        self.creator = signer.borrow<&BlockRecordsSingle.Creator>(from: BlockRecordsSingle.CreatorStoragePath)!
+        self.creator = signer.borrow<&BlockRecordsRelease.Creator>(from: BlockRecordsRelease.CreatorStoragePath)!
     }
 
     execute {

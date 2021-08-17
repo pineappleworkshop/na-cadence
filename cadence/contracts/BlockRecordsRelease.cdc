@@ -4,6 +4,17 @@ import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
 import FUSD from 0xFUSD_CONTRACT_ADDRESS
 import BlockRecordsNFT from 0xSERVICE_ACCOUNT_ADDRESS
 
+/* 
+	Releases are the root resource of any BlockRecords nft.
+
+	potential "creators" will create and save the creator resource to their storage and expose
+	its capability receiver function publicly. this allows the service account to create a unique
+ 	ReleaseCollection, save it to storage, create a private capability, and send that capability 
+	to the creator. the service account maintains the right to revoke this capability - blocking the
+	creator's access to their release collection - in the event that the creator violates our terms
+	and agreements.
+*/
+
 pub contract BlockRecordsRelease {
 
 	//events
