@@ -52,11 +52,15 @@ func TestCreatorCreateRelease(t *testing.T) {
 							payoutAddress := flow.HexToAddress(config.Conf.FlowServiceAccountAddress)
 							payoutPercentFee := 0.05
 							release := ReleaseCreate{
-								Name:             cadence.String("flowin'"),
-								Description:      cadence.String("debut release"),
-								Type:             cadence.String("single"),
+								Type:             cadence.String(TEST_SINGLE_TYPE),
+								Name:             cadence.String(TEST_SINGLE_NAME),
+								Literation:       cadence.String(TEST_SINGLE_LITERATION),
+								ImageURL:         cadence.String(TEST_SINGLE_IMAGE_URL),
+								AudioURL:         cadence.String(TEST_SINGLE_AUDIO_URL),
+								CopiesCount:      cadence.UInt64(TEST_SINGLE_COPIES_COUNT),
 								PayoutAddress:    cadence.Address(payoutAddress),
 								PayoutPercentFee: cadence.UFix64(payoutPercentFee),
+								ReceiverAddress:  cadence.Address(*acctAddr),
 							}
 							txRes, err := CreateRelease(config.Conf.FlowServiceAccountAddress, acctAddr.String(), privKey, release)
 							So(err, ShouldBeNil)

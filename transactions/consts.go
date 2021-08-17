@@ -12,10 +12,10 @@ const (
 	CLUSTER_FILE_PATH_MARKET_CONTRACT = "./go/bin/contracts/BlockRecordsMarket.cdc"
 	MARKET_CONTRACT_NAME              = "BlockRecordsMarket"
 
-	TEST_FILE_PATH_SINGLE_CONTRACT    = "../cadence/contracts/BlockRecordsSingle.cdc"
-	LOCAL_FILE_PATH_SINGLE_CONTRACT   = "./cadence/contracts/BlockRecordsSingle.cdc"
-	CLUSTER_FILE_PATH_SINGLE_CONTRACT = "./go/bin/contracts/BlockRecordsSingle.cdc"
-	SINGLE_CONTRACT_NAME              = "BlockRecordsSingle"
+	TEST_FILE_PATH_BR_NFT_CONTRACT    = "../cadence/contracts/BlockRecordsNFT.cdc"
+	LOCAL_FILE_PATH_BR_NFT_CONTRACT   = "./cadence/contracts/BlockRecordsNFT.cdc"
+	CLUSTER_FILE_PATH_BR_NFT_CONTRACT = "./go/bin/contracts/BlockRecordsNFT.cdc"
+	BR_NFT_CONTRACT_NAME              = "BlockRecordsNFT"
 
 	TEST_FILE_PATH_NON_FUNGIBLE_TOKEN_CONTRACT    = "../cadence/contracts/NonFungibleToken.cdc"
 	LOCAL_FILE_PATH_NON_FUNGIBLE_TOKEN_CONTRACT   = "./cadence/contracts/NonFungibleToken.cdc"
@@ -76,6 +76,11 @@ const (
 	TEST_SINGLE_LITERATION         = "This is a test Block Records Single"
 	TEST_SINGLE_IMAGE_URL          = "https://test.image.com"
 	TEST_SINGLE_AUDIO_URL          = "https://test.audio.com"
+	TEST_SINGLE_COPIES_COUNT       = 3
+
+	TEST_CREATOR_PROFILE_STAGE_NAME = "robbie wasabi"
+	TEST_CREATOR_PROFILE_FULL_NAME  = "Robert Rossilli"
+	TEST_CREATOR_PROFILE_IMAGE      = "https://ipfs.io/ipfs/Qmc4EA9rNdHVDKQUDWDgeGyL7pL1FDFMkT2ZnWC61DvaQd"
 
 	TEST_FUSD_AMOUNT = 10000
 )

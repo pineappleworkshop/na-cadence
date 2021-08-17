@@ -17,9 +17,6 @@ func init() {
 	deployAllContractsCmd.Flags().StringVar(&env, "env", "", "specify environment: emulator, testnet, mainnet")
 	rootCmd.AddCommand(deployAllContractsCmd)
 
-	updateAllContractsCmd.Flags().StringVar(&env, "env", "", "specify environment: emulator, testnet, mainnet")
-	rootCmd.AddCommand(updateAllContractsCmd)
-
 	removeContractCmd.Flags().StringVar(&name, "name", "", "specify contract name")
 	rootCmd.AddCommand(removeContractCmd)
 
@@ -34,25 +31,7 @@ var removeContractCmd = &cobra.Command{
 	Use:   "remove-contract",
 	Short: "remove contract from service account",
 	Run: func(cmd *cobra.Command, args []string) {
-		var contractFileName string
-		if name == "NonFungibleToken" || name == "nft" {
-			contractFileName = NON_FUNGIBLE_TOKEN_CONTRACT_NAME
-		} else if name == "FungibleToken" || name == "ft" {
-			contractFileName = FUNGIBLE_TOKEN_CONTRACT_NAME
-		} else if name == "FUSD" || name == "fusd" {
-			contractFileName = FUSD_CONTRACT_NAME
-		} else if name == "BlockRecordsSingle" || name == "single" {
-			contractFileName = SINGLE_CONTRACT_NAME
-		} else if name == "BlockRecordsMarket" || name == "market" {
-			contractFileName = MARKET_CONTRACT_NAME
-		} else if name == "" {
-			fmt.Println("contract not found")
-			return
-		} else {
-			fmt.Println("must specify contract name")
-			return
-		}
-		result, err := RemoveContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, contractFileName)
+		result, err := RemoveContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, name)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -69,21 +48,25 @@ var deployContract = &cobra.Command{
 	Short: "deploy contract to service account",
 	Run: func(cmd *cobra.Command, args []string) {
 		var contractFilePath string
-		if name == "NonFungibleToken" || name == "nft" {
+		if name == NFT_CONTRACT_NAME {
 			contractFilePath = LOCAL_FILE_PATH_NON_FUNGIBLE_TOKEN_CONTRACT
-		} else if name == "FungibleToken" || name == "ft" {
+		} else if name == FUNGIBLE_TOKEN_CONTRACT_NAME {
 			contractFilePath = LOCAL_FILE_PATH_FUNGIBLE_TOKEN_CONTRACT
-		} else if name == "FUSD" || name == "fusd" {
+		} else if name == FUSD_CONTRACT_NAME {
 			contractFilePath = LOCAL_FILE_PATH_FUSD_CONTRACT
-		} else if name == "BlockRecordsSingle" || name == "single" {
-			contractFilePath = LOCAL_FILE_PATH_SINGLE_CONTRACT
-		} else if name == "BlockRecordsMarket" || name == "market" {
-			contractFilePath = LOCAL_FILE_PATH_MARKET_CONTRACT
+		} else if name == BR_NFT_CONTRACT_NAME {
+			contractFilePath = LOCAL_FILE_PATH_BR_NFT_CONTRACT
+		} else if name == BR_MARKETPLACE_CONTRACT_NAME {
+			contractFilePath = LOCAL_FILE_PATH_BR_MARKETPLACE_CONTRACT
+		} else if name == BR_RELEASE_CONTRACT_NAME {
+			contractFilePath = LOCAL_FILE_PATH_BR_RELEASE_CONTRACT
+		} else if name == BR_SALE_LISTING_CONTRACT_NAME {
+			contractFilePath = LOCAL_FILE_PATH_BR_SALE_LISTING_CONTRACT
 		} else if name == "" {
-			fmt.Println("contract not found")
+			fmt.Println("must specify contract name")
 			return
 		} else {
-			fmt.Println("must specify contract name")
+			fmt.Println("contract not found")
 			return
 		}
 
@@ -104,21 +87,26 @@ var updateContract = &cobra.Command{
 	Short: "update contract to service account",
 	Run: func(cmd *cobra.Command, args []string) {
 		var contractFilePath string
-		if name == "NonFungibleToken" || name == "nft" {
+
+		if name == NFT_CONTRACT_NAME {
 			contractFilePath = LOCAL_FILE_PATH_NON_FUNGIBLE_TOKEN_CONTRACT
-		} else if name == "FungibleToken" || name == "ft" {
+		} else if name == FUNGIBLE_TOKEN_CONTRACT_NAME {
 			contractFilePath = LOCAL_FILE_PATH_FUNGIBLE_TOKEN_CONTRACT
-		} else if name == "FUSD" || name == "fusd" {
+		} else if name == FUSD_CONTRACT_NAME {
 			contractFilePath = LOCAL_FILE_PATH_FUSD_CONTRACT
-		} else if name == "BlockRecordsSingle" || name == "single" {
-			contractFilePath = LOCAL_FILE_PATH_SINGLE_CONTRACT
-		} else if name == "BlockRecordsMarket" || name == "market" {
-			contractFilePath = LOCAL_FILE_PATH_MARKET_CONTRACT
+		} else if name == BR_NFT_CONTRACT_NAME {
+			contractFilePath = LOCAL_FILE_PATH_BR_NFT_CONTRACT
+		} else if name == BR_MARKETPLACE_CONTRACT_NAME {
+			contractFilePath = LOCAL_FILE_PATH_BR_MARKETPLACE_CONTRACT
+		} else if name == BR_RELEASE_CONTRACT_NAME {
+			contractFilePath = LOCAL_FILE_PATH_BR_RELEASE_CONTRACT
+		} else if name == BR_SALE_LISTING_CONTRACT_NAME {
+			contractFilePath = LOCAL_FILE_PATH_BR_SALE_LISTING_CONTRACT
 		} else if name == "" {
-			fmt.Println("contract not found")
+			fmt.Println("must specify contract name")
 			return
 		} else {
-			fmt.Println("must specify contract name")
+			fmt.Println("contract not found")
 			return
 		}
 
@@ -145,7 +133,7 @@ var deployAllContractsCmd = &cobra.Command{
 
 		if env == EMULATOR {
 			// NonFungibleToken
-			result, err := DeployContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_NON_FUNGIBLE_TOKEN_CONTRACT, NON_FUNGIBLE_TOKEN_CONTRACT_NAME)
+			result, err := DeployContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_NON_FUNGIBLE_TOKEN_CONTRACT, NFT_CONTRACT_NAME)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -178,8 +166,8 @@ var deployAllContractsCmd = &cobra.Command{
 			}
 		}
 
-		// BlockRecordsSingle
-		result, err := DeployContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_SINGLE_CONTRACT, SINGLE_CONTRACT_NAME)
+		// BlockRecordsNFT
+		result, err := DeployContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_BR_NFT_CONTRACT, BR_NFT_CONTRACT_NAME)
 		if err != nil {
 			fmt.Println("error", err)
 		}
@@ -189,8 +177,8 @@ var deployAllContractsCmd = &cobra.Command{
 			fmt.Println(result.Status.String())
 		}
 
-		// BlockRecordsMarket
-		result, err = DeployContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_MARKET_CONTRACT, MARKET_CONTRACT_NAME)
+		// BlockRecordsRelease
+		result, err = DeployContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_BR_RELEASE_CONTRACT, BR_RELEASE_CONTRACT_NAME)
 		if err != nil {
 			fmt.Println("error", err)
 		}
@@ -199,52 +187,11 @@ var deployAllContractsCmd = &cobra.Command{
 		} else {
 			fmt.Println(result.Status.String())
 		}
-	},
-}
 
-var updateAllContractsCmd = &cobra.Command{
-	Use:   "update-contracts",
-	Short: "update all contracts on service account",
-	Run: func(cmd *cobra.Command, args []string) {
-		if env == EMULATOR {
-			// NonFungibleToken
-			result, err := UpdateContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_NON_FUNGIBLE_TOKEN_CONTRACT, NON_FUNGIBLE_TOKEN_CONTRACT_NAME)
-			if err != nil {
-				fmt.Println(err)
-			}
-			if result.Error != nil {
-				fmt.Println(result.Error.Error())
-			} else {
-				fmt.Println(result.Status.String())
-			}
-
-			// Fungibletoken
-			result, err = UpdateContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_FUNGIBLE_TOKEN_CONTRACT, FUNGIBLE_TOKEN_CONTRACT_NAME)
-			if err != nil {
-				fmt.Println(err)
-			}
-			if result.Error != nil {
-				fmt.Println(result.Error.Error())
-			} else {
-				fmt.Println(result.Status.String())
-			}
-
-			// FUSD
-			result, err = UpdateContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_FUSD_CONTRACT, FUSD_CONTRACT_NAME)
-			if err != nil {
-				fmt.Println(err)
-			}
-			if result.Error != nil {
-				fmt.Println(result.Error.Error())
-			} else {
-				fmt.Println(result.Status.String())
-			}
-		}
-
-		// BlockRecordsSingle
-		result, err := UpdateContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_SINGLE_CONTRACT, SINGLE_CONTRACT_NAME)
+		// BlockRecordsMarketplace
+		result, err = DeployContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_BR_MARKETPLACE_CONTRACT, BR_MARKETPLACE_CONTRACT_NAME)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("error", err)
 		}
 		if result.Error != nil {
 			fmt.Println(result.Error.Error())
@@ -252,10 +199,10 @@ var updateAllContractsCmd = &cobra.Command{
 			fmt.Println(result.Status.String())
 		}
 
-		// BlockRecordsMarket
-		result, err = UpdateContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_MARKET_CONTRACT, MARKET_CONTRACT_NAME)
+		// BlockRecordsSaleListing
+		result, err = DeployContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_BR_SALE_LISTING_CONTRACT, BR_SALE_LISTING_CONTRACT_NAME)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("error", err)
 		}
 		if result.Error != nil {
 			fmt.Println(result.Error.Error())
