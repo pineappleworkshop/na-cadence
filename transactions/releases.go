@@ -12,11 +12,15 @@ import (
 )
 
 type ReleaseCreate struct {
-	Name             cadence.String
-	Description      cadence.String
 	Type             cadence.String
+	Name             cadence.String
+	Literation       cadence.String
+	ImageURL         cadence.String
+	AudioURL         cadence.String
+	CopiesCount      cadence.UInt64
 	PayoutAddress    cadence.Address
 	PayoutPercentFee cadence.UFix64
+	ReceiverAddress  cadence.Address
 }
 
 func CreateRelease(serviceAcctAddr, creatorAcctAddr, creatorAcctPrivKey string, release ReleaseCreate) (*flow.TransactionResult, error) {
@@ -51,6 +55,12 @@ func CreateRelease(serviceAcctAddr, creatorAcctAddr, creatorAcctPrivKey string, 
 		config.Conf.FungibleTokenContractAddress,
 		-1,
 	)
+	txFileStr = strings.Replace(
+		txFileStr,
+		NFT_CONTRACT_ADDRESS,
+		config.Conf.NonFungibleTokenContractAddress,
+		-1,
+	)
 
 	//create authorizers
 	authorizerAddress := flow.HexToAddress(creatorAcctAddr)
@@ -65,11 +75,15 @@ func CreateRelease(serviceAcctAddr, creatorAcctAddr, creatorAcctPrivKey string, 
 		return nil, err
 	}
 
-	tx.AddArgument(release.Name)
-	tx.AddArgument(release.Description)
 	tx.AddArgument(release.Type)
+	tx.AddArgument(release.Name)
+	tx.AddArgument(release.Literation)
+	tx.AddArgument(release.ImageURL)
+	tx.AddArgument(release.AudioURL)
+	tx.AddArgument(release.CopiesCount)
 	tx.AddArgument(release.PayoutAddress)
 	tx.AddArgument(release.PayoutPercentFee)
+	tx.AddArgument(release.ReceiverAddress)
 
 	//create signers
 	authorizerSigner, err := createSigner(authorizerAddress, creatorAcctPrivKey)

@@ -42,26 +42,39 @@ pub contract BlockRecordsNFT: NonFungibleToken {
     // metadata is a dictionary of strings so our fields are mutable
     pub var metadata: {String: AnyStruct}
 
+    pub let serialNumber: UInt64
+
+    pub let releaseID: UInt64
+
     init(
       name: String, 
-      type: String, 
       literation: String, 
       imageURL: String, 
       audioURL: String,
       serialNumber: UInt64,
       releaseID: UInt64
     ){
+			self.id = BlockRecordsNFT.totalSupply
+
       self.metadata = {
         "name": name,
-        "type": type,
         "literation": literation,
         "image_url": imageURL,
-        "audio_url": audioURL,
-        "serial_number": serialNumber,
-        "release_id": releaseID
+        "audio_url": audioURL
       }
 
-			self.id = BlockRecordsNFT.totalSupply
+      self.serialNumber = serialNumber
+      self.releaseID = releaseID
+
+      emit Event(type: "minted", metadata: {
+				"id" : self.id.toString(),
+				"name": name,
+				"literation": literation,
+				"image_url": imageURL,
+				"audio_url": audioURL,
+				"serial_number": serialNumber.toString(),
+				"release_id": releaseID.toString()
+			})
 
       // increment id
       BlockRecordsNFT.totalSupply = BlockRecordsNFT.totalSupply + (1 as UInt64)
@@ -71,7 +84,6 @@ pub contract BlockRecordsNFT: NonFungibleToken {
 // other contracts owned by the account may mint singles
   access(account) fun mintSingle(
     name: String, 
-    type: String, 
     literation: String, 
     imageURL: String, 
     audioURL: String,
@@ -80,7 +92,6 @@ pub contract BlockRecordsNFT: NonFungibleToken {
   ): @NFT {
     return <- create BlockRecordsNFT.NFT(
       name: name, 
-      type: type, 
       literation: literation, 
       imageURL: imageURL, 
       audioURL: audioURL,

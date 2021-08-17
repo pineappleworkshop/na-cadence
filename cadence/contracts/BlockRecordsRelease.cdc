@@ -66,32 +66,37 @@ pub contract BlockRecordsRelease {
 
 		// refer to https://github.com/versus-flow/versus-contracts/blob/master/contracts/Versus.cdc#L429
 		pub fun createAndAddRelease(
-			name: String,
-			description: String,
 			type: String,
+			name: String, 
+      literation: String, 
+      imageURL: String, 
+      audioURL: String,
+			copiesCount: UInt64,
 			fusdVault: Capability<&{FungibleToken.Receiver}>,
 			percentFee: UFix64
-		){
-			// pre {
-			//     royaltyVault.check() == true : "Vault capability should exist"
-			// }
+		): UInt64 {
+			pre {
+			    fusdVault.check() == true : "Vault capability should exist"
+			}
 
 			let release <- create Release(
-				name: name,
-				description: description,
 				type: type,
+				name: name, 
+				literation: literation, 
+				imageURL: imageURL, 
+				audioURL: audioURL,
+				copiesCount: copiesCount,
 				fusdVault: fusdVault,
 				percentFee: percentFee
 			)
 
-			// emit event
-			emit Event(type: "release_created", metadata: {
-				"id" : release.id.toString()
-			})
+			let id = release.id
 
 			// add release to release collection dictionary
-			let oldRelease <- self.releases[release.id] <- release
+			let oldRelease <- self.releases[id] <- release
 			destroy oldRelease
+
+			return id
 		}
 
 		// todo: review this... should be pub or access(contract)?
@@ -125,10 +130,9 @@ pub contract BlockRecordsRelease {
 
 	pub resource interface ReleasePublic {
 		pub let id: UInt64
-		pub let name: String
-		pub let description: String
-		pub let type: String
 		pub var nftIDs: [UInt64]
+		pub let metadata: {String: AnyStruct}
+		pub let type: String
 		pub var completed: Bool
 		pub let payout: Payout
 	}
@@ -140,35 +144,44 @@ pub contract BlockRecordsRelease {
 		// unique id of the release
 		pub let id: UInt64
 
-		// name of the release
-		pub let name: String
-
-		// the description of the release
-		pub let description: String
-		
 		// "type" of release
 		pub let type: String
+
+		// metadata of the release
+		pub let metadata: {String: AnyStruct}
+
+		// NFT copies count
+		pub let copiesCount: UInt64
 
 		// ids of nfts associated with release
 		pub var nftIDs: [UInt64]
 
-		// specifies that all NFTs that should be added, were added
-		// maybe: allows the associated nfts to be listed for sale
-		pub var completed: Bool
-
 		// the sale fee cut for the release creator
 		pub let payout: Payout
 
+		// specifies that all NFTs that should be added, were added
+		pub var completed: Bool
+
 		init(
-			name: String,
-			description: String,
 			type: String,
+			name: String, 
+      literation: String, 
+      imageURL: String, 
+      audioURL: String,
+			copiesCount: UInt64,
 			fusdVault: Capability<&{FungibleToken.Receiver}>,
 			percentFee: UFix64
 		){
-			self.name = name
-			self.description = description
 			self.type = type
+
+			self.metadata = {
+        "name": name,
+        "literation": literation,
+        "image_url": imageURL,
+        "audio_url": audioURL
+      }
+
+			self.copiesCount = copiesCount
 
 			self.payout = Payout(
 				fusdVault: fusdVault,
@@ -182,6 +195,17 @@ pub contract BlockRecordsRelease {
 
 			// iterate supply
 			BlockRecordsRelease.totalSupply = BlockRecordsRelease.totalSupply + (1 as UInt64)
+
+			// emit event
+			emit Event(type: "release_created", metadata: {
+				"id" : self.id.toString(),
+				"name": name,
+        "literation": literation,
+        "image_url": imageURL,
+        "audio_url": audioURL,
+				"copies_count": copiesCount.toString(),
+				"percent_fee": percentFee.toString()
+			})
 		}
 
 		pub fun complete(){
@@ -191,12 +215,10 @@ pub contract BlockRecordsRelease {
 		// mints a new BlockRecordsNFT, adds ID to release, and deposits into minter's nft collection
 		pub fun mintAndAddSingle(
 			name: String, 
-			type: String, 
 			literation: String, 
 			imageURL: String, 
 			audioURL: String,
 			serialNumber: UInt64,
-			releaseID: UInt64,
 			receiverCollection: &{NonFungibleToken.CollectionPublic}
 		){
 			pre {
@@ -208,27 +230,15 @@ pub contract BlockRecordsRelease {
 					
 			let single <- BlockRecordsNFT.mintSingle(
 				name: name, 
-				type: type, 
 				literation: literation, 
 				imageURL: imageURL, 
 				audioURL: audioURL,
 				serialNumber: serialNumber,
-				releaseID: releaseID
+				releaseID: self.id
 			)
 
 			// append id to release collection
 			self.nftIDs.append(single.id)
-
-			emit Event(type: "minted", metadata: {
-				"id" : single.id.toString(),
-				"name": name,
-				"type": type,
-				"literation": literation,
-				"image_url": imageURL,
-				"audio_url": audioURL,
-				"serial_number": serialNumber.toString(),
-				"release_id": releaseID.toString()
-			})
 
 			// deposit into minter's own collection
 			receiverCollection.deposit(
@@ -272,54 +282,45 @@ pub contract BlockRecordsRelease {
 		}
 
 		pub fun createRelease(
-			name: String,
-			description: String,
 			type: String,
-			fusdVault: Capability<&{FungibleToken.Receiver}>,
-			percentFee: UFix64
-		){
-			// accounts cannot create new releases without release collection capability
-			pre {
-				self.releaseCollectionCapability != nil: "not an authorized creator"
-			}
-
-			// create release and add to release collection
-			self.releaseCollectionCapability!.borrow()!.createAndAddRelease(
-				name: name,
-				description: description,
-				type:type,
-				fusdVault: fusdVault,
-				percentFee: percentFee
-			)
-		}
-
-		pub fun mintSingle(
 			name: String, 
-			type: String, 
 			literation: String, 
 			imageURL: String, 
 			audioURL: String,
-			copiesCount: Int,
-			releaseID: UInt64,
+			copiesCount: UInt64,
+			fusdVault: Capability<&{FungibleToken.Receiver}>,
+			percentFee: UFix64,
 			receiverCollection: &{NonFungibleToken.CollectionPublic}
 		){
 			pre {
 				self.releaseCollectionCapability != nil: "not an authorized creator"
 			}
 
-			var serialNumber = 1
+			// borrow release collection
+			let rc = self.releaseCollectionCapability!.borrow()!
+
+			// create release and add to release collection
+			let releaseID = rc.createAndAddRelease(
+				type: type,
+				name: name, 
+				literation: literation, 
+				imageURL: imageURL, 
+				audioURL: audioURL,
+				copiesCount: copiesCount,
+				fusdVault: fusdVault,
+				percentFee: percentFee
+			)
+			let release = rc.borrowRelease(releaseID)
+
+			// create nfts and add them to release collection
+			var serialNumber: UInt64 = 1
 			while serialNumber <= copiesCount {
-
-				let id =  BlockRecordsNFT.totalSupply
-
-				self.releaseCollectionCapability!.borrow()!.borrowRelease(releaseID).mintAndAddSingle(
+				release.mintAndAddSingle(
 					name: name, 
-					type: type, 
 					literation: literation, 
 					imageURL: imageURL, 
 					audioURL: audioURL,
 					serialNumber: UInt64(serialNumber),
-					releaseID: releaseID,
 					receiverCollection: receiverCollection
 				)
 
