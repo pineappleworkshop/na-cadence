@@ -42,6 +42,9 @@ pub contract BlockRecordsRelease {
 	// this is secure because "transactions cannot create resource types outside of containing contracts"
 	pub resource ReleaseCollection: ReleaseCollectionPublic {  
 
+		// unique id of the release collection
+		pub let id: UInt64
+
 		// creator profile resource
 		pub var creatorProfile: CreatorProfile
 
@@ -54,6 +57,9 @@ pub contract BlockRecordsRelease {
 			creatorImageURL: String,
 			creatorAddress: Address
 		){
+
+			self.id = BlockRecordsRelease.totalSupply
+
 			self.creatorProfile = CreatorProfile(
 				stageName: creatorStageName,
 				legalName: creatorLegalName,
@@ -61,7 +67,19 @@ pub contract BlockRecordsRelease {
 				address: creatorAddress
 			)
 
+			// release collection was created for creator
+			emit Event(type: "collection_created", metadata: {
+				"id" : self.id.toString(),
+				"creator_stage_name": creatorStageName,
+        "creator_legal_name": creatorLegalName,
+        "creator_image_url": creatorImageURL,
+        "creator_address": creatorAddress.toString()
+			})
+
 			self.releases <- {}
+
+			// iterate supply
+			BlockRecordsRelease.totalSupply = BlockRecordsRelease.totalSupply + (1 as UInt64)
 		}
 
 		// refer to https://github.com/versus-flow/versus-contracts/blob/master/contracts/Versus.cdc#L429
@@ -197,7 +215,7 @@ pub contract BlockRecordsRelease {
 			BlockRecordsRelease.totalSupply = BlockRecordsRelease.totalSupply + (1 as UInt64)
 
 			// emit event
-			emit Event(type: "release_created", metadata: {
+			emit Event(type: "created", metadata: {
 				"id" : self.id.toString(),
 				"name": name,
         "literation": literation,
@@ -274,11 +292,13 @@ pub contract BlockRecordsRelease {
 				self.releaseCollectionCapability == nil : "capability already set"
 			}
 			
-			emit Event(type: "creator_authorized", metadata: {
-				"address": address.toString()
+			self.releaseCollectionCapability = cap
+
+			emit Event(type: "collection_capability_added", metadata: {
+				"collection_id": self.releaseCollectionCapability!.borrow()!.id.toString(),
+				"creator_address": address.toString()
 			})
 
-			self.releaseCollectionCapability = cap
 		}
 
 		pub fun createRelease(
