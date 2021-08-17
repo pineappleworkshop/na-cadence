@@ -11,17 +11,17 @@
         // BlockRecordsSingle Collection
         // account resource collection for nfts
         //
-        if acct.borrow<&BlockRecordsSingle.Collection>(from: /storage/BlockRecordsSingleCollection002) != nil {
+        if acct.borrow<&BlockRecordsSingle.Collection>(from: /storage/BlockRecordsSingleCollection) != nil {
             return
         }
 
         let collection <- BlockRecordsSingle.createEmptyCollection()
-        acct.save(<-collection, to: /storage/BlockRecordsSingleCollection002)
+        acct.save(<-collection, to: /storage/BlockRecordsSingleCollection)
         
-        acct.unlink(/public/BlockRecordsSingleCollection002)
+        acct.unlink(/public/BlockRecordsSingleCollection)
         acct.link<&{NonFungibleToken.CollectionPublic, BlockRecordsSingle.BlockRecordsSingleCollectionPublic}>(
-            /public/BlockRecordsSingleCollection002,
-            target: /storage/BlockRecordsSingleCollection002
+            /public/BlockRecordsSingleCollection,
+            target: /storage/BlockRecordsSingleCollection
         )    
           
         // FUSD

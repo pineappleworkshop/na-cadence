@@ -179,8 +179,8 @@ pub contract BlockRecordsNFT: NonFungibleToken {
   }
 
 	init() {
-    self.CollectionStoragePath = /storage/BlockRecordsNFTCollection002
-    self.CollectionPublicPath = /public/BlockRecordsNFTCollection002
+    self.CollectionStoragePath = /storage/BlockRecordsNFTCollection
+    self.CollectionPublicPath = /public/BlockRecordsNFTCollection
     
     // total supply of all block records resources: releases, nfts, etc...
     self.totalSupply = 0

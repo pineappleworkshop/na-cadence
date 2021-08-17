@@ -3,6 +3,8 @@ import NonFungibleToken from 0xSERVICE_ACCOUNT_ADDRESS
 import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
 import FUSD from 0xFUSD_CONTRACT_ADDRESS
 
+import BlockRecordsMarketplace from 0xSERVICE_ACCOUNT_ADDRESS
+
 // todo: encapsulate much of this funcationality into different smart contracts
 // 
 pub contract BlockRecordsRelease {
@@ -132,7 +134,7 @@ pub contract BlockRecordsRelease {
 		pub var completed: Bool
 
 		// the sale fee cut for the release creator
-		pub let payout: Payout
+		pub let payout: BlockRecordsMarketplace.Payout
 
 		init(
 			name: String,
@@ -153,17 +155,17 @@ pub contract BlockRecordsRelease {
 			self.nftIDs = []
 			self.completed = false
 
-			self.id = BlockRecordsSingle.totalSupply
+			self.id = BlockRecordsNFT.totalSupply
 
 			// iterate supply
-			BlockRecordsSingle.totalSupply = BlockRecordsSingle.totalSupply + (1 as UInt64)
+			BlockRecordsNFT.totalSupply = BlockRecordsNFT.totalSupply + (1 as UInt64)
 		}
 
 		pub fun complete(){
 				self.completed = true
 		}
 
-		// mints a new BlockRecordsSingle, adds ID to release, and deposits into minter's nft collection
+		// mints a new BlockRecordsNFT, adds ID to release, and deposits into minter's nft collection
 		pub fun mintAndAddSingle(
 			name: String, 
 			type: String, 
@@ -178,12 +180,12 @@ pub contract BlockRecordsRelease {
 				!self.completed : "cannot add to completed release"
 				
 				// validate nft type
-				// BlockRecordsSingle.NFTTypes.contains(type) : "invalid nft type"
+				// BlockRecordsNFT.NFTTypes.contains(type) : "invalid nft type"
 			}
 					
-			let id =  BlockRecordsSingle.totalSupply
+			let id =  BlockRecordsNFT.totalSupply
 
-			let single <- create BlockRecordsSingle.NFT(
+			let single <- create BlockRecordsNFT.NFT(
 				id: id, 
 				name: name, 
 				type: type, 
@@ -288,7 +290,7 @@ pub contract BlockRecordsRelease {
 			var serialNumber = 1
 			while serialNumber <= copiesCount {
 
-				let id =  BlockRecordsSingle.totalSupply
+				let id =  BlockRecordsNFT.totalSupply
 
 				self.releaseCollectionCapability!.borrow()!.borrowRelease(releaseID).mintAndAddSingle(
 					name: name, 
@@ -306,13 +308,46 @@ pub contract BlockRecordsRelease {
 			}
 		}
 	}
+
+	// the creator's profile info
+	pub struct CreatorProfile {
+
+		// creator's stage name or pseudonym
+		pub var stageName: String
+
+		// creator's legal full name
+		pub var legalName: String
+
+		// creator's desired profile picture url
+		pub var imageURL: String
+
+		// creator's account address
+		// this can be changed if the creator loses their credentials.
+		// just unlink the private capability and create a new one,
+		// then update creator profile struct in release collection.
+		// NOTE: it is important to keep this reference in the release collection resource *only*
+		// so there won't be discrepencies downstream if the creator's address changes
+		pub var address: Address
+
+		init(
+			stageName: String, 
+			legalName: String,
+			imageURL: String,
+			address: Address
+		){
+			self.stageName = stageName
+			self.legalName = legalName
+			self.imageURL = imageURL
+			self.address = address
+		}
+	}
 		
 	init() {
-		self.CreatorStoragePath = /storage/BlockRecordsCreator002
-		self.CreatorPublicPath = /public/BlockRecordsCreator002
+		self.CreatorStoragePath = /storage/BlockRecordsCreator
+		self.CreatorPublicPath = /public/BlockRecordsCreator
 
-		self.CollectionStoragePath = /storage/BlockRecordsReleaseCollection002
-		self.CollectionPublicPath = /public/BlockRecordsReleaseCollection002
+		self.CollectionStoragePath = /storage/BlockRecordsReleaseCollection
+		self.CollectionPublicPath = /public/BlockRecordsReleaseCollection
 
 		emit ContractInitialized()
 	}

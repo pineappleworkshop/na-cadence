@@ -1,5 +1,5 @@
 
-import BlockRecordsSingle from 0xSERVICE_ACCOUNT_ADDRESS
+import BlockRecordsNFT from 0xSERVICE_ACCOUNT_ADDRESS
 import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
 import NonFungibleToken from 0xNFT_CONTRACT_ADDRESS
 import FUSD from 0xFUSD_CONTRACT_ADDRESS
@@ -55,7 +55,7 @@ pub contract BlockRecordsSale {
   //
   pub var totalSupply: UInt64
 
-  // a BlockRecordsSingle NFT being offered to sale for a set fee paid in FUSD.
+  // a BlockRecordsNFT NFT being offered to sale for a set fee paid in FUSD.
   //
   pub resource SaleListing: SaleListingPublicView {
     // whether the sale has completed with someone purchasing the item.
@@ -64,7 +64,7 @@ pub contract BlockRecordsSale {
     // the SaleListing ID
     pub let id: UInt64
 
-    // the BlockRecordsSingleID
+    // the BlockRecordsNFTID
     pub let nftID: UInt64
 
     // the sale payment price.
@@ -74,7 +74,7 @@ pub contract BlockRecordsSale {
     // pub let royalty: UFix64?
 
     // the collection containing that ID.
-    access(self) let sellerItemProvider: Capability<&BlockRecordsSingle.Collection{BlockRecordsSingle.BlockRecordsSingleCollectionPublic, NonFungibleToken.Provider}>
+    access(self) let sellerItemProvider: Capability<&BlockRecordsNFT.Collection{BlockRecordsNFT.BlockRecordsNFTCollectionPublic, NonFungibleToken.Provider}>
 
     // the seller FUSD vault
     access(self) let sellerPaymentReceiver: Capability<&FUSD.Vault{FungibleToken.Receiver}>
@@ -87,11 +87,11 @@ pub contract BlockRecordsSale {
 
     // called by a purchaser to accept the sale offer.
     // if they send the correct payment in FUSD, and if the item is still available,
-    // the BlockRecordsSingle NFT will be placed in their BlockRecordsSingle.Collection .
+    // the BlockRecordsNFT NFT will be placed in their BlockRecordsNFT.Collection .
     //
 
     pub fun accept(
-        buyerCollection: &BlockRecordsSingle.Collection{NonFungibleToken.Receiver},
+        buyerCollection: &BlockRecordsNFT.Collection{NonFungibleToken.Receiver},
         buyerPayment: @FungibleToken.Vault
     ) {
         pre {
@@ -101,9 +101,9 @@ pub contract BlockRecordsSale {
 
         self.saleCompleted = true
 
-        let blockRecordsSingle = self.sellerItemProvider.borrow()!.borrowBlockRecordsSingle(id: self.nftID)!
+        let BlockRecordsNFT = self.sellerItemProvider.borrow()!.borrowBlockRecordsNFT(id: self.nftID)!
 
-        let marketplace = getAccount(0xSERVICE_ACCOUNT_ADDRESS).getCapability<&BlockRecordsSingle.Marketplace{BlockRecordsSingle.MarketplacePublic}>(BlockRecordsSingle.MarketplacePublicPath).borrow()!
+        let marketplace = getAccount(0xSERVICE_ACCOUNT_ADDRESS).getCapability<&BlockRecordsMarketplace.Marketplace{BlockRecordsMarketplace.MarketplacePublic}>(BlockRecordsMarketplace.MarketplacePublicPath).borrow()!
 
         // distribute release payouts
         let release = marketplace.borrowReleaseByNFTID(1)
@@ -118,7 +118,7 @@ pub contract BlockRecordsSale {
         self.sellerPaymentReceiver.borrow()!.deposit(from: <-buyerPayment)
 
         // Withdraw nft from Seller account collection and deposit into Buyer's
-        let nft <- self.sellerItemProvider.borrow()!.withdraw(withdrawID: blockRecordsSingle.id)
+        let nft <- self.sellerItemProvider.borrow()!.withdraw(withdrawID: BlockRecordsNFT.id)
         buyerCollection.deposit(token: <-nft)
 
         emit SaleListingAccepted(id: self.id, price: self.price, seller: self.owner?.address)
@@ -132,11 +132,11 @@ pub contract BlockRecordsSale {
       // whether the sale completed or not, publicize that it is being withdrawn.
       emit SaleListingFinished(id: self.id)
     }
-    
+
     init(
       id: UInt64,
       nftID: UInt64,
-      sellerItemProvider: Capability<&BlockRecordsSingle.Collection{BlockRecordsSingle.BlockRecordsSingleCollectionPublic, NonFungibleToken.Provider}>,
+      sellerItemProvider: Capability<&BlockRecordsNFT.Collection{BlockRecordsNFT.BlockRecordsNFTCollectionPublic, NonFungibleToken.Provider}>,
       sellerPaymentReceiver: Capability<&FUSD.Vault{FungibleToken.Receiver}>,
       price: UFix64
     ) {
@@ -172,7 +172,7 @@ pub contract BlockRecordsSale {
   //
   pub fun createSaleListing (
     nftID: UInt64,
-    sellerItemProvider: Capability<&BlockRecordsSingle.Collection{BlockRecordsSingle.BlockRecordsSingleCollectionPublic, NonFungibleToken.Provider}>,
+    sellerItemProvider: Capability<&BlockRecordsNFT.Collection{BlockRecordsNFT.BlockRecordsNFTCollectionPublic, NonFungibleToken.Provider}>,
     sellerPaymentReceiver: Capability<&FUSD.Vault{FungibleToken.Receiver}>,
     price: UFix64,
   ): @SaleListing {
@@ -204,7 +204,7 @@ pub contract BlockRecordsSale {
   pub resource interface CollectionPurchaser {
     pub fun purchase(
       id: UInt64,
-      buyerCollection: &BlockRecordsSingle.Collection{NonFungibleToken.Receiver},
+      buyerCollection: &BlockRecordsNFT.Collection{NonFungibleToken.Receiver},
       buyerPayment: @FungibleToken.Vault
     )
   }
@@ -217,7 +217,7 @@ pub contract BlockRecordsSale {
     pub fun borrowSaleListing(id: UInt64): &SaleListing{SaleListingPublicView}?
     pub fun purchase(
       id: UInt64,
-      buyerCollection: &BlockRecordsSingle.Collection{NonFungibleToken.Receiver},
+      buyerCollection: &BlockRecordsNFT.Collection{NonFungibleToken.Receiver},
       buyerPayment: @FungibleToken.Vault
     )
 }
@@ -259,7 +259,7 @@ pub contract BlockRecordsSale {
 
     pub fun purchase(
       id: UInt64,
-      buyerCollection: &BlockRecordsSingle.Collection{NonFungibleToken.Receiver},
+      buyerCollection: &BlockRecordsNFT.Collection{NonFungibleToken.Receiver},
       buyerPayment: @FungibleToken.Vault
   ) {
       pre {
@@ -304,8 +304,8 @@ pub contract BlockRecordsSale {
   }
 
   init () {
-    self.CollectionStoragePath = /storage/BlockRecordsSaleCollection002
-    self.CollectionPublicPath = /public/BlockRecordsSaleCollection002
+    self.CollectionStoragePath = /storage/BlockRecordsSaleListingCollection
+    self.CollectionPublicPath = /public/BlockRecordsSaleListingCollection
     self.totalSupply = 0
   }
 }
