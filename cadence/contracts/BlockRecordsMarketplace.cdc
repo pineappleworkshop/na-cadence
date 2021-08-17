@@ -135,7 +135,7 @@ pub contract BlockRecordsMarketplace {
 			creatorImageURL: String,
 			creatorAddress: Address
 		): @BlockRecordsRelease.ReleaseCollection {
-			return <- create BlockRecordsRelease.ReleaseCollection(
+			return <- BlockRecordsRelease.createReleaseCollection(
 				creatorStageName: creatorStageName,
 				creatorLegalName: creatorLegalName,
 				creatorImageURL: creatorImageURL,
@@ -144,6 +144,7 @@ pub contract BlockRecordsMarketplace {
 		}
 	}
 
+	// todo: move this struct to another smart contract
 	pub struct Payout {
 		// the vault that  on the payout will be distributed to
 		pub let fusdVault: Capability<&{FungibleToken.Receiver}>

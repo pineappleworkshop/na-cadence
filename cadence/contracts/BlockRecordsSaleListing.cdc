@@ -3,8 +3,9 @@ import BlockRecordsNFT from 0xSERVICE_ACCOUNT_ADDRESS
 import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
 import NonFungibleToken from 0xNFT_CONTRACT_ADDRESS
 import FUSD from 0xFUSD_CONTRACT_ADDRESS
+import BlockRecordsMarketplace from 0xSERVICE_ACCOUNT_ADDRESS
 
-pub contract BlockRecordsSale {
+pub contract BlockRecordsSaleListing {
 
   // SaleListing events.
   //
@@ -163,7 +164,7 @@ pub contract BlockRecordsSale {
         "price": self.price.toString()
       })
 
-      BlockRecordsSale.totalSupply = BlockRecordsSale.totalSupply + (1 as UInt64)
+      BlockRecordsSaleListing.totalSupply = BlockRecordsSaleListing.totalSupply + (1 as UInt64)
     }
   }
 
@@ -176,7 +177,7 @@ pub contract BlockRecordsSale {
     sellerPaymentReceiver: Capability<&FUSD.Vault{FungibleToken.Receiver}>,
     price: UFix64,
   ): @SaleListing {
-    let id = BlockRecordsSale.totalSupply
+    let id = BlockRecordsSaleListing.totalSupply
     
     return <-create SaleListing(
       id: id,
@@ -192,7 +193,7 @@ pub contract BlockRecordsSale {
   // use by the collection's owner.
   //
   pub resource interface CollectionManager {
-    pub fun insert(offer: @BlockRecordsSale.SaleListing)
+    pub fun insert(offer: @BlockRecordsSaleListing.SaleListing)
     pub fun remove(id: UInt64): @SaleListing 
   }
 
@@ -231,7 +232,7 @@ pub contract BlockRecordsSale {
     // insert
     // Insert a SaleListing into the collection, replacing one with the same id if present.
     //
-    pub fun insert(offer: @BlockRecordsSale.SaleListing) {
+    pub fun insert(offer: @BlockRecordsSaleListing.SaleListing) {
       let id: UInt64 = offer.id
       let price: UFix64 = offer.price
 

@@ -39,7 +39,6 @@ pub contract BlockRecordsNFT: NonFungibleToken {
     pub var metadata: {String: AnyStruct}
 
     init(
-      id: UInt64, 
       name: String, 
       type: String, 
       literation: String, 
@@ -48,8 +47,6 @@ pub contract BlockRecordsNFT: NonFungibleToken {
       serialNumber: UInt64,
       releaseID: UInt64
     ){
-      self.id = id
-
       self.metadata = {
         "name": name,
         "type": type,
@@ -60,9 +57,32 @@ pub contract BlockRecordsNFT: NonFungibleToken {
         "release_id": releaseID
       }
 
+			self.id = BlockRecordsNFT.totalSupply
+
       // increment id
       BlockRecordsNFT.totalSupply = BlockRecordsNFT.totalSupply + (1 as UInt64)
     }
+  }
+
+// other contracts owned by the account may mint singles
+  access(account) fun mintSingle(
+    name: String, 
+    type: String, 
+    literation: String, 
+    imageURL: String, 
+    audioURL: String,
+    serialNumber: UInt64,
+    releaseID: UInt64
+  ): @NFT {
+    return <- create BlockRecordsNFT.NFT(
+      name: name, 
+      type: type, 
+      literation: literation, 
+      imageURL: imageURL, 
+      audioURL: audioURL,
+      serialNumber: serialNumber,
+      releaseID: releaseID
+    )
   }
 
   // this is the interface that users can cast their BlockRecordsNFT Collection as

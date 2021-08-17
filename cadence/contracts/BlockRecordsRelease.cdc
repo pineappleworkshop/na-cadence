@@ -2,11 +2,8 @@
 import NonFungibleToken from 0xSERVICE_ACCOUNT_ADDRESS
 import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
 import FUSD from 0xFUSD_CONTRACT_ADDRESS
+import BlockRecordsNFT from 0xSERVICE_ACCOUNT_ADDRESS
 
-import BlockRecordsMarketplace from 0xSERVICE_ACCOUNT_ADDRESS
-
-// todo: encapsulate much of this funcationality into different smart contracts
-// 
 pub contract BlockRecordsRelease {
 
 	//events
@@ -100,6 +97,21 @@ pub contract BlockRecordsRelease {
 		}
 	}
 
+	// other contracts owned by the account may create release collections
+	access(account) fun createReleaseCollection(
+		creatorStageName: String,
+		creatorLegalName: String,
+		creatorImageURL: String,
+		creatorAddress: Address
+  ): @ReleaseCollection {
+    return <- create ReleaseCollection(
+			creatorStageName: creatorStageName,
+			creatorLegalName: creatorLegalName,
+			creatorImageURL: creatorImageURL,
+			creatorAddress: creatorAddress
+    )
+  }
+
 	pub resource interface ReleasePublic {
 		pub let id: UInt64
 		pub let name: String
@@ -134,7 +146,7 @@ pub contract BlockRecordsRelease {
 		pub var completed: Bool
 
 		// the sale fee cut for the release creator
-		pub let payout: BlockRecordsMarketplace.Payout
+		pub let payout: Payout
 
 		init(
 			name: String,
@@ -155,10 +167,10 @@ pub contract BlockRecordsRelease {
 			self.nftIDs = []
 			self.completed = false
 
-			self.id = BlockRecordsNFT.totalSupply
+			self.id = BlockRecordsRelease.totalSupply
 
 			// iterate supply
-			BlockRecordsNFT.totalSupply = BlockRecordsNFT.totalSupply + (1 as UInt64)
+			BlockRecordsRelease.totalSupply = BlockRecordsRelease.totalSupply + (1 as UInt64)
 		}
 
 		pub fun complete(){
@@ -183,10 +195,7 @@ pub contract BlockRecordsRelease {
 				// BlockRecordsNFT.NFTTypes.contains(type) : "invalid nft type"
 			}
 					
-			let id =  BlockRecordsNFT.totalSupply
-
-			let single <- create BlockRecordsNFT.NFT(
-				id: id, 
+			let single <- BlockRecordsNFT.mintSingle(
 				name: name, 
 				type: type, 
 				literation: literation, 
@@ -199,13 +208,8 @@ pub contract BlockRecordsRelease {
 			// append id to release collection
 			self.nftIDs.append(single.id)
 
-			// deposit into minter's own collection
-			receiverCollection.deposit(
-				token: <- single
-			)
-
 			emit Event(type: "minted", metadata: {
-				"id" : id.toString(),
+				"id" : single.id.toString(),
 				"name": name,
 				"type": type,
 				"literation": literation,
@@ -214,6 +218,11 @@ pub contract BlockRecordsRelease {
 				"serial_number": serialNumber.toString(),
 				"release_id": releaseID.toString()
 			})
+
+			// deposit into minter's own collection
+			receiverCollection.deposit(
+				token: <- single
+			)
 		}
 	}
 
@@ -341,6 +350,23 @@ pub contract BlockRecordsRelease {
 			self.address = address
 		}
 	}
+
+	// todo: move this struct to another smart contract
+	pub struct Payout {
+		// the vault that  on the payout will be distributed to
+		pub let fusdVault: Capability<&{FungibleToken.Receiver}>
+
+		// percentage percentFee of the sale that will be paid out to the marketplace vault
+		pub let percentFee: UFix64 
+
+		init(
+			fusdVault: Capability<&{FungibleToken.Receiver}>,
+			percentFee: UFix64
+		){
+			self.fusdVault = fusdVault
+			self.percentFee = percentFee
+		}
+	}
 		
 	init() {
 		self.CreatorStoragePath = /storage/BlockRecordsCreator
@@ -348,6 +374,8 @@ pub contract BlockRecordsRelease {
 
 		self.CollectionStoragePath = /storage/BlockRecordsReleaseCollection
 		self.CollectionPublicPath = /public/BlockRecordsReleaseCollection
+
+		self.totalSupply = 0
 
 		emit ContractInitialized()
 	}

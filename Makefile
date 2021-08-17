@@ -44,15 +44,6 @@ flow-deploy-contracts-testnet:
 flow-deploy-contracts-mainnet:
 	go run cli/main.go deploy-contracts --env mainnet
 
-flow-update-contracts-emulator:
-	go run cli/main.go update-contracts --env emulator
-
-flow-update-contracts-testnet:
-	go run cli/main.go update-contracts --env testnet
-
-flow-update-contracts-mainnet:
-	go run cli/main.go update-contracts --env mainnet
-
 docker-build:
 	docker build -t $(docker-image) .
 
