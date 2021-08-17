@@ -57,7 +57,7 @@ pub contract BlockRecordsNFT: NonFungibleToken {
         "image_url": imageURL,
         "audio_url": audioURL,
         "serial_number": serialNumber,
-      "release_id": releaseID
+        "release_id": releaseID
       }
 
       // increment id
