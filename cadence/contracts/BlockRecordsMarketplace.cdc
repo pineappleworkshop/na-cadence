@@ -30,11 +30,11 @@ pub contract BlockRecordsMarketplace {
 	pub let AdminStoragePath: StoragePath
 
 	pub resource interface MarketplacePublic {
-		pub let name: String
-		pub let payout: Payout
-		pub fun borrowReleaseCollections(): [&BlockRecordsRelease.ReleaseCollection]
-		pub fun borrowReleaseCollectionByProfileAddress(_ address: Address): &BlockRecordsRelease.ReleaseCollection
-		pub fun borrowReleaseByNFTID(_ nftID: UInt64): &BlockRecordsRelease.Release
+        pub let name: String
+        pub let payout: Payout
+        pub fun borrowReleaseCollections(): [&BlockRecordsRelease.ReleaseCollection]
+        pub fun borrowReleaseCollectionByProfileAddress(_ address: Address): &BlockRecordsRelease.ReleaseCollection
+        pub fun borrowReleaseByNFTID(_ nftID: UInt64): &BlockRecordsRelease.Release
 	}
 
 	// any account in posession of a Marketplace capability will be able to create release collections
@@ -110,64 +110,63 @@ pub contract BlockRecordsMarketplace {
 	}
 
 	pub resource interface AdminPublic {
-		pub fun addCapability(cap: Capability<&Marketplace>)
+		  pub fun addCapability(cap: Capability<&Marketplace>)
 	}
 
 	// accounts can create creator resource but will need to be authorized
 	pub fun createAdmin(): @Admin {
-		return <- create Admin()
+		  return <- create Admin()
 	}
 
 	// resource that an admin would own to be able to create BlockRecordsRelease.Release Collections
 	// 
 	pub resource Admin: AdminPublic {
 
-		//ownership of this capability allows for the creation of BlockRecordsRelease.Release Collections
-		access(account) var marketplaceCapability: Capability<&Marketplace>?
+        //ownership of this capability allows for the creation of BlockRecordsRelease.Release Collections
+        access(account) var marketplaceCapability: Capability<&Marketplace>?
 
 		init() {
-			self.marketplaceCapability = nil
+            self.marketplaceCapability = nil
 		}
 
 		pub fun addCapability(cap: Capability<&Marketplace>) {
-			pre {
-					cap.check() : "invalid capability"
-					self.marketplaceCapability == nil : "capability already set"
-			}
-			self.marketplaceCapability = cap
+            pre {
+                cap.check() : "invalid capability"
+                self.marketplaceCapability == nil : "capability already set"
+            }
+            self.marketplaceCapability = cap
 		}
 
 		// create release collection
 		pub fun createReleaseCollection(
-			creatorStageName: String,
-			creatorLegalName: String,
-			creatorImageURL: String,
-			creatorAddress: Address
+        creatorStageName: String,
+        creatorLegalName: String,
+        creatorImageURL: String,
+        creatorAddress: Address
 		): @BlockRecordsRelease.ReleaseCollection {
-			return <- BlockRecordsRelease.createReleaseCollection(
-				creatorStageName: creatorStageName,
-				creatorLegalName: creatorLegalName,
-				creatorImageURL: creatorImageURL,
-				creatorAddress: creatorAddress
-			)
-		}
+        return <- BlockRecordsRelease.createReleaseCollection(
+            creatorStageName: creatorStageName,
+            creatorLegalName: creatorLegalName,
+            creatorImageURL: creatorImageURL,
+            creatorAddress: creatorAddress
+        )}
 	}
 
 	// todo: move this struct to another smart contract
 	pub struct Payout {
-		// the vault that  on the payout will be distributed to
-		pub let fusdVault: Capability<&{FungibleToken.Receiver}>
+        // the vault that  on the payout will be distributed to
+        pub let fusdVault: Capability<&{FungibleToken.Receiver}>
 
-		// percentage percentFee of the sale that will be paid out to the marketplace vault
-		pub let percentFee: UFix64 
+        // percentage percentFee of the sale that will be paid out to the marketplace vault
+        pub let percentFee: UFix64 
 
-		init(
-			fusdVault: Capability<&{FungibleToken.Receiver}>,
-			percentFee: UFix64
-		){
-			self.fusdVault = fusdVault
-			self.percentFee = percentFee
-		}
+        init(
+            fusdVault: Capability<&{FungibleToken.Receiver}>,
+            percentFee: UFix64
+        ){
+            self.fusdVault = fusdVault
+            self.percentFee = percentFee
+        }
 	}
 
 	init() {
