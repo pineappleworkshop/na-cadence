@@ -71,9 +71,9 @@ pub contract BlockRecordsRelease {
 			emit Event(type: "collection_created", metadata: {
 				"id" : self.id.toString(),
 				"creator_stage_name": creatorStageName,
-        "creator_legal_name": creatorLegalName,
-        "creator_image_url": creatorImageURL,
-        "creator_address": creatorAddress.toString()
+                "creator_legal_name": creatorLegalName,
+                "creator_image_url": creatorImageURL,
+                "creator_address": creatorAddress.toString()
 			})
 
 			self.releases <- {}
@@ -86,9 +86,9 @@ pub contract BlockRecordsRelease {
 		pub fun createAndAddRelease(
 			type: String,
 			name: String, 
-      literation: String, 
-      imageURL: String, 
-      audioURL: String,
+            literation: String, 
+            imageURL: String, 
+            audioURL: String,
 			copiesCount: UInt64,
 			fusdVault: Capability<&{FungibleToken.Receiver}>,
 			percentFee: UFix64
@@ -137,14 +137,14 @@ pub contract BlockRecordsRelease {
 		creatorLegalName: String,
 		creatorImageURL: String,
 		creatorAddress: Address
-  ): @ReleaseCollection {
+    ): @ReleaseCollection {
     return <- create ReleaseCollection(
-			creatorStageName: creatorStageName,
-			creatorLegalName: creatorLegalName,
-			creatorImageURL: creatorImageURL,
-			creatorAddress: creatorAddress
-    )
-  }
+            creatorStageName: creatorStageName,
+            creatorLegalName: creatorLegalName,
+            creatorImageURL: creatorImageURL,
+            creatorAddress: creatorAddress
+        )
+    }
 
 	pub resource interface ReleasePublic {
 		pub let id: UInt64
@@ -183,9 +183,9 @@ pub contract BlockRecordsRelease {
 		init(
 			type: String,
 			name: String, 
-      literation: String, 
-      imageURL: String, 
-      audioURL: String,
+            literation: String, 
+            imageURL: String, 
+            audioURL: String,
 			copiesCount: UInt64,
 			fusdVault: Capability<&{FungibleToken.Receiver}>,
 			percentFee: UFix64
@@ -193,11 +193,11 @@ pub contract BlockRecordsRelease {
 			self.type = type
 
 			self.metadata = {
-        "name": name,
-        "literation": literation,
-        "image_url": imageURL,
-        "audio_url": audioURL
-      }
+                "name": name,
+                "literation": literation,
+                "image_url": imageURL,
+                "audio_url": audioURL
+            }
 
 			self.copiesCount = copiesCount
 
@@ -218,9 +218,9 @@ pub contract BlockRecordsRelease {
 			emit Event(type: "created", metadata: {
 				"id" : self.id.toString(),
 				"name": name,
-        "literation": literation,
-        "image_url": imageURL,
-        "audio_url": audioURL,
+                "literation": literation,
+                "image_url": imageURL,
+                "audio_url": audioURL,
 				"copies_count": copiesCount.toString(),
 				"percent_fee": percentFee.toString()
 			})
@@ -268,13 +268,13 @@ pub contract BlockRecordsRelease {
 	// potential creator accounts will create a public capability to this
 	// so that a BlockRecords admin can add the minter capability
 	pub resource interface CreatorPublic {
-			pub fun addCapability(cap: Capability<&ReleaseCollection>, address: Address)
+		pub fun addCapability(cap: Capability<&ReleaseCollection>, address: Address)
 	}
 
 	// accounts can create creator resource but, will not be able to mint without
 	// the ReleaseCollection capability
 	pub fun createCreator(): @Creator {
-			return <- create Creator()
+		return <- create Creator()
 	}
 
 	// resource that a creator would own to be able to mint their own NFTs
