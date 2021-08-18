@@ -30,11 +30,11 @@ pub contract BlockRecordsMarketplace {
 	pub let AdminStoragePath: StoragePath
 
 	pub resource interface MarketplacePublic {
-        pub let name: String
-        pub let payout: Payout
-        pub fun borrowReleaseCollections(): [&BlockRecordsRelease.ReleaseCollection]
-        pub fun borrowReleaseCollectionByProfileAddress(_ address: Address): &BlockRecordsRelease.ReleaseCollection
-        pub fun borrowReleaseByNFTID(_ nftID: UInt64): &BlockRecordsRelease.Release
+		pub let name: String
+		pub let payout: Payout
+		pub fun borrowReleaseCollections(): [&BlockRecordsRelease.ReleaseCollection]
+		pub fun borrowReleaseCollectionByProfileAddress(_ address: Address): &BlockRecordsRelease.ReleaseCollection
+		pub fun borrowReleaseByNFTID(_ nftID: UInt64): &BlockRecordsRelease.Release
 	}
 
 	// any account in posession of a Marketplace capability will be able to create release collections
@@ -122,101 +122,101 @@ pub contract BlockRecordsMarketplace {
 	// 
 	pub resource Admin: AdminPublic {
 
-        //ownership of this capability allows for the creation of BlockRecordsRelease.Release Collections
-        access(account) var marketplaceCapability: Capability<&Marketplace>?
+		//ownership of this capability allows for the creation of BlockRecordsRelease.Release Collections
+		access(account) var marketplaceCapability: Capability<&Marketplace>?
 
 		init() {
-            self.marketplaceCapability = nil
+			self.marketplaceCapability = nil
 		}
 
 		pub fun addCapability(cap: Capability<&Marketplace>) {
-            pre {
-                cap.check() : "invalid capability"
-                self.marketplaceCapability == nil : "capability already set"
-            }
-            self.marketplaceCapability = cap
+			pre {
+				cap.check() : "invalid capability"
+				self.marketplaceCapability == nil : "capability already set"
+			}
+			self.marketplaceCapability = cap
 		}
 
 		// create release collection
 		pub fun createReleaseCollection(
-        creatorStageName: String,
-        creatorLegalName: String,
-        creatorImageURL: String,
-        creatorAddress: Address
+			creatorStageName: String,
+			creatorLegalName: String,
+			creatorImageURL: String,
+			creatorAddress: Address
 		): @BlockRecordsRelease.ReleaseCollection {
-        return <- BlockRecordsRelease.createReleaseCollection(
-            creatorStageName: creatorStageName,
-            creatorLegalName: creatorLegalName,
-            creatorImageURL: creatorImageURL,
-            creatorAddress: creatorAddress
-        )}
+		return <- BlockRecordsRelease.createReleaseCollection(
+			creatorStageName: creatorStageName,
+			creatorLegalName: creatorLegalName,
+			creatorImageURL: creatorImageURL,
+			creatorAddress: creatorAddress
+		)}
 	}
 
 	// todo: move this struct to another smart contract
 	pub struct Payout {
-        // the vault that  on the payout will be distributed to
-        pub let fusdVault: Capability<&{FungibleToken.Receiver}>
+		// the vault that  on the payout will be distributed to
+		pub let fusdVault: Capability<&{FungibleToken.Receiver}>
 
-        // percentage percentFee of the sale that will be paid out to the marketplace vault
-        pub let percentFee: UFix64 
+		// percentage percentFee of the sale that will be paid out to the marketplace vault
+		pub let percentFee: UFix64 
 
-        init(
-            fusdVault: Capability<&{FungibleToken.Receiver}>,
-            percentFee: UFix64
-        ){
-            self.fusdVault = fusdVault
-            self.percentFee = percentFee
-        }
+		init(
+			fusdVault: Capability<&{FungibleToken.Receiver}>,
+			percentFee: UFix64
+		){
+			self.fusdVault = fusdVault
+			self.percentFee = percentFee
+		}
 	}
 
 	init() {
-        self.MarketplaceStoragePath = /storage/BlockRecordsMarketplace
-        self.MarketplacePublicPath = /public/BlockRecordsMarketplace
-        self.MarketplacePrivatePath = /private/BlockRecordsMarketplace
-        
-        self.AdminPrivatePath = /private/BlockRecordsAdmin
-        self.AdminStoragePath = /storage/BlockRecordsAdmin
+		self.MarketplaceStoragePath = /storage/BlockRecordsMarketplace
+		self.MarketplacePublicPath = /public/BlockRecordsMarketplace
+		self.MarketplacePrivatePath = /private/BlockRecordsMarketplace
+		
+		self.AdminPrivatePath = /private/BlockRecordsAdmin
+		self.AdminStoragePath = /storage/BlockRecordsAdmin
 
-        // initialize FUSD vault for service account so that we can receive sale percentFees and check balance
-        self.account.save(<-FUSD.createEmptyVault(), to: /storage/fusdVault)
-        self.account.link<&FUSD.Vault{FungibleToken.Receiver}>(
-            /public/fusdReceiver,
-            target: /storage/fusdVault
-        )
-        self.account.link<&FUSD.Vault{FungibleToken.Balance}>(
-            /public/fusdBalance,
-            target: /storage/fusdVault
-        )
+		// initialize FUSD vault for service account so that we can receive sale percentFees and check balance
+		self.account.save(<-FUSD.createEmptyVault(), to: /storage/fusdVault)
+		self.account.link<&FUSD.Vault{FungibleToken.Receiver}>(
+			/public/fusdReceiver,
+			target: /storage/fusdVault
+		)
+		self.account.link<&FUSD.Vault{FungibleToken.Balance}>(
+			/public/fusdBalance,
+			target: /storage/fusdVault
+		)
 
-        // initialize and save marketplace resource to account storage
-        let marketplaceFUSDVault = self.account.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)!
-        let marketplace <- create Marketplace(
-            name: "Block Records",
-            fusdVault: marketplaceFUSDVault,
-            percentFee: 0.05
-        )
-        self.account.save(<- marketplace, to: self.MarketplaceStoragePath)
-        self.account.link<&BlockRecordsMarketplace.Marketplace>(
-            self.MarketplacePrivatePath,
-            target: self.MarketplaceStoragePath
-        )
+		// initialize and save marketplace resource to account storage
+		let marketplaceFUSDVault = self.account.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)!
+		let marketplace <- create Marketplace(
+			name: "Block Records",
+			fusdVault: marketplaceFUSDVault,
+			percentFee: 0.05
+		)
+		self.account.save(<- marketplace, to: self.MarketplaceStoragePath)
+		self.account.link<&BlockRecordsMarketplace.Marketplace>(
+			self.MarketplacePrivatePath,
+			target: self.MarketplaceStoragePath
+		)
 
-        // todo: store public interface private?
-        self.account.link<&BlockRecordsMarketplace.Marketplace{BlockRecordsMarketplace.MarketplacePublic}>(
-            self.MarketplacePublicPath,
-            target: self.MarketplaceStoragePath
-        )       
+		// todo: store public interface private?
+		self.account.link<&BlockRecordsMarketplace.Marketplace{BlockRecordsMarketplace.MarketplacePublic}>(
+			self.MarketplacePublicPath,
+			target: self.MarketplaceStoragePath
+		)       
 
-        // add marketplace capability to admin resource
-        let marketplaceCap = self.account.getCapability<&BlockRecordsMarketplace.Marketplace>(self.MarketplacePrivatePath)!
-        
-        // initialize and save admin resource
-        let admin <- create Admin()
-        admin.addCapability(cap: marketplaceCap)
-        self.account.save(<- admin, to: self.AdminStoragePath)
-        self.account.link<&BlockRecordsMarketplace.Admin>(self.AdminPrivatePath, target: self.AdminStoragePath)  
+		// add marketplace capability to admin resource
+		let marketplaceCap = self.account.getCapability<&BlockRecordsMarketplace.Marketplace>(self.MarketplacePrivatePath)!
+		
+		// initialize and save admin resource
+		let admin <- create Admin()
+		admin.addCapability(cap: marketplaceCap)
+		self.account.save(<- admin, to: self.AdminStoragePath)
+		self.account.link<&BlockRecordsMarketplace.Admin>(self.AdminPrivatePath, target: self.AdminStoragePath)  
 
-        emit ContractInitialized()
+		emit ContractInitialized()
 	}
 }
 
