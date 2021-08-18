@@ -18,9 +18,7 @@ transaction(amount: UFix64, receiverAddress: Address) {
     execute {
         let recipient = getAccount(receiverAddress)
 
-        let receiver = recipient
-            .getCapability(/public/fusdReceiver)!
-            .borrow<&{FungibleToken.Receiver}>()
+        let receiver = recipient.getCapability(/public/fusdReceiver)!.borrow<&{FungibleToken.Receiver}>()
             ?? panic("Could not get receiver reference to the FUSD Vault")
 
         let vault <- self.minterRef.mintTokens(amount:amount)

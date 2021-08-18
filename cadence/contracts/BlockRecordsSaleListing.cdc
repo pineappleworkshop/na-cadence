@@ -7,13 +7,13 @@ import BlockRecordsMarketplace from 0xSERVICE_ACCOUNT_ADDRESS
 
 /* 
 	SaleListings allow BlockRecordsNFT owners to create a resource that effectively puts 
-  their NFTs up for sale. 
-  
-  Buyers can purchase these NFTs for sale by providing a capability to an FUSD vault
-  with a sufficient balance. Payouts will be distributed to the BlockRecordsMarketplace 
-  facilitating the transaction and to the vault provided by the BlockRecordsRelease 
-  associated with the NFT. The leftover FUSD will be deposited into the vault provided 
-  by the seller and the NFT will be transferred into the collection provided by the buyer.
+    their NFTs up for sale. 
+    
+    Buyers can purchase these NFTs for sale by providing a capability to an FUSD vault
+    with a sufficient balance. Payouts will be distributed to the BlockRecordsMarketplace 
+    facilitating the transaction and to the vault provided by the BlockRecordsRelease 
+    associated with the NFT. The leftover FUSD will be deposited into the vault provided 
+    by the seller and the NFT will be transferred into the collection provided by the buyer.
 */
 
 pub contract BlockRecordsSaleListing {
@@ -261,7 +261,8 @@ pub contract BlockRecordsSaleListing {
                 "id" : id.toString()
             })
 
-            return <-(self.saleOffers.remove(key: id) ?? panic("missing SaleListing"))
+            return <-(self.saleOffers.remove(key: id) 
+                ?? panic("missing SaleListing"))
         }
 
         pub fun purchase(
@@ -273,7 +274,8 @@ pub contract BlockRecordsSaleListing {
                 self.saleOffers[id] != nil: "SaleListing does not exist in the collection!"
             }
 
-            let offer <-(self.saleOffers.remove(key: id) ?? panic("missing SaleListing"))
+            let offer <-(self.saleOffers.remove(key: id) 
+                ?? panic("missing SaleListing"))
             offer.accept(buyerCollection: buyerCollection, buyerPayment: <-buyerPayment)
             destroy offer
         }
