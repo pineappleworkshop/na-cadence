@@ -5,8 +5,8 @@ import FUSD from 0xFUSD_CONTRACT_ADDRESS
 
 /* 
 	BlockRecords NFTs
-  - single
-  - album (not yet implemented)
+    - single
+    - album (not yet implemented)
 */
 
 pub contract BlockRecordsNFT: NonFungibleToken {
@@ -127,7 +127,8 @@ pub contract BlockRecordsNFT: NonFungibleToken {
         // Removes an NFT from the collection and moves it to the caller
         //
         pub fun withdraw(withdrawID: UInt64): @NonFungibleToken.NFT {
-            let token <- self.ownedNFTs.remove(key: withdrawID) ?? panic("missing NFT")
+            let token <- self.ownedNFTs.remove(key: withdrawID) 
+                ?? panic("missing NFT")
             let ownerAddress = self.owner?.address!.toString()
 
             emit Event(type: "withdrawn", metadata: {
@@ -203,10 +204,8 @@ pub contract BlockRecordsNFT: NonFungibleToken {
     // get a reference to a BlockRecordsNFT from an account's Collection, if available.
     //
     pub fun fetch(_ from: Address, itemID: UInt64): &BlockRecordsNFT.NFT? {
-        let collection = getAccount(from)
-        .getCapability(BlockRecordsNFT.CollectionPublicPath)!
-        .borrow<&BlockRecordsNFT.Collection{BlockRecordsNFT.BlockRecordsNFTCollectionPublic}>()
-        ?? panic("couldn't get collection")
+        let collection = getAccount(from).getCapability(BlockRecordsNFT.CollectionPublicPath)!.borrow<&BlockRecordsNFT.Collection{BlockRecordsNFT.BlockRecordsNFTCollectionPublic}>()
+            ?? panic("couldn't get collection")
         
         // We trust BlockRecordsNFT.Collection.borowBlockRecords to get the correct itemID
         // (it checks it before returning it).

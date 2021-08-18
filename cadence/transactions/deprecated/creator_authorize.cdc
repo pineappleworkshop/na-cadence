@@ -7,12 +7,11 @@ import FUSD from 0xFUSD_CONTRACT_ADDRESS
 // after, gives the revocable capability to the creator
 
 transaction(newCreatorAddress: Address) {
-
     prepare(account: AuthAccount) {
-
         // get creator capability receiver
         let creator = getAccount(newCreatorAddress)
-        let creatorReceiver = creator.getCapability<&{BlockRecordsSingle.CreatorPublic}>(BlockRecordsSingle.CreatorPublicPath).borrow() ?? panic("Could not borrow capability receiver")
+        let creatorReceiver = creator.getCapability<&{BlockRecordsSingle.CreatorPublic}>(BlockRecordsSingle.CreatorPublicPath).borrow() 
+            ?? panic("Could not borrow capability receiver")
 
         // get service acct FUSD vault
         let fusdVault = account.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver) 
