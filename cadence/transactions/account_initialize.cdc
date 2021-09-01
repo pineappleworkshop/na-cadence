@@ -19,7 +19,7 @@ transaction {
         acct.save(<-collection, to: /storage/BlockRecordsNFTCollection)
         
         acct.unlink(/public/BlockRecordsNFTCollection)
-        acct.link<&{NonFungibleToken.CollectionPublic, BlockRecordsNFT.BlockRecordsNFTCollectionPublic}>(
+        acct.link<&{NonFungibleToken.CollectionPublic, BlockRecordsNFT.CollectionPublic}>(
             /public/BlockRecordsNFTCollection,
             target: /storage/BlockRecordsNFTCollection
         )    

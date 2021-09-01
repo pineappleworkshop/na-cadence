@@ -8,7 +8,7 @@ transaction(creatorAddress: Address) {
         // to keep track of creator's paths; however, this should be sufficient for now
         let uniqueCreatorPrivatePath = /private/BlockRecordsReleaseCollectionCREATOR_ACCOUNT_ADDRESS
 
-        if !account.getCapability<&BlockRecordsSingle.ReleaseCollection>(uniqueCreatorPrivatePath).check() {
+        if !account.getCapability<&BlockRecordsSingle.Collection>(uniqueCreatorPrivatePath).check() {
             panic("capability does not exist")
         }
 

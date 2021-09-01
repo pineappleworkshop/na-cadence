@@ -44,8 +44,10 @@ pub contract BlockRecordsNFT: NonFungibleToken {
         // metadata is a dictionary of strings so our fields are mutable
         pub var metadata: {String: AnyStruct}
 
+        // sequence in which nft was minted in a release
         pub let serialNumber: UInt64
 
+        // unique id of nft release
         pub let releaseID: UInt64
 
         init(
@@ -105,7 +107,7 @@ pub contract BlockRecordsNFT: NonFungibleToken {
     // this is the interface that users can cast their BlockRecordsNFT Collection as
     // to allow others to deposit BlockRecordsNFT into their Collection. It also allows for reading
     // the details of BlockRecordsNFT in the Collection.
-    pub resource interface BlockRecordsNFTCollectionPublic {
+    pub resource interface CollectionPublic {
         pub fun deposit(token: @NonFungibleToken.NFT)
         pub fun getIDs(): [UInt64]
         pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT
@@ -120,14 +122,13 @@ pub contract BlockRecordsNFT: NonFungibleToken {
 
     // a collection of BlockRecordsNFT NFTs owned by an account
     //
-    pub resource Collection: BlockRecordsNFTCollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic {
+    pub resource Collection: CollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic {
+
         // dictionary of NFT conforming tokens
         // NFT is a resource type with an `UInt64` ID field
-        //
         pub var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
 
-        // Removes an NFT from the collection and moves it to the caller
-        //
+        // removes an NFT from the collection and moves it to the caller
         pub fun withdraw(withdrawID: UInt64): @NonFungibleToken.NFT {
             let token <- self.ownedNFTs.remove(key: withdrawID) 
                 ?? panic("missing NFT")
@@ -143,7 +144,6 @@ pub contract BlockRecordsNFT: NonFungibleToken {
 
         // takes an NFT and adds it to the collections dictionary
         // and adds the ID to the id array
-        //
         pub fun deposit(token: @NonFungibleToken.NFT) {
             let token <- token as! @BlockRecordsNFT.NFT
             let id: UInt64 = token.id
@@ -159,14 +159,12 @@ pub contract BlockRecordsNFT: NonFungibleToken {
         }
 
         // returns an array of the IDs that are in the collection
-        //
         pub fun getIDs(): [UInt64] {
             return self.ownedNFTs.keys
         }
 
         // gets a reference to an NFT in the collection
         // so that the caller can read its metadata and call its methods
-        //
         pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT {
             return &self.ownedNFTs[id] as &NonFungibleToken.NFT
         }
@@ -174,7 +172,6 @@ pub contract BlockRecordsNFT: NonFungibleToken {
         // gets a reference to an NFT in the collection as a BlockRecordsNFT,
         // exposing all of its fields (including the img).
         // his is safe as there are no functions that can be called on the BlockRecordsNFT.
-        //
         pub fun borrowBlockRecordsNFT(id: UInt64): &BlockRecordsNFT.NFT? {
             if self.ownedNFTs[id] != nil {
                 let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
@@ -206,7 +203,7 @@ pub contract BlockRecordsNFT: NonFungibleToken {
     // get a reference to a BlockRecordsNFT from an account's Collection, if available.
     //
     pub fun fetch(_ from: Address, itemID: UInt64): &BlockRecordsNFT.NFT? {
-        let collection = getAccount(from).getCapability(BlockRecordsNFT.CollectionPublicPath)!.borrow<&BlockRecordsNFT.Collection{BlockRecordsNFT.BlockRecordsNFTCollectionPublic}>()
+        let collection = getAccount(from).getCapability(BlockRecordsNFT.CollectionPublicPath)!.borrow<&BlockRecordsNFT.Collection{BlockRecordsNFT.CollectionPublic}>()
             ?? panic("couldn't get collection")
         
         // We trust BlockRecordsNFT.Collection.borowBlockRecords to get the correct itemID

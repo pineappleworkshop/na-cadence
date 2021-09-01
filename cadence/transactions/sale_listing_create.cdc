@@ -6,7 +6,7 @@ import FUSD from 0xFUSD_CONTRACT_ADDRESS
 
 transaction(id: UInt64, price: UFix64) {
     let sellerFUSDVault: Capability<&FUSD.Vault{FungibleToken.Receiver}>
-    let BlockRecordsNFTCollection: Capability<&BlockRecordsNFT.Collection{NonFungibleToken.Provider, BlockRecordsNFT.BlockRecordsNFTCollectionPublic}>
+    let BlockRecordsNFTCollection: Capability<&BlockRecordsNFT.Collection{NonFungibleToken.Provider, BlockRecordsNFT.CollectionPublic}>
     let marketCollection: &BlockRecordsSaleListing.Collection
 
     prepare(signer: AuthAccount) {
@@ -16,11 +16,11 @@ transaction(id: UInt64, price: UFix64) {
         
         assert(self.sellerFUSDVault.borrow() != nil, message: "Missing or mis-typed FUSD receiver")
         
-        if !signer.getCapability<&BlockRecordsNFT.Collection{NonFungibleToken.Provider, BlockRecordsNFT.BlockRecordsNFTCollectionPublic}>(BlockRecordsCollectionProviderPrivatePath)!.check() {
-            signer.link<&BlockRecordsNFT.Collection{NonFungibleToken.Provider, BlockRecordsNFT.BlockRecordsNFTCollectionPublic}>(BlockRecordsCollectionProviderPrivatePath, target: BlockRecordsNFT.CollectionStoragePath)
+        if !signer.getCapability<&BlockRecordsNFT.Collection{NonFungibleToken.Provider, BlockRecordsNFT.CollectionPublic}>(BlockRecordsCollectionProviderPrivatePath)!.check() {
+            signer.link<&BlockRecordsNFT.Collection{NonFungibleToken.Provider, BlockRecordsNFT.CollectionPublic}>(BlockRecordsCollectionProviderPrivatePath, target: BlockRecordsNFT.CollectionStoragePath)
         }
 
-        self.BlockRecordsNFTCollection = signer.getCapability<&BlockRecordsNFT.Collection{NonFungibleToken.Provider, BlockRecordsNFT.BlockRecordsNFTCollectionPublic}>(BlockRecordsCollectionProviderPrivatePath)!
+        self.BlockRecordsNFTCollection = signer.getCapability<&BlockRecordsNFT.Collection{NonFungibleToken.Provider, BlockRecordsNFT.CollectionPublic}>(BlockRecordsCollectionProviderPrivatePath)!
 
         assert(self.BlockRecordsNFTCollection.borrow() != nil, message: "Missing or mis-typed BlockRecordsNFTCollection provider")
         
