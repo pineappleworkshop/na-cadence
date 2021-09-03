@@ -34,8 +34,8 @@ pub contract BlockRecordsMarketplace {
     pub resource interface MarketplacePublic {
         pub let name: String
         pub let payout: Payout
-        pub fun borrowReleaseCollections(): [&BlockRecordsRelease.ReleaseCollection]
-        pub fun borrowReleaseCollectionByProfileAddress(_ address: Address): &BlockRecordsRelease.ReleaseCollection
+        pub fun borrowReleaseCollections(): [&BlockRecordsRelease.Collection]
+        pub fun borrowReleaseCollectionByProfileAddress(_ address: Address): &BlockRecordsRelease.Collection
         pub fun borrowReleaseByNFTID(_ nftID: UInt64): &BlockRecordsRelease.Release
     }
 
@@ -50,7 +50,7 @@ pub contract BlockRecordsMarketplace {
         pub let payout: Payout
 
         // todo: change this to dict
-        access(account) var releaseCollectionCapabilities: [Capability<&BlockRecordsRelease.ReleaseCollection>]
+        access(account) var releaseCollectionCapabilities: [Capability<&BlockRecordsRelease.Collection>]
 
         init(
             name: String,
@@ -67,35 +67,35 @@ pub contract BlockRecordsMarketplace {
             self.releaseCollectionCapabilities = []
         }
 
-        pub fun addReleaseCollectionCapability(cap: Capability<&BlockRecordsRelease.ReleaseCollection>) {
+        pub fun addReleaseCollectionCapability(cap: Capability<&BlockRecordsRelease.Collection>) {
             self.releaseCollectionCapabilities.append(cap)
         }
 
-        pub fun borrowReleaseCollections(): [&BlockRecordsRelease.ReleaseCollection] {
-            let releaseCollections: [&BlockRecordsRelease.ReleaseCollection] = []
+        pub fun borrowReleaseCollections(): [&BlockRecordsRelease.Collection] {
+            let releaseCollections: [&BlockRecordsRelease.Collection] = []
             for rc in self.releaseCollectionCapabilities {
                 let releaseCollection = rc!.borrow()!
                 releaseCollections.append(releaseCollection)
             }
-            return releaseCollections as [&BlockRecordsRelease.ReleaseCollection]
+            return releaseCollections as [&BlockRecordsRelease.Collection]
         }
 
         // borrow release collection by creator profile address
-        pub fun borrowReleaseCollectionByProfileAddress(_ address: Address) : &BlockRecordsRelease.ReleaseCollection {
-            var releaseCollection: &BlockRecordsRelease.ReleaseCollection? = nil
+        pub fun borrowReleaseCollectionByProfileAddress(_ address: Address) : &BlockRecordsRelease.Collection {
+            var releaseCollection: &BlockRecordsRelease.Collection? = nil
             let releaseCollections = self.borrowReleaseCollections()
             for rc in releaseCollections {
                 if rc.creatorProfile.address == address {
-                    releaseCollection = rc as &BlockRecordsRelease.ReleaseCollection
+                    releaseCollection = rc as &BlockRecordsRelease.Collection
                     break
                 }
             }
-            return releaseCollection! as &BlockRecordsRelease.ReleaseCollection
+            return releaseCollection! as &BlockRecordsRelease.Collection
         }
 
         // borrow release by nft id
         pub fun borrowReleaseByNFTID(_ nftID: UInt64) : &BlockRecordsRelease.Release {
-            var releaseCollection: &BlockRecordsRelease.ReleaseCollection? = nil
+            var releaseCollection: &BlockRecordsRelease.Collection? = nil
             var release: &BlockRecordsRelease.Release? = nil
             let releaseCollections = self.borrowReleaseCollections()
             for rc in releaseCollections {
@@ -142,13 +142,13 @@ pub contract BlockRecordsMarketplace {
         // create release collection
         pub fun createReleaseCollection(
             creatorStageName: String,
-            creatorLegalName: String,
+            creatorName: String,
             creatorImageURL: String,
             creatorAddress: Address
-        ): @BlockRecordsRelease.ReleaseCollection {
+        ): @BlockRecordsRelease.Collection {
         return <- BlockRecordsRelease.createReleaseCollection(
             creatorStageName: creatorStageName,
-            creatorLegalName: creatorLegalName,
+            creatorName: creatorName,
             creatorImageURL: creatorImageURL,
             creatorAddress: creatorAddress
         )}
@@ -156,10 +156,11 @@ pub contract BlockRecordsMarketplace {
 
     // todo: move this struct to another smart contract
     pub struct Payout {
-        // the vault that  on the payout will be distributed to
+        
+        // the vault that on the payout will be distributed to
         pub let fusdVault: Capability<&{FungibleToken.Receiver}>
 
-        // percentage percentFee of the sale that will be paid out to the marketplace vault
+        // percentage percentFee of the sale that will be paid out to the fusd vault
         pub let percentFee: UFix64 
 
         init(

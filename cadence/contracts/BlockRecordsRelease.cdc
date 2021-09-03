@@ -3,6 +3,7 @@ import NonFungibleToken from 0xSERVICE_ACCOUNT_ADDRESS
 import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
 import FUSD from 0xFUSD_CONTRACT_ADDRESS
 import BlockRecordsNFT from 0xSERVICE_ACCOUNT_ADDRESS
+import BlockRecordsMarketplace from 0xSERVICE_ACCOUNT_ADDRESS
 
 /** 
 
@@ -10,7 +11,7 @@ Releases are the root resource of any BlockRecords nft.
 
 potential "creators" will create and save the creator resource to their storage and expose
 its capability receiver function publicly. this allows the service account to create a unique
-ReleaseCollection, save it to storage, create a private capability, and send that capability 
+Collection, save it to storage, create a private capability, and send that capability 
 to the creator. the service account maintains the right to revoke this capability - blocking the
 creator's access to their release collection - in the event that the creator violates our terms
 and agreements.
@@ -36,13 +37,14 @@ pub contract BlockRecordsRelease {
     //
     pub var totalSupply: UInt64
 
-    pub resource interface ReleaseCollectionPublic {
+    pub resource interface CollectionPublic {
         pub fun borrowRelease(_ id: UInt64): &Release
     }
 
-    // any account in posession of a ReleaseCollection will be able to mint BlockRecords NFTs
+    // todo: rename collection
+    // any account in posession of a Collection will be able to mint BlockRecords NFTs
     // this is secure because "transactions cannot create resource types outside of containing contracts"
-    pub resource ReleaseCollection: ReleaseCollectionPublic {  
+    pub resource Collection: CollectionPublic {  
 
         // unique id of the release collection
         pub let id: UInt64
@@ -55,7 +57,7 @@ pub contract BlockRecordsRelease {
 
         init(
             creatorStageName: String,
-            creatorLegalName: String,
+            creatorName: String,
             creatorImageURL: String,
             creatorAddress: Address
         ){
@@ -64,7 +66,7 @@ pub contract BlockRecordsRelease {
 
             self.creatorProfile = CreatorProfile(
                 stageName: creatorStageName,
-                legalName: creatorLegalName,
+                name: creatorName,
                 imageURL: creatorImageURL,
                 address: creatorAddress
             )
@@ -73,7 +75,7 @@ pub contract BlockRecordsRelease {
             emit Event(type: "collection_created", metadata: {
                 "id" : self.id.toString(),
                 "creator_stage_name": creatorStageName,
-                "creator_legal_name": creatorLegalName,
+                "creator_legal_name": creatorName,
                 "creator_image_url": creatorImageURL,
                 "creator_address": creatorAddress.toString()
             })
@@ -136,13 +138,13 @@ pub contract BlockRecordsRelease {
     // other contracts owned by the account may create release collections
     access(account) fun createReleaseCollection(
         creatorStageName: String,
-        creatorLegalName: String,
+        creatorName: String,
         creatorImageURL: String,
         creatorAddress: Address
-    ): @ReleaseCollection {
-    return <- create ReleaseCollection(
+    ): @Collection {
+    return <- create Collection(
             creatorStageName: creatorStageName,
-            creatorLegalName: creatorLegalName,
+            creatorName: creatorName,
             creatorImageURL: creatorImageURL,
             creatorAddress: creatorAddress
         )
@@ -154,7 +156,7 @@ pub contract BlockRecordsRelease {
         pub let metadata: {String: AnyStruct}
         pub let type: String
         pub var completed: Bool
-        pub let payout: Payout
+        pub let payout: BlockRecordsMarketplace.Payout
     }
 
     // acts as the root resource for any NFT minted by a creator
@@ -177,7 +179,7 @@ pub contract BlockRecordsRelease {
         pub var nftIDs: [UInt64]
 
         // the sale fee cut for the release creator
-        pub let payout: Payout
+        pub let payout: BlockRecordsMarketplace.Payout
 
         // specifies that all NFTs that should be added, were added
         pub var completed: Bool
@@ -203,7 +205,7 @@ pub contract BlockRecordsRelease {
 
             self.copiesCount = copiesCount
 
-            self.payout = Payout(
+            self.payout = BlockRecordsMarketplace.Payout(
                 fusdVault: fusdVault,
                 percentFee: percentFee
             )
@@ -270,11 +272,11 @@ pub contract BlockRecordsRelease {
     // potential creator accounts will create a public capability to this
     // so that a BlockRecords admin can add the minter capability
     pub resource interface CreatorPublic {
-        pub fun addCapability(cap: Capability<&ReleaseCollection>, address: Address)
+        pub fun addCapability(cap: Capability<&Collection>, address: Address)
     }
 
     // accounts can create creator resource but, will not be able to mint without
-    // the ReleaseCollection capability
+    // the Collection capability
     pub fun createCreator(): @Creator {
         return <- create Creator()
     }
@@ -282,13 +284,13 @@ pub contract BlockRecordsRelease {
     // resource that a creator would own to be able to mint their own NFTs
     // 
     pub resource Creator: CreatorPublic {
-        access(account) var releaseCollectionCapability: Capability<&ReleaseCollection>?
+        access(account) var releaseCollectionCapability: Capability<&Collection>?
 
         init() {
             self.releaseCollectionCapability = nil
         }
 
-        pub fun addCapability(cap: Capability<&ReleaseCollection>, address: Address) {
+        pub fun addCapability(cap: Capability<&Collection>, address: Address) {
             pre {
                 cap.check() : "invalid capability"
                 self.releaseCollectionCapability == nil : "capability already set"
@@ -296,9 +298,18 @@ pub contract BlockRecordsRelease {
             
             self.releaseCollectionCapability = cap
 
+            let releaseCollection = self.releaseCollectionCapability!.borrow()!
+            let creator = releaseCollection.creatorProfile
+
+            // todo: rename name as name
+            // emitted when a creator is granted the capability to a collection,
+            // allowing them to mint BlockRecords NFTs
             emit Event(type: "collection_capability_added", metadata: {
-                "collection_id": self.releaseCollectionCapability!.borrow()!.id.toString(),
-                "creator_address": address.toString()
+                "collection_id": releaseCollection.id.toString(),
+                "creator_stage_name": creator.stageName,
+                "creator_legal_name": creator.name,
+                "creator_img_url": creator.imageURL,
+                "creator_address": creator.address.toString()
             })
 
         }
@@ -358,8 +369,9 @@ pub contract BlockRecordsRelease {
         // creator's stage name or pseudonym
         pub var stageName: String
 
+        // todo: rename to name
         // creator's legal full name
-        pub var legalName: String
+        pub var name: String
 
         // creator's desired profile picture url
         pub var imageURL: String
@@ -374,31 +386,14 @@ pub contract BlockRecordsRelease {
 
         init(
             stageName: String, 
-            legalName: String,
+            name: String,
             imageURL: String,
             address: Address
         ){
             self.stageName = stageName
-            self.legalName = legalName
+            self.name = name
             self.imageURL = imageURL
             self.address = address
-        }
-    }
-
-    // todo: move this struct to another smart contract
-    pub struct Payout {
-        // the vault that  on the payout will be distributed to
-        pub let fusdVault: Capability<&{FungibleToken.Receiver}>
-
-        // percentage percentFee of the sale that will be paid out to the marketplace vault
-        pub let percentFee: UFix64 
-
-        init(
-            fusdVault: Capability<&{FungibleToken.Receiver}>,
-            percentFee: UFix64
-        ){
-            self.fusdVault = fusdVault
-            self.percentFee = percentFee
         }
     }
         

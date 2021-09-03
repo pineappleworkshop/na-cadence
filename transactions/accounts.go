@@ -226,7 +226,7 @@ func SetupCreator(serviceAcctAddr string, targetAcctAddress flow.Address, target
 
 type Creator struct {
 	StageName cadence.String
-	LegalName cadence.String
+	Name      cadence.String
 	ImageURL  cadence.String
 	Address   cadence.Address
 }
@@ -281,7 +281,7 @@ func CreateReleaseCollectionForCreator(serviceAcctAddr string, serviceAcctPrivKe
 	}
 
 	tx.AddArgument(creator.StageName)
-	tx.AddArgument(creator.LegalName)
+	tx.AddArgument(creator.Name)
 	tx.AddArgument(creator.ImageURL)
 	tx.AddArgument(creator.Address)
 

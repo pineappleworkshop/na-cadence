@@ -9,7 +9,7 @@ import FUSD from 0xFUSD_CONTRACT_ADDRESS
 
 transaction(
     creatorStageName: String,
-    creatorLegalName: String,
+    creatorName: String,
     creatorImageURL: String,
     creatorAddress: Address 
 ) {
@@ -25,7 +25,7 @@ transaction(
         let releaseCollStoragePath = /storage/BlockRecordsReleaseCollectionCREATOR_ACCOUNT_ADDRESS
         let releaseCollection <- account.getCapability<&BlockRecordsMarketplace.Admin>(BlockRecordsMarketplace.AdminPrivatePath).borrow()!.createReleaseCollection(
             creatorStageName: creatorStageName,
-            creatorLegalName: creatorLegalName,
+            creatorName: creatorName,
             creatorImageURL: creatorImageURL,
             creatorAddress: creatorAddress
         )
@@ -34,13 +34,13 @@ transaction(
         // create unique private path for Release Collection so that we can revoke the capability if
         // creator violates the agreement
         let releaseCollPrivPath = /private/BlockRecordsReleaseCollectionCREATOR_ACCOUNT_ADDRESS
-        if account.getCapability<&BlockRecordsRelease.ReleaseCollection>(releaseCollPrivPath).check() {
+        if account.getCapability<&BlockRecordsRelease.Collection>(releaseCollPrivPath).check() {
             panic("unique creator release collection private path already exists")
         }
-        account.link<&BlockRecordsRelease.ReleaseCollection>(releaseCollPrivPath, target: releaseCollStoragePath)
+        account.link<&BlockRecordsRelease.Collection>(releaseCollPrivPath, target: releaseCollStoragePath)
 
         // add release capability to creator so that they may create releases and mint NFTs
-        let releaseCollectionCap = account.getCapability<&BlockRecordsRelease.ReleaseCollection>(releaseCollPrivPath)
+        let releaseCollectionCap = account.getCapability<&BlockRecordsRelease.Collection>(releaseCollPrivPath)
         creatorReceiver.addCapability(cap: releaseCollectionCap, address: creatorAddress)
 
         let marketplaceCap = account.getCapability<&BlockRecordsMarketplace.Marketplace>(BlockRecordsMarketplace.MarketplacePrivatePath).borrow()!

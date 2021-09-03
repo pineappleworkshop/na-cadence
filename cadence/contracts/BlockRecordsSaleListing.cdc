@@ -83,15 +83,13 @@ pub contract BlockRecordsSaleListing {
         // the sale payment price.
         pub let price: UFix64
 
-        // // the royalty percentage
-        // pub let royalty: UFix64?
-
         // the collection containing that ID.
-        access(self) let sellerItemProvider: Capability<&BlockRecordsNFT.Collection{BlockRecordsNFT.BlockRecordsNFTCollectionPublic, NonFungibleToken.Provider}>
+        access(self) let sellerItemProvider: Capability<&BlockRecordsNFT.Collection{BlockRecordsNFT.CollectionPublic, NonFungibleToken.Provider}>
 
         // the seller FUSD vault
         access(self) let sellerPaymentReceiver: Capability<&FUSD.Vault{FungibleToken.Receiver}>
 
+        // todo: rename to marketplace receiver??
         // the beneficiary's FUSD vault 
         access(self) var beneficiaryReceiver: Capability<&FUSD.Vault{FungibleToken.Receiver}>
         
@@ -132,20 +130,21 @@ pub contract BlockRecordsSaleListing {
 
             emit SaleListingAccepted(id: self.id, price: self.price, seller: self.owner?.address)
 
+            // SaleListing was accepted by another account and destroyed
             emit Event(type: "sale_listing_completed", metadata: {
                 "id": self.id.toString()
             })
         }
 
         destroy() {
-        // whether the sale completed or not, publicize that it is being withdrawn.
+            // whether the sale completed or not, publicize that it is being withdrawn.
             emit SaleListingFinished(id: self.id)
         }
 
         init(
             id: UInt64,
             nftID: UInt64,
-            sellerItemProvider: Capability<&BlockRecordsNFT.Collection{BlockRecordsNFT.BlockRecordsNFTCollectionPublic, NonFungibleToken.Provider}>,
+            sellerItemProvider: Capability<&BlockRecordsNFT.Collection{BlockRecordsNFT.CollectionPublic, NonFungibleToken.Provider}>,
             sellerPaymentReceiver: Capability<&FUSD.Vault{FungibleToken.Receiver}>,
             price: UFix64
         ) {
@@ -166,6 +165,7 @@ pub contract BlockRecordsSaleListing {
 
             emit SaleListingCreated(id: self.id, price: self.price)
 
+            // SaleListing created
             emit Event(type: "sale_listing_for_sale", metadata: {
                 "id" : self.id.toString(),
                 "nft_id" : self.nftID.toString(),
@@ -181,7 +181,7 @@ pub contract BlockRecordsSaleListing {
     //
     pub fun createSaleListing (
         nftID: UInt64,
-        sellerItemProvider: Capability<&BlockRecordsNFT.Collection{BlockRecordsNFT.BlockRecordsNFTCollectionPublic, NonFungibleToken.Provider}>,
+        sellerItemProvider: Capability<&BlockRecordsNFT.Collection{BlockRecordsNFT.CollectionPublic, NonFungibleToken.Provider}>,
         sellerPaymentReceiver: Capability<&FUSD.Vault{FungibleToken.Receiver}>,
         price: UFix64,
     ): @SaleListing {
@@ -234,36 +234,39 @@ pub contract BlockRecordsSaleListing {
     // Collection
     // a resource that allows its owner to manage a list of SaleListings, and purchasers to interact with them.
     //
-    pub resource Collection : CollectionManager, CollectionPurchaser, CollectionPublic {
-        pub var saleOffers: @{UInt64: SaleListing}
+    pub resource Collection: CollectionManager, CollectionPurchaser, CollectionPublic {
+        
+        // dictionary of SaleListings
+        pub var saleListings: @{UInt64: SaleListing}
 
         // insert
         // Insert a SaleListing into the collection, replacing one with the same id if present.
         //
         pub fun insert(offer: @BlockRecordsSaleListing.SaleListing) {
-        let id: UInt64 = offer.id
-        let price: UFix64 = offer.price
+            let id: UInt64 = offer.id
+            let price: UFix64 = offer.price
 
-        // add the new offer to the dictionary which removes the old one
-        let oldOffer <- self.saleOffers[id] <- offer
-        destroy oldOffer
+            // add the new offer to the dictionary which removes the old one
+            let oldOffer <- self.saleListings[id] <- offer
+            destroy oldOffer
 
-        emit CollectionInsertedSaleListing(
-            id: id,
-            price: price,
-            seller: self.owner?.address
-        )
+            emit CollectionInsertedSaleListing(
+                id: id,
+                price: price,
+                seller: self.owner?.address
+            )
         }
 
         // remove and return a SaleListing from the collection.
         pub fun remove(id: UInt64): @SaleListing {
             emit CollectionRemovedSaleListing(id: id, seller: self.owner?.address)
 
+            // SaleListing cancelled by owner and destroyed
             emit Event(type: "sale_listing_cancelled", metadata: {
                 "id" : id.toString()
             })
 
-            return <-(self.saleOffers.remove(key: id) 
+            return <-(self.saleListings.remove(key: id) 
                 ?? panic("missing SaleListing"))
         }
 
@@ -273,10 +276,10 @@ pub contract BlockRecordsSaleListing {
             buyerPayment: @FungibleToken.Vault
         ) {
             pre {
-                self.saleOffers[id] != nil: "SaleListing does not exist in the collection!"
+                self.saleListings[id] != nil: "SaleListing does not exist in the collection!"
             }
 
-            let offer <-(self.saleOffers.remove(key: id) 
+            let offer <-(self.saleListings.remove(key: id) 
                 ?? panic("missing SaleListing"))
             offer.accept(buyerCollection: buyerCollection, buyerPayment: <-buyerPayment)
             destroy offer
@@ -285,26 +288,26 @@ pub contract BlockRecordsSaleListing {
         // returns an array of the IDs that are in the collection
         //
         pub fun getSaleListingIDs(): [UInt64] {
-            return self.saleOffers.keys
+            return self.saleListings.keys
         }
 
         // returns an Optional read-only view of the SaleListing for the given id if it is contained by this collection.
         // the optional will be nil if the provided id is not present in the collection.
         //
         pub fun borrowSaleListing(id: UInt64): &SaleListing{SaleListingPublicView}? {
-            if self.saleOffers[id] == nil {
+            if self.saleListings[id] == nil {
                 return nil
             } else {
-                return &self.saleOffers[id] as &SaleListing{SaleListingPublicView}
+                return &self.saleListings[id] as &SaleListing{SaleListingPublicView}
             }
         }
 
         destroy () {
-        destroy self.saleOffers
+        destroy self.saleListings
         }
 
         init () {
-            self.saleOffers <- {}
+            self.saleListings <- {}
         }
     }
 
