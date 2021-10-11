@@ -9,13 +9,19 @@ import BlockRecordsStorefront from 0xSERVICE_ACCOUNT_ADDRESS
 
 /**
 
-Marketplaces are storefronts for BlockRecords service accounts.
-
-potential "admins" will create and save the admin resource to their storage and expose
-its capability receiver function publicly. this allows the service account to create a unique
-Marketplace, and send a marketplace capability to the admin. the service account maintains the right to revoke 
-this capability - blocking the admin's access to the marketplace - in the event that the admin violates our terms and agreements.
-
+The BlockRecordsMarketplace acts as a central facilitator for the BlockRecords platform.
+    
+    // Release Collections
+    //
+        release collections and releases are stored centrally in the service account so that BlockRecords admins can arbitrate who is able to mint on the platform. 
+        when a new creator is onboarded onto the platform, a new release collection will be created for them and a capability will be given to their UserProfile; allowing the creator to create new releases and mint nfts
+        capabilities to release collections - stored in the marketplace - allow users to view verified creators' release collections and releases. 
+     
+    // Storefronts
+    //
+        users can list their storefront on the marketplace by giving a public capability to the marketplace
+        capabilities to storefronts  - stored in the marketplace - allow users to view what others have for sale, purchase listings, and put their own listings up for sale on the marketplace. in exchange for this ease of use,
+        the marketplace takes a small percentage fee on every transaction.
 **/
 
 pub contract BlockRecordsMarketplace {
@@ -52,14 +58,13 @@ pub contract BlockRecordsMarketplace {
         pub fun getID(): UInt64
         pub fun getName(): String
         pub fun getPayout(): BlockRecords.Payout
-        // pub fun getReleaseCollectionIDs(): [UInt64]
-        // pub fun getStorefrontIDs(): [UInt64]
-        // pub fun borrowReleaseCollectionByID(_ id: UInt64): &BlockRecordsRelease.Collection
-        pub fun listStorefront(storefrontCapability: Capability<&BlockRecordsStorefront.Storefront{BlockRecordsStorefront.StorefrontPublic}>)
-        pub fun purchaseListingFromStorefront(listingID: UInt64, storefrontID: UInt64, payment: @FungibleToken.Vault): @NonFungibleToken.NFT
-        // todo: get storefront ids
-        // todo: borrow storefront by id
-        // todo: etc...
+        pub fun getReleaseCollectionAddresses(): [Address]
+        pub fun borrowReleaseCollection(address: Address): &BlockRecordsRelease.Collection{BlockRecordsRelease.CollectionPublic}
+        pub fun borrowStorefront(address: Address): &BlockRecordsStorefront.Storefront{BlockRecordsStorefront.StorefrontPublic}
+        pub fun getStorefrontAddresses(): [Address]
+        pub fun listStorefront(storefrontCapability: Capability<&BlockRecordsStorefront.Storefront{BlockRecordsStorefront.StorefrontPublic}>, address: Address)
+        pub fun purchaseListingFromStorefront(listingID: UInt64, storefrontAddress: Address, payment: @FungibleToken.Vault): @NonFungibleToken.NFT
+        pub fun borrowListingFromStorefront(listingID: UInt64, storefrontAddress: Address): &BlockRecordsStorefront.Listing{BlockRecordsStorefront.ListingPublic}
     }
 
     // any account in posession of a Marketplace capability will be able to create release collections
@@ -78,11 +83,11 @@ pub contract BlockRecordsMarketplace {
         // then give cap to user so that they can create releases.
         // note: this capability is revokable
         // pub var releaseCollections: @{UInt64: BlockRecordsRelease.Collection}
-        pub var releaseCollections: {Address: Capability<&BlockRecordsRelease.Collection{BlockRecordsRelease.CollectionPublic}>}
+        access(self) var releaseCollections: {Address: Capability<&BlockRecordsRelease.Collection{BlockRecordsRelease.CollectionPublic}>}
 
         // todo (maybe): we can store references to users' storefronts
         // so that we can list the sales in a central place
-        pub var storefronts: {UInt64: Capability<&BlockRecordsStorefront.Storefront{BlockRecordsStorefront.StorefrontPublic}>}
+        access(self) var storefronts: {Address: Capability<&BlockRecordsStorefront.Storefront{BlockRecordsStorefront.StorefrontPublic}>}
 
         init(
             name: String,
@@ -122,61 +127,55 @@ pub contract BlockRecordsMarketplace {
             // todo (maybe): emit event
         }
 
-        // create release collection and add to release collection resource dictionary
-        // releases and their collections are to be stored in the marketplace rather than 
-        // in user accounts. this helps us maintain some level of control as to who is able
-        // to create on our platform
-        // pub fun createAndAddReleaseCollection(
-        //     name: String,
-        //     description: String,
-        //     logo: String,
-        //     banner: String,
-        //     website: String,
-        //     socialMedias: [String]
-        // ): UInt64 {
-        //     let releaseCollection <- BlockRecordsRelease.createReleaseCollection(
-        //         name: name,
-        //         description: description,
-        //         logo: logo,
-        //         banner: banner,
-        //         website: website,
-        //         socialMedias: socialMedias
-        //     )
+        // get all release collection addresses
+        pub fun getReleaseCollectionAddresses(): [Address] {
+            return self.releaseCollections.keys
+        }
 
-        //     let id = releaseCollection.id
+       pub fun borrowReleaseCollection(address: Address): &BlockRecordsRelease.Collection{BlockRecordsRelease.CollectionPublic} {
+           pre {
+                self.releaseCollections[address] != nil : "release collection not found"
+            }
+            return self.releaseCollections[address]!.borrow()!
+       }
 
-        //     // add release to release collection dictionary
-        //     let oldRC <- self.releaseCollections[id] <- releaseCollection
-        //     destroy oldRC
-
-        //     return id
-        // }
-
-        // get all release collection ids
-        // pub fun getReleaseCollectionIDs(): [UInt64] {
-        //     return self.releaseCollections.keys
-        // }
-
-        // // borrow release collection by id
-        // pub fun borrowReleaseCollectionByID(_ id: UInt64): &BlockRecordsRelease.Collection {
-        //     pre {
-        //         self.releaseCollections[id] != nil : "release collection doesn't exist"
-        //     }
-        //     return &self.releaseCollections[id] as &BlockRecordsRelease.Collection
-        // }
-
-        // get all storefront ids
-        pub fun getStorefrontIDs(): [UInt64] {
+        // get all storefront addresses
+        pub fun getStorefrontAddresses(): [Address] {
             return self.storefronts.keys
         }
 
+        // borrow storefront by address
+        pub fun borrowStorefront(address: Address): &BlockRecordsStorefront.Storefront{BlockRecordsStorefront.StorefrontPublic} {
+            pre {
+                self.storefronts[address] != nil : "storefront is unlisted or doesn't exist"
+            }
+            return self.storefronts[address]!.borrow()!
+        }
+
+        pub fun borrowListingFromStorefront(
+            listingID: UInt64, 
+            storefrontAddress: Address
+        ): &BlockRecordsStorefront.Listing{BlockRecordsStorefront.ListingPublic} {
+            pre {
+                self.storefronts[storefrontAddress] != nil : "storefront is unlisted or doesn't exist"
+            }
+            let storefront = self.borrowStorefront(address: storefrontAddress)
+            let listing = storefront.borrowListing(listingResourceID: listingID)!
+            return listing
+        }
+
         // users can list their storefronts so that they are viewable in the marketplace
-        pub fun listStorefront(storefrontCapability: Capability<&BlockRecordsStorefront.Storefront{BlockRecordsStorefront.StorefrontPublic}>) {
+        // NOTE: malicious users might set address as a different address than their own
+        // there's probably a better way to do this...
+        pub fun listStorefront(
+            storefrontCapability: Capability<&BlockRecordsStorefront.Storefront{BlockRecordsStorefront.StorefrontPublic}>,
+            address: Address
+        ) {
             pre {
                 storefrontCapability.check() : "invalid storefront capability"
             }
             let storefront = storefrontCapability.borrow()!
-            self.storefronts[storefront.uuid] = storefrontCapability
+            self.storefronts[address] = storefrontCapability
 
             // todo: emit storefront listed
         }
@@ -185,12 +184,16 @@ pub contract BlockRecordsMarketplace {
         // payouts are distributed to the marketplace accordingly
         // NOTE: a user can circumvent this marketplace payout by writing their own transaction
         // to purchase a listing from a user directly. we are OK with this!
-        pub fun purchaseListingFromStorefront(listingID: UInt64, storefrontID: UInt64, payment: @FungibleToken.Vault): @NonFungibleToken.NFT {
+        pub fun purchaseListingFromStorefront(
+            listingID: UInt64, 
+            storefrontAddress: Address, 
+            payment: @FungibleToken.Vault
+        ): @NonFungibleToken.NFT {
             pre {
-                self.storefronts[storefrontID] != nil: "could not find storefront with given id"
+                self.storefronts[storefrontAddress] != nil: "could not find storefront with given id"
                 self.payout.receiver.check() : "could not get marketplace payout receiver"
             }
-            let storefront = self.storefronts[storefrontID]!.borrow()!
+            let storefront = self.storefronts[storefrontAddress]!.borrow()!
             let listing = storefront.borrowListing(listingResourceID: listingID)!
             let listingDetails = listing.getDetails()
 

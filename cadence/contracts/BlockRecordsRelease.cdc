@@ -115,27 +115,27 @@ pub contract BlockRecordsRelease {
         pub let id: UInt64
 
         // name of the release collection
-        pub var name: String
+        access(self) var name: String
         
         // description of the release collection
-        pub var description: String
+        access(self) var description: String
 
         // logo image will be used for featuring your collection on the homepage, category pages, etc...
         // 600 x 400 recommended
-        pub var logo: String
+        access(self) var logo: String
 
         // banner image will appear at the top of your collection page
         // 1400 x 1400 recommended
-        pub var banner: String
+        access(self) var banner: String
 
         // url of promotional website
-        pub var website: String
+        access(self) var website: String
 
         // social media urls
-        pub var socialMedias: [String]
+        access(self) var socialMedias: [String]
 
         // dictionary of releases in the collection
-        pub var releases: @{UInt64: Release}
+        access(self) var releases: @{UInt64: Release}
 
         init(
             name: String,
@@ -328,7 +328,7 @@ pub contract BlockRecordsRelease {
         pub let releaseCollectionID: UInt64
 
         // checks if nfts were minted for the release
-        pub var isComplete: Bool
+        access(self) var isComplete: Bool
 
         init(
             type: String,
@@ -418,7 +418,6 @@ pub contract BlockRecordsRelease {
             // let payouts: [BlockRecords.Payout] = self.metadata["payouts"] as! [BlockRecords.Payout]
             let payouts: [BlockRecords.Payout] = [] as! [BlockRecords.Payout]
 
-            
             var i = 1
             while i <= count {
                 let single <- BlockRecordsSingle.mint(

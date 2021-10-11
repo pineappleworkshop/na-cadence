@@ -119,7 +119,7 @@ pub contract BlockRecordsStorefront {
         access(contract) let nftProvider: Capability<&BlockRecordsSingle.Collection{BlockRecordsSingle.CollectionPublic, NonFungibleToken.Provider}>
 
         // the seller's receiver that will be deposited fusd on sale
-        access(self) let paymentReceiver: Capability<&FUSD.Vault{FungibleToken.Receiver}>
+        access(contract) let paymentReceiver: Capability<&FUSD.Vault{FungibleToken.Receiver}>
 
         // initializer
         //

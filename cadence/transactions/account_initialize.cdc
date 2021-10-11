@@ -53,7 +53,7 @@ transaction {
         // list storefront in marketplace
         let storefrontCap = acct.getCapability<&BlockRecordsStorefront.Storefront{BlockRecordsStorefront.StorefrontPublic}>(BlockRecordsStorefront.StorefrontPublicPath)
         let marketplace = getAccount(0xSERVICE_ACCOUNT_ADDRESS).getCapability<&BlockRecordsMarketplace.Marketplace{BlockRecordsMarketplace.MarketplacePublic}>(BlockRecordsMarketplace.MarketplacePublicPath)!.borrow()!
-        marketplace.listStorefront(storefrontCapability: storefrontCap)
+        marketplace.listStorefront(storefrontCapability: storefrontCap, address: acct.address)
 
         // create user profile
         if acct.borrow<&BlockRecordsUser.User>(from: BlockRecordsUser.UserStoragePath) == nil {

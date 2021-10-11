@@ -31,6 +31,11 @@ pub contract BlockRecordsSingle: NonFungibleToken {
     //
     pub var totalSupply: UInt64
 
+    // todo: use this function to validate single metadata
+    pub fun validate() {
+        
+    }
+
     // the BlockRecordsSingle NFT resource
     //
     pub resource NFT: NonFungibleToken.INFT {
@@ -42,7 +47,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         // "This is not the long term way NFT metadata will be stored. It's a temporary
         // construct while we figure out a better way to do metadata." - flow team
         //
-        pub var metadata: {String: AnyStruct}
+        pub let metadata: {String: AnyStruct}
 
         init(
             name: String, 
@@ -143,7 +148,6 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             let oldToken <- self.ownedNFTs[id] <- token
 
             let ownerAddress = self.owner?.address!
-
             emit Deposit(id: id, to: ownerAddress)
 
             destroy oldToken

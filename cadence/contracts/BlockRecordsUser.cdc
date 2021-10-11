@@ -300,7 +300,7 @@ pub contract BlockRecordsUser {
         access(self) var links: {String: Link}
         access(self) var allowStoringFollowers: Bool
 
-        // capability to a BlockRecords Release Collection in a Marketplace;
+        // capability to a BlockRecords Release Collection in a Marketplace
         access(account) var releaseCollectionCapability: Capability<&BlockRecordsRelease.Collection{BlockRecordsRelease.CollectionOwner}>?
 
         init(
