@@ -224,14 +224,17 @@ func SetupCreator(serviceAcctAddr string, targetAcctAddress flow.Address, target
 	return result, nil
 }
 
-type Creator struct {
-	StageName cadence.String
-	Name      cadence.String
-	ImageURL  cadence.String
-	Address   cadence.Address
+type ReleaseCollection struct {
+	Name           cadence.String
+	Description    cadence.String
+	Logo           cadence.String
+	Banner         cadence.String
+	Website        cadence.String
+	SocialMedias   cadence.Array
+	CreatorAddress cadence.Address
 }
 
-func CreateReleaseCollectionForCreator(serviceAcctAddr string, serviceAcctPrivKey string, creator Creator) (*flow.TransactionResult, error) {
+func CreateReleaseCollectionForCreator(serviceAcctAddr string, serviceAcctPrivKey string, rc ReleaseCollection) (*flow.TransactionResult, error) {
 	var filePath string
 	if config.Conf.GetEnv() == config.DEV || config.Conf.GetEnv() == config.PROD {
 		filePath = CLUSTER_FILE_PATH_CREATOR_AUTHORIZE
@@ -254,7 +257,7 @@ func CreateReleaseCollectionForCreator(serviceAcctAddr string, serviceAcctPrivKe
 	txFileStr = strings.Replace(
 		txFileStr,
 		CREATOR_ACCOUNT_ADDRESS,
-		creator.Address.Hex(),
+		rc.CreatorAddress.Hex(),
 		-1,
 	)
 	txFileStr = strings.Replace(
@@ -280,10 +283,13 @@ func CreateReleaseCollectionForCreator(serviceAcctAddr string, serviceAcctPrivKe
 		return nil, err
 	}
 
-	tx.AddArgument(creator.StageName)
-	tx.AddArgument(creator.Name)
-	tx.AddArgument(creator.ImageURL)
-	tx.AddArgument(creator.Address)
+	tx.AddArgument(rc.Name)
+	tx.AddArgument(rc.Description)
+	tx.AddArgument(rc.Logo)
+	tx.AddArgument(rc.Banner)
+	tx.AddArgument(rc.Website)
+	tx.AddArgument(rc.SocialMedias)
+	tx.AddArgument(rc.CreatorAddress)
 
 	authorizerSigner, err := createSigner(serviceAcctAddress, serviceAcctPrivKey)
 	signers := []crypto.Signer{

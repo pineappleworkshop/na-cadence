@@ -11,7 +11,7 @@ import (
 )
 
 type SaleListingCreate struct {
-	ID    cadence.UInt64
+	NFTID cadence.UInt64
 	Price cadence.UFix64
 }
 
@@ -68,7 +68,7 @@ func CreateSaleListing(serviceAcctAddr, creatorAcctAddr, creatorAcctPrivKey stri
 	}
 
 	// todo: cleaner way to do this
-	tx.AddArgument(saleListing.ID)
+	tx.AddArgument(saleListing.NFTID)
 	tx.AddArgument(saleListing.Price)
 
 	//create signers

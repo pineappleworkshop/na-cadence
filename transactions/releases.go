@@ -12,15 +12,14 @@ import (
 )
 
 type ReleaseCreate struct {
-	Type             cadence.String
-	Name             cadence.String
-	Literation       cadence.String
-	ImageURL         cadence.String
-	AudioURL         cadence.String
-	CopiesCount      cadence.UInt64
-	PayoutAddress    cadence.Address
-	PayoutPercentFee cadence.UFix64
-	ReceiverAddress  cadence.Address
+	Type              cadence.String
+	Name              cadence.String
+	Literation        cadence.String
+	Image             cadence.String
+	Audio             cadence.String
+	CopiesCount       cadence.Int
+	PayoutAddresses   cadence.Array
+	PayoutPercentFees cadence.Array
 }
 
 func CreateRelease(serviceAcctAddr, creatorAcctAddr, creatorAcctPrivKey string, release ReleaseCreate) (*flow.TransactionResult, error) {
@@ -78,12 +77,12 @@ func CreateRelease(serviceAcctAddr, creatorAcctAddr, creatorAcctPrivKey string, 
 	tx.AddArgument(release.Type)
 	tx.AddArgument(release.Name)
 	tx.AddArgument(release.Literation)
-	tx.AddArgument(release.ImageURL)
-	tx.AddArgument(release.AudioURL)
+	tx.AddArgument(release.Image)
+	tx.AddArgument(release.Audio)
 	tx.AddArgument(release.CopiesCount)
-	tx.AddArgument(release.PayoutAddress)
-	tx.AddArgument(release.PayoutPercentFee)
-	tx.AddArgument(release.ReceiverAddress)
+	tx.AddArgument(release.PayoutAddresses)
+	tx.AddArgument(release.PayoutPercentFees)
+	tx.AddArgument(cadence.Address(authorizerAddress))
 
 	//create signers
 	authorizerSigner, err := createSigner(authorizerAddress, creatorAcctPrivKey)

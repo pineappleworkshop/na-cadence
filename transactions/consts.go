@@ -72,7 +72,7 @@ const (
 
 	TEST_SINGLE_NAME               = "Block Records Single Test"
 	TEST_SINGLE_ROYALTY_PERCENTAGE = 5
-	TEST_SINGLE_TYPE               = "Single"
+	TEST_SINGLE_TYPE               = "single"
 	TEST_SINGLE_LITERATION         = "This is a test Block Records Single"
 	TEST_SINGLE_IMAGE_URL          = "https://test.image.com"
 	TEST_SINGLE_AUDIO_URL          = "https://test.audio.com"

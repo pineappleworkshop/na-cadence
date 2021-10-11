@@ -3,6 +3,8 @@ import NonFungibleToken from 0xSERVICE_ACCOUNT_ADDRESS
 import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
 import BlockRecords from 0xSERVICE_ACCOUNT_ADDRESS
 import BlockRecordsSingle from 0xSERVICE_ACCOUNT_ADDRESS
+import FUSD from 0xFUSD_CONTRACT_ADDRESS
+
 /* 
 
 Storefronts facilitate sales for BlockRecords users (collectors and creators).
@@ -17,6 +19,7 @@ pub contract BlockRecordsStorefront {
     // paths
     pub let StorefrontStoragePath: StoragePath
     pub let StorefrontPublicPath: PublicPath
+    pub let StorefrontManagerPath: PrivatePath
 
     // pub events
     pub event ContractInitialized()
@@ -25,9 +28,7 @@ pub contract BlockRecordsStorefront {
     pub event ListingAvailable(
         storefrontAddress: Address,
         listingResourceID: UInt64,
-        nftType: Type,
         nftID: UInt64,
-        ftVaultType: Type,
         price: UFix64
     )
 
@@ -52,17 +53,11 @@ pub contract BlockRecordsStorefront {
         // Whether this listing has been purchased or not.
         pub var purchased: Bool
 
-        // The Type of the NonFungibleToken.NFT that is being listed.
-        pub let nftType: Type
-
         // The ID of the NFT within that type.
         pub let nftID: UInt64
 
-        // The Type of the FungibleToken that payments must be made in.
-        pub let salePaymentVaultType: Type
-
         // The amount that must be paid in the specified FungibleToken.
-        pub let salePrice: UFix64
+        pub let price: UFix64
 
         // setToPurchased
         // Irreversibly set this listing as purchased.
@@ -74,24 +69,14 @@ pub contract BlockRecordsStorefront {
         // initializer
         //
         init (
-            nftType: Type,
             nftID: UInt64,
-            salePaymentVaultType: Type,
+            price: UFix64,
             storefrontID: UInt64
         ) {
             self.storefrontID = storefrontID
             self.purchased = false
-            self.nftType = nftType
             self.nftID = nftID
-            self.salePaymentVaultType = salePaymentVaultType
-
-            // Calculate the total price from the cuts
-            var salePrice = 0.0
-
-            assert(salePrice > 0.0, message: "Listing must have non-zero price")
-
-            // Store the calculated sale price
-            self.salePrice = salePrice
+            self.price = price
         }
     }
 
@@ -131,37 +116,41 @@ pub contract BlockRecordsStorefront {
         // This capability allows the resource to withdraw *any* NFT, so you should be careful when giving
         // such a capability to a resource and always check its code to make sure it will use it in the
         // way that it claims.
-        access(contract) let nftProviderCapability: Capability<&BlockRecordsSingle.Collection{BlockRecordsSingle.CollectionPublic, NonFungibleToken.Provider}>
+        access(contract) let nftProvider: Capability<&BlockRecordsSingle.Collection{BlockRecordsSingle.CollectionPublic, NonFungibleToken.Provider}>
+
+        // the seller's receiver that will be deposited fusd on sale
+        access(self) let paymentReceiver: Capability<&FUSD.Vault{FungibleToken.Receiver}>
 
         // initializer
         //
         init (
-            nftProviderCapability: Capability<&BlockRecordsSingle.Collection{BlockRecordsSingle.CollectionPublic, NonFungibleToken.Provider}>,
-            nftType: Type,
+            nftProvider: Capability<&BlockRecordsSingle.Collection{BlockRecordsSingle.CollectionPublic, NonFungibleToken.Provider}>,
             nftID: UInt64,
-            salePaymentVaultType: Type,
+            paymentReceiver: Capability<&FUSD.Vault{FungibleToken.Receiver}>,
+            price: UFix64,
             storefrontID: UInt64
         ) {
             // Store the sale information
             self.details = ListingDetails(
-                nftType: nftType,
                 nftID: nftID,
-                salePaymentVaultType: salePaymentVaultType,
+                price: price,
                 storefrontID: storefrontID
             )
 
             // Store the NFT provider
-            self.nftProviderCapability = nftProviderCapability
+            self.nftProvider = nftProvider
+
+            // save the seller receiver
+            self.paymentReceiver = paymentReceiver
 
             // Check that the provider contains the NFT.
             // We will check it again when the token is sold.
             // We cannot move this into a function because initializers cannot call member functions.
-            let provider = self.nftProviderCapability.borrow()
-            assert(provider != nil, message: "cannot borrow nftProviderCapability")
+            let provider = self.nftProvider.borrow()
+            assert(provider != nil, message: "cannot borrow nftProvider")
 
             // This will precondition assert if the token is not available.
-            let nft = provider!.borrowNFT(id: self.details.nftID)
-            assert(nft.isInstance(self.details.nftType), message: "token is not of specified type")
+            let nft = provider!.borrowSingle(id: self.details.nftID)!
             assert(nft.id == self.details.nftID, message: "token does not have specified ID")
         }
 
@@ -170,10 +159,7 @@ pub contract BlockRecordsStorefront {
         // if the NFT is absent, for example if it has been sold via another listing.
         //
         pub fun borrowNFT(): &NonFungibleToken.NFT {
-            let ref = self.nftProviderCapability.borrow()!.borrowNFT(id: self.getDetails().nftID)
-            //- CANNOT DO THIS IN PRECONDITION: "member of restricted type is not accessible: isInstance"
-            //  result.isInstance(self.getDetails().nftType): "token has wrong type"
-            assert(ref.isInstance(self.getDetails().nftType), message: "token has wrong type")
+            let ref = self.nftProvider.borrow()!.borrowNFT(id: self.getDetails().nftID)
             assert(ref.id == self.getDetails().nftID, message: "token has wrong ID")
             return ref as &NonFungibleToken.NFT
         }
@@ -194,45 +180,33 @@ pub contract BlockRecordsStorefront {
         pub fun purchase(payment: @FungibleToken.Vault): @NonFungibleToken.NFT {
             pre {
                 self.details.purchased == false: "listing has already been purchased"
-                payment.isInstance(self.details.salePaymentVaultType): "payment vault is not requested fungible token"
-                payment.balance == self.details.salePrice: "payment vault does not contain requested price"
+                payment.balance == self.details.price: "payment vault does not contain requested price"
             }
 
             // Make sure the listing cannot be purchased again.
             self.details.setToPurchased()
 
-            let single = self.nftProviderCapability.borrow()!.borrowSingle(id: self.details.nftID)!
+            let single = self.nftProvider.borrow()!.borrowSingle(id: self.details.nftID)!
 
             // Neither receivers nor providers are trustworthy, they must implement the correct
             // interface but beyond complying with its pre/post conditions they are not gauranteed
             // to implement the functionality behind the interface in any given way.
             // Therefore we cannot trust the Collection resource behind the interface,
             // and we must check the NFT resource it gives us to make sure that it is the correct one.
-            assert(single.isInstance(self.details.nftType), message: "withdrawn NFT is not of specified type")
             assert(single.id == self.details.nftID, message: "withdrawn NFT does not have specified ID")
 
             let payouts: [BlockRecords.Payout] = single.metadata["payouts"]! as! [BlockRecords.Payout]
 
-            // Rather than aborting the transaction if any receiver is absent when we try to pay it,
-            // we send the cut to the first valid receiver.
-            // The first receiver should therefore either be the seller, or an agreed recipient for
-            // any unpaid cuts.
-            var residualReceiver: &{FungibleToken.Receiver}? = nil
+            // distribute payouts
             for payout in payouts {
                 if let receiver = payout.receiver.borrow() {
-                   let p <- payment.withdraw(amount: payout.percentFee * self.details.salePrice)
+                   let p <- payment.withdraw(amount: payout.percentFee * self.details.price)
                     receiver.deposit(from: <-p)
-                    if (residualReceiver == nil) {
-                        residualReceiver = receiver
-                    }
                 }
             }
 
-            assert(residualReceiver != nil, message: "No valid payment receivers")
-
-            // At this point, if all recievers were active and availabile, then the payment Vault will have
-            // zero tokens left, and this will functionally be a no-op that consumes the empty vault
-            residualReceiver!.deposit(from: <-payment)
+            // pay the receiver
+            self.paymentReceiver.borrow()!.deposit(from: <-payment)
 
             // If the listing is purchased, we regard it as completed here.
             // Otherwise we regard it as completed in the destructor.
@@ -243,7 +217,7 @@ pub contract BlockRecordsStorefront {
             )
 
             // Fetch the token to return to the purchaser.
-            let nft <-self.nftProviderCapability.borrow()!.withdraw(withdrawID: self.details.nftID)
+            let nft <-self.nftProvider.borrow()!.withdraw(withdrawID: self.details.nftID)
 
             return <-nft
         }
@@ -275,10 +249,10 @@ pub contract BlockRecordsStorefront {
         // Allows the Storefront owner to create and insert Listings.
         //
         pub fun createListing(
-            nftProviderCapability: Capability<&BlockRecordsSingle.Collection{BlockRecordsSingle.CollectionPublic, NonFungibleToken.Provider}>,
-            nftType: Type,
+            nftProvider: Capability<&BlockRecordsSingle.Collection{BlockRecordsSingle.CollectionPublic, NonFungibleToken.Provider}>,
             nftID: UInt64,
-            salePaymentVaultType: Type
+            paymentReceiver: Capability<&FUSD.Vault{FungibleToken.Receiver}>,
+            price: UFix64
         ): UInt64
         
         // removeListing
@@ -319,21 +293,21 @@ pub contract BlockRecordsStorefront {
         // Create and publish a Listing for an NFT.
         //
          pub fun createListing(
-            nftProviderCapability: Capability<&BlockRecordsSingle.Collection{BlockRecordsSingle.CollectionPublic, NonFungibleToken.Provider}>,
-            nftType: Type,
+            nftProvider: Capability<&BlockRecordsSingle.Collection{BlockRecordsSingle.CollectionPublic, NonFungibleToken.Provider}>,
             nftID: UInt64,
-            salePaymentVaultType: Type
+            paymentReceiver: Capability<&FUSD.Vault{FungibleToken.Receiver}>,
+            price: UFix64
          ): UInt64 {
             let listing <- create Listing(
-                nftProviderCapability: nftProviderCapability,
-                nftType: nftType,
+                nftProvider: nftProvider,
                 nftID: nftID,
-                salePaymentVaultType: salePaymentVaultType,
+                paymentReceiver: paymentReceiver,
+                price: price,
                 storefrontID: self.uuid
             )
 
             let listingResourceID = listing.uuid
-            let listingPrice = listing.getDetails().salePrice
+            let listingPrice = listing.getDetails().price
 
             // Add the new listing to the dictionary.
             // Note that oldListing will always be nil, but we have to handle it.
@@ -343,9 +317,7 @@ pub contract BlockRecordsStorefront {
             emit ListingAvailable(
                 storefrontAddress: self.owner?.address!,
                 listingResourceID: listingResourceID,
-                nftType: nftType,
                 nftID: nftID,
-                ftVaultType: salePaymentVaultType,
                 price: listingPrice
             )
 
@@ -423,6 +395,7 @@ pub contract BlockRecordsStorefront {
     init () {
         self.StorefrontStoragePath = /storage/BlockRecordsStorefront
         self.StorefrontPublicPath = /public/BlockRecordsStorefront
+        self.StorefrontManagerPath = /private/BlockRecordsStorefrontManager
 
         emit ContractInitialized()
     }

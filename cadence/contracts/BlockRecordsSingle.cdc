@@ -25,7 +25,8 @@ pub contract BlockRecordsSingle: NonFungibleToken {
     //
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath
-    
+    pub let CollectionProviderPath: PrivatePath
+
     // the total number of BlockRecordsSingle that have been minted
     //
     pub var totalSupply: UInt64
@@ -48,7 +49,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             literation: String, 
             image: String, 
             audio: String,
-            serialNumber: UInt64,
+            serialNumber: Int,
             releaseID: UInt64,
             payouts: [BlockRecords.Payout]
         ){
@@ -84,7 +85,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         literation: String, 
         image: String, 
         audio: String,
-        serialNumber: UInt64,
+        serialNumber: Int,
         releaseID: UInt64,
         payouts: [BlockRecords.Payout]
     ): @NFT {
@@ -204,6 +205,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
     init() {
         self.CollectionStoragePath = /storage/BlockRecordsSingleCollection
         self.CollectionPublicPath = /public/BlockRecordsSingleCollection
+        self.CollectionProviderPath = /private/BlockRecordsCollectionProvider
         
         // total supply of all block records resources: releases, nfts, etc...
         self.totalSupply = 0

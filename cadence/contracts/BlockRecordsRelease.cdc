@@ -45,6 +45,57 @@ pub contract BlockRecordsRelease {
     // the total number of Release Collections and Releases that have been created
     pub var totalSupply: UInt64
 
+    pub resource interface CollectionOwner {
+        pub fun setName(_ val: String) {
+            pre {
+                val.length <= 16: "name must be 30 or less characters"
+            }
+        }
+
+        pub fun setDescription(_ val: String) {
+            pre {
+                val.length <= 255: "description must be 255 characters or less"
+            }
+        }
+
+        pub fun setLogo(_ val: String){
+            pre {
+                val.length <= 255: "logo must be 255 characters or less"
+            }
+        }
+
+        pub fun setBanner(_ val: String){
+            pre {
+                val.length <= 255: "logo must be 255 characters or less"
+            }
+        }
+
+        pub fun setWebsite(_ val: String){
+            pre {
+                val.length <= 255: "logo must be 255 characters or less"
+            }
+        }
+
+        // todo:
+        // pub fun getSocialMedias(_ val: [String])  {
+        //     pre {
+        //         BlockRecordsUser.verifyTags(tags: val, tagLength:10, tagSize:3) : "cannot have more then 3 tags of length 10"
+        //     }
+        // }   
+
+        pub fun borrowRelease(id: UInt64): &Release
+
+        pub fun createAndAddRelease(
+            type: String,
+            name: String, 
+            literation: String, 
+            image: String, 
+            audio: String,
+            copiesCount: Int,
+            payouts: [BlockRecords.Payout]
+        ): UInt64 
+    }
+
     pub resource interface CollectionPublic {
         pub fun getID(): UInt64
         pub fun getName(): String
@@ -53,35 +104,35 @@ pub contract BlockRecordsRelease {
         pub fun getBanner(): String
         pub fun getWebsite(): String
         pub fun getSocialMedias(): [String]
-        pub fun borrowReleases(): [&Release]
-        pub fun borrowReleaseByID(_ id: UInt64): &Release
+        pub fun getReleaseIDs(): [UInt64]
+        pub fun borrowReleasePublic(id: UInt64): &Release{ReleasePublic}
     }
 
     // any account in posession of a Collection will be able to mint BlockRecords NFTs
     // this is secure because "transactions cannot create resource types outside of containing contracts"
-    pub resource Collection: CollectionPublic {  
+    pub resource Collection: CollectionPublic, CollectionOwner {  
         // unique id of the release collection
         pub let id: UInt64
 
         // name of the release collection
-        pub let name: String
+        pub var name: String
         
         // description of the release collection
-        pub let description: String
+        pub var description: String
 
         // logo image will be used for featuring your collection on the homepage, category pages, etc...
         // 600 x 400 recommended
-        pub let logo: String
+        pub var logo: String
 
         // banner image will appear at the top of your collection page
         // 1400 x 1400 recommended
-        pub let banner: String
+        pub var banner: String
 
         // url of promotional website
-        pub let website: String
+        pub var website: String
 
         // social media urls
-        pub let socialMedias: [String]
+        pub var socialMedias: [String]
 
         // dictionary of releases in the collection
         pub var releases: @{UInt64: Release}
@@ -126,7 +177,7 @@ pub contract BlockRecordsRelease {
             literation: String, 
             image: String, 
             audio: String,
-            copiesCount: UInt64,
+            copiesCount: Int,
             payouts: [BlockRecords.Payout]
         ): UInt64 {
             pre {
@@ -182,22 +233,42 @@ pub contract BlockRecordsRelease {
             return self.socialMedias
         }
 
-        pub fun borrowReleases(): [&Release] {
-            let releases: [&Release] = []
-            let keys = self.releases.keys
-            for key in keys {
-                let release = &self.releases[key] as &Release
-                releases.append(release)
-            }
-
-            return releases
+        pub fun getReleaseIDs(): [UInt64] {
+            return self.releases.keys
         }
 
-        pub fun borrowReleaseByID(_ id: UInt64): &Release {
+        pub fun setName(_ val: String) { 
+            self.name = val 
+        }
+
+         pub fun setDescription(_ val: String) { 
+            self.description = val
+        }
+
+        pub fun setLogo(_ val: String) { 
+            self.logo = val
+        }
+        
+        pub fun setBanner(_ val: String) { 
+            self.banner = val 
+        }
+
+        pub fun setWebsite(_ val: String) { 
+            self.website = val 
+        }
+
+        pub fun borrowRelease(id: UInt64): &Release {
             pre {
                 self.releases[id] != nil : "release doesn't exist"
             }
             return &self.releases[id] as &Release
+        }
+
+        pub fun borrowReleasePublic(id: UInt64): &Release{ReleasePublic} {
+            pre {
+                self.releases[id] != nil : "release doesn't exist"
+            }
+            return &self.releases[id] as &Release{ReleasePublic}
         }
 
         destroy(){
@@ -248,11 +319,12 @@ pub contract BlockRecordsRelease {
         pub let type: String
 
         // NFT copies count
-        pub let copiesCount: UInt64
+        pub let copiesCount: Int
 
         // ids of nfts associated with release
         pub let nftIDs: [UInt64]
 
+        // the id of the release collection that the release belongs to
         pub let releaseCollectionID: UInt64
 
         // checks if nfts were minted for the release
@@ -264,13 +336,13 @@ pub contract BlockRecordsRelease {
             literation: String, 
             image: String, 
             audio: String,
-            copiesCount: UInt64,
+            copiesCount: Int,
             payouts: [BlockRecords.Payout],
             releaseCollectionID: UInt64
         ){
             pre{
                 type == "single" : "release type invalid"
-                payouts.length > 0 : "at least one payout is required"
+                // payouts.length > 0 : "at least one payout is required"
                 copiesCount > 0 : "number of copies must be greater than 0"
             }
 
@@ -322,10 +394,12 @@ pub contract BlockRecordsRelease {
             return self.isComplete
         }
 
-        // create and deposit nfts to isComplete release
-        pub fun mintSingles(receiverCollection: &{NonFungibleToken.CollectionPublic}) {    
+        // user can call this function multiple times 
+        pub fun mintSingles(count: Int, receiverCollection: &{NonFungibleToken.CollectionPublic}) {    
             pre {
                 // todo: this is pretty verbose
+                self.nftIDs.length + count <= self.copiesCount : "mint would exceed release copies count"
+                self.isComplete == false : "release is complete"
                 self.type == "single" : "release is not of type single"
                 self.metadata["name"]!.getType() == Type<String>() : "metadata field type missmatch or missing value for field: name"
                 self.metadata["literation"]!.getType() == Type<String>()  : "metadata field type missmatch or missing value for field: name"
@@ -339,16 +413,20 @@ pub contract BlockRecordsRelease {
             let literation: String = self.metadata["literation"]! as! String
             let image: String = self.metadata["image"]! as! String
             let audio: String = self.metadata["audio"]! as! String
-            let payouts: [BlockRecords.Payout] = self.metadata["payouts"] as! [BlockRecords.Payout]
-            var serialNumber: UInt64 = 1
+
+            // todo: what if no payouts?
+            // let payouts: [BlockRecords.Payout] = self.metadata["payouts"] as! [BlockRecords.Payout]
+            let payouts: [BlockRecords.Payout] = [] as! [BlockRecords.Payout]
+
             
-            while serialNumber <= self.copiesCount {
+            var i = 1
+            while i <= count {
                 let single <- BlockRecordsSingle.mint(
                     name: name, 
                     literation: literation, 
                     image: image, 
                     audio: audio,
-                    serialNumber: serialNumber,
+                    serialNumber: self.nftIDs.length,
                     releaseID: self.id,
                     payouts: payouts
                 )
@@ -361,11 +439,15 @@ pub contract BlockRecordsRelease {
                     token: <- single
                 )
 
-                // increment serial number
-                serialNumber = serialNumber + 1
-            }
+                // complete release
+                if self.nftIDs.length == self.copiesCount {
+                    self.isComplete = true
+                    break
+                }
 
-            self.isComplete = true
+                // increment counter
+                i = i + 1
+            }
         }
 
         // pub fun mintAlbums

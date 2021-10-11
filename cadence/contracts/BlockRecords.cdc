@@ -18,7 +18,6 @@ pub contract BlockRecords {
     pub event ContractInitialized()
 
     pub struct Payout {
-        
         // the vault that on the payout will be distributed to
         pub let receiver: Capability<&{FungibleToken.Receiver}>
 

@@ -5,7 +5,6 @@ import (
 )
 
 func init() {
-
 	rootCmd.AddCommand(authorizeMinterCMD)
 }
 

@@ -52,9 +52,9 @@ pub contract BlockRecordsMarketplace {
         pub fun getID(): UInt64
         pub fun getName(): String
         pub fun getPayout(): BlockRecords.Payout
-        pub fun getReleaseCollectionIDs(): [UInt64]
-        pub fun getStorefrontIDs(): [UInt64]
-        pub fun borrowReleaseCollectionByID(_ id: UInt64): &BlockRecordsRelease.Collection
+        // pub fun getReleaseCollectionIDs(): [UInt64]
+        // pub fun getStorefrontIDs(): [UInt64]
+        // pub fun borrowReleaseCollectionByID(_ id: UInt64): &BlockRecordsRelease.Collection
         pub fun listStorefront(storefrontCapability: Capability<&BlockRecordsStorefront.Storefront{BlockRecordsStorefront.StorefrontPublic}>)
         pub fun purchaseListingFromStorefront(listingID: UInt64, storefrontID: UInt64, payment: @FungibleToken.Vault): @NonFungibleToken.NFT
         // todo: get storefront ids
@@ -77,7 +77,8 @@ pub contract BlockRecordsMarketplace {
         // service account can create a capability to this release collection
         // then give cap to user so that they can create releases.
         // note: this capability is revokable
-        pub var releaseCollections: @{UInt64: BlockRecordsRelease.Collection}
+        // pub var releaseCollections: @{UInt64: BlockRecordsRelease.Collection}
+        pub var releaseCollections: {Address: Capability<&BlockRecordsRelease.Collection{BlockRecordsRelease.CollectionPublic}>}
 
         // todo (maybe): we can store references to users' storefronts
         // so that we can list the sales in a central place
@@ -90,7 +91,7 @@ pub contract BlockRecordsMarketplace {
         ){
             self.id = BlockRecordsSingle.totalSupply
             self.name = name
-            self.releaseCollections <- {}
+            self.releaseCollections = {}
             self.storefronts = {}
 
             self.payout = BlockRecords.Payout(
@@ -116,48 +117,53 @@ pub contract BlockRecordsMarketplace {
             return self.payout
         }
 
+        pub fun addReleaseCollection(releaseCollectionCapability: Capability<&BlockRecordsRelease.Collection{BlockRecordsRelease.CollectionPublic}>, address: Address) {
+            self.releaseCollections[address] = releaseCollectionCapability
+            // todo (maybe): emit event
+        }
+
         // create release collection and add to release collection resource dictionary
         // releases and their collections are to be stored in the marketplace rather than 
         // in user accounts. this helps us maintain some level of control as to who is able
         // to create on our platform
-        pub fun createAndAddReleaseCollection(
-            name: String,
-            description: String,
-            logo: String,
-            banner: String,
-            website: String,
-            socialMedias: [String]
-        ): UInt64 {
-            let releaseCollection <- BlockRecordsRelease.createReleaseCollection(
-                name: name,
-                description: description,
-                logo: logo,
-                banner: banner,
-                website: website,
-                socialMedias: socialMedias
-            )
+        // pub fun createAndAddReleaseCollection(
+        //     name: String,
+        //     description: String,
+        //     logo: String,
+        //     banner: String,
+        //     website: String,
+        //     socialMedias: [String]
+        // ): UInt64 {
+        //     let releaseCollection <- BlockRecordsRelease.createReleaseCollection(
+        //         name: name,
+        //         description: description,
+        //         logo: logo,
+        //         banner: banner,
+        //         website: website,
+        //         socialMedias: socialMedias
+        //     )
 
-            let id = releaseCollection.id
+        //     let id = releaseCollection.id
 
-            // add release to release collection dictionary
-            let oldRC <- self.releaseCollections[id] <- releaseCollection
-            destroy oldRC
+        //     // add release to release collection dictionary
+        //     let oldRC <- self.releaseCollections[id] <- releaseCollection
+        //     destroy oldRC
 
-            return id
-        }
+        //     return id
+        // }
 
         // get all release collection ids
-        pub fun getReleaseCollectionIDs(): [UInt64] {
-            return self.releaseCollections.keys
-        }
+        // pub fun getReleaseCollectionIDs(): [UInt64] {
+        //     return self.releaseCollections.keys
+        // }
 
-        // borrow release collection by id
-        pub fun borrowReleaseCollectionByID(_ id: UInt64): &BlockRecordsRelease.Collection {
-            pre {
-                self.releaseCollections[id] != nil : "release collection doesn't exist"
-            }
-            return &self.releaseCollections[id] as &BlockRecordsRelease.Collection
-        }
+        // // borrow release collection by id
+        // pub fun borrowReleaseCollectionByID(_ id: UInt64): &BlockRecordsRelease.Collection {
+        //     pre {
+        //         self.releaseCollections[id] != nil : "release collection doesn't exist"
+        //     }
+        //     return &self.releaseCollections[id] as &BlockRecordsRelease.Collection
+        // }
 
         // get all storefront ids
         pub fun getStorefrontIDs(): [UInt64] {
@@ -190,16 +196,12 @@ pub contract BlockRecordsMarketplace {
 
             // distribute payout to the marketplace
             let receiver = self.payout.receiver.borrow()!
-            let p <- payment.withdraw(amount: self.payout.percentFee * listingDetails.salePrice)
+            let p <- payment.withdraw(amount: self.payout.percentFee * listingDetails.price)
             receiver.deposit(from: <-p)
 
             // return nft to the buyer
             let nft <- storefront.purchaseListing(listingResourceID: listingID, payment: <- payment)
             return <- nft
-        }
-
-        destroy(){
-            destroy self.releaseCollections
         }
     }
 
@@ -239,13 +241,11 @@ pub contract BlockRecordsMarketplace {
             banner: String,
             website: String,
             socialMedias: [String]
-        ): UInt64 {
+        ): @BlockRecordsRelease.Collection {
              pre {
                 self.marketplaceCapability != nil: "not an authorized admin"
             }
-
-            let mc = self.marketplaceCapability!.borrow()!
-            let releaseCollectionID = mc.createAndAddReleaseCollection(
+            return <- BlockRecordsRelease.createReleaseCollection(
                 name: name,
                 description: description,
                 logo: logo,
@@ -253,9 +253,12 @@ pub contract BlockRecordsMarketplace {
                 website: website,
                 socialMedias: socialMedias
             )
-            return releaseCollectionID
         }
     }
+
+    // pub fun borrowReleaseCollection(id: UInt64): @BlockRecordsRelease.Collection {
+    //     return self.releaseCollections[id]
+    // }
 
     init() {
         self.totalSupply = 0

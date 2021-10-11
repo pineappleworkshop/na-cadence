@@ -1,37 +1,38 @@
 import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
 import NonFungibleToken from 0xNFT_CONTRACT_ADDRESS
 import BlockRecordsSingle from 0xSERVICE_ACCOUNT_ADDRESS
-import BlockRecordsSaleListing from 0xSERVICE_ACCOUNT_ADDRESS
+import BlockRecordsStorefront from 0xSERVICE_ACCOUNT_ADDRESS
 import FUSD from 0xFUSD_CONTRACT_ADDRESS
 
-transaction(id: UInt64, marketCollectionAddress: Address) {
-    let buyerVault: @FungibleToken.Vault
-    let BlockRecordsSingleCollection: &BlockRecordsSingle.Collection{NonFungibleToken.Receiver}
-    let marketCollection: &BlockRecordsSaleListing.Collection{BlockRecordsSaleListing.CollectionPublic}
+transaction(
+    listingID: UInt64, 
+    storefrontAddress: Address
+) {
+    let payment: @FungibleToken.Vault
+    let singleCollection: &BlockRecordsSingle.Collection{NonFungibleToken.Receiver}
+    let storefront: &BlockRecordsStorefront.Storefront{BlockRecordsStorefront.StorefrontPublic}
 
     prepare(signer: AuthAccount) {
-        self.marketCollection = getAccount(marketCollectionAddress).getCapability<&BlockRecordsSaleListing.Collection{BlockRecordsSaleListing.CollectionPublic}>(BlockRecordsSaleListing.CollectionPublicPath)!.borrow()
+        self.storefront = getAccount(storefrontAddress).getCapability<&BlockRecordsStorefront.Storefront{BlockRecordsStorefront.StorefrontPublic}>(BlockRecordsStorefront.StorefrontPublicPath)!.borrow()
             ?? panic("Could not borrow market collection from market address")
 
-    let saleListing = self.marketCollection.borrowSaleListing(id: id)
-        ?? panic("No item with that ID")
+        // get listing price
+        let listing = self.storefront.borrowListing(listingResourceID: listingID)
+            ?? panic("No listing with that ID")
+        let listingDetail = listing.getDetails()
+        let price = listingDetail.price
 
-    let price = saleListing.price
+        // create payment
+        let fusdVault = signer.borrow<&FUSD.Vault>(from: /storage/fusdVault)
+            ?? panic("Cannot borrow FUSD vault from acct storage")
+        self.payment <- fusdVault.withdraw(amount: price)
 
-    let mainFUSDVault = signer.borrow<&FUSD.Vault>(from: /storage/fusdVault)
-        ?? panic("Cannot borrow FUSD vault from acct storage")
-
-    self.buyerVault <- mainFUSDVault.withdraw(amount: price)
-
-    self.BlockRecordsSingleCollection = signer.borrow<&BlockRecordsSingle.Collection{NonFungibleToken.Receiver}>(from: BlockRecordsSingle.CollectionStoragePath) 
-        ?? panic("Cannot borrow BlockRecordsSingle collection receiver from acct")
+        self.singleCollection = signer.borrow<&BlockRecordsSingle.Collection{NonFungibleToken.Receiver}>(from: BlockRecordsSingle.CollectionStoragePath) 
+            ?? panic("Cannot borrow BlockRecordsSingle collection receiver from acct")
     }
 
     execute {
-        self.marketCollection.purchase(
-            id: id,
-            buyerCollection: self.BlockRecordsSingleCollection,
-            buyerPayment: <- self.buyerVault
-        )
+        let nft <- self.storefront.purchaseListing(listingResourceID: listingID, payment: <- self.payment)
+        destroy nft
     }
 }

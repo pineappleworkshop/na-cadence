@@ -3,6 +3,7 @@ import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
 import BlockRecordsMarketplace from 0xSERVICE_ACCOUNT_ADDRESS
 import BlockRecordsRelease from 0xSERVICE_ACCOUNT_ADDRESS
 import BlockRecords from 0xSERVICE_ACCOUNT_ADDRESS
+import NonFungibleToken from 0xNFT_CONTRACT_ADDRESS
 
 /** 
 
@@ -206,7 +207,7 @@ pub contract BlockRecordsUser {
         pub fun isCreator(): Bool
 
         // a public function to be called by the BlockRecords Marketplace Admin
-        pub fun addReleaseCollectionCapability(cap: Capability<&BlockRecordsRelease.Collection>)
+        pub fun addReleaseCollectionCapability(cap: Capability<&BlockRecordsRelease.Collection{BlockRecordsRelease.CollectionOwner}>)
         
         access(contract) fun internal_addFollower(_ val: FollowerStatus)
         access(contract) fun internal_removeFollower(_ address: Address) 
@@ -276,7 +277,7 @@ pub contract BlockRecordsUser {
             literation: String, 
             image: String, 
             audio: String,
-            copiesCount: UInt64,
+            copiesCount: Int,
             payouts: [BlockRecords.Payout]
         ): UInt64 
 
@@ -300,7 +301,7 @@ pub contract BlockRecordsUser {
         access(self) var allowStoringFollowers: Bool
 
         // capability to a BlockRecords Release Collection in a Marketplace;
-        access(account) var releaseCollectionCapability: Capability<&BlockRecordsRelease.Collection>?
+        access(account) var releaseCollectionCapability: Capability<&BlockRecordsRelease.Collection{BlockRecordsRelease.CollectionOwner}>?
 
         init(
             name: String,
@@ -352,15 +353,16 @@ pub contract BlockRecordsUser {
         }
 
         // to be called by a BlockRecords Marketplace Admin
-        pub fun addReleaseCollectionCapability(cap: Capability<&BlockRecordsRelease.Collection>) {
+        pub fun addReleaseCollectionCapability(cap: Capability<&BlockRecordsRelease.Collection{BlockRecordsRelease.CollectionOwner}>) {
             pre {
                 cap.check() : "invalid capability"
                 self.releaseCollectionCapability == nil : "capability already set"
             }
-            
             self.releaseCollectionCapability = cap
 
-            let releaseCollection = self.releaseCollectionCapability!.borrow()!
+            // todo: emit event
+
+            // let releaseCollection = self.releaseCollectionCapability!.borrow()!
 
             // let creator = releaseCollection.creatorProfile
 
@@ -383,13 +385,12 @@ pub contract BlockRecordsUser {
             literation: String, 
             image: String, 
             audio: String,
-            copiesCount: UInt64,
+            copiesCount: Int,
             payouts: [BlockRecords.Payout],
         ): UInt64 {
             pre {
                 self.releaseCollectionCapability != nil: "not an authorized creator"
             }
-
             let rc = self.releaseCollectionCapability!.borrow()!
             let releaseID = rc.createAndAddRelease(
                 type: type,
@@ -401,6 +402,16 @@ pub contract BlockRecordsUser {
                 payouts: payouts
             )
             return releaseID
+        }
+
+        pub fun mintReleaseSingles(releaseID: UInt64, count: Int, receiverCollection: &{NonFungibleToken.CollectionPublic}) {
+            pre {
+                self.releaseCollectionCapability != nil: "not an authorized creator"
+            }
+            let rc = self.releaseCollectionCapability!.borrow()!
+            let release = rc.borrowRelease(id: releaseID)
+            // let release = rc.releases[releaseID]! as! &BlockRecordsRelease.Release
+            release.mintSingles(count: count, receiverCollection: receiverCollection)
         }
 
         // remove release collection capability
