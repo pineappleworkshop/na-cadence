@@ -1,17 +1,18 @@
 
-import NonFungibleToken from 0xSERVICE_ACCOUNT_ADDRESS
+import NonFungibleToken from 0xNFT_CONTRACT_ADDRESS
 import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
 import FUSD from 0xFUSD_CONTRACT_ADDRESS
+import BlockRecords from 0xSERVICE_ACCOUNT_ADDRESS
 
 /** 
 
-BlockRecords NFTs
-- single
-- album (not yet implemented)
+BlockRecordsSingle is the base NFT for BlockRecords. Eventually, we will have 
+a BlockRecordsAlbum smart contract as well that will allow users to collect and combine
+multiple singles to create a "full" album.
 
 **/
 
-pub contract BlockRecordsNFT: NonFungibleToken {
+pub contract BlockRecordsSingle: NonFungibleToken {
 
     //events
     //
@@ -19,108 +20,102 @@ pub contract BlockRecordsNFT: NonFungibleToken {
     pub event Withdraw(id: UInt64, from: Address?)
     pub event Deposit(id: UInt64, to: Address?)
     pub event Minted(id: UInt64, metadata: {String: String})
-    pub event Event(type: String, metadata: {String: String})
 
     // named paths
     //
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath
-
-    // global constants
-    //
-    pub let NFTTypes: [String]
     
-    // the total number of BlockRecordsNFT that have been minted
+    // the total number of BlockRecordsSingle that have been minted
     //
     pub var totalSupply: UInt64
 
-    // the BlockRecordsNFT NFT resource
+    // the BlockRecordsSingle NFT resource
     //
     pub resource NFT: NonFungibleToken.INFT {
         
         // unique id of nft
         pub let id: UInt64
 
-        // metadata is a dictionary of strings so our fields are mutable
+        // Stores all the metadata about the single as a string mapping
+        // "This is not the long term way NFT metadata will be stored. It's a temporary
+        // construct while we figure out a better way to do metadata." - flow team
+        //
         pub var metadata: {String: AnyStruct}
-
-        // sequence in which nft was minted in a release
-        pub let serialNumber: UInt64
-
-        // unique id of nft release
-        pub let releaseID: UInt64
 
         init(
             name: String, 
             literation: String, 
-            imageURL: String, 
-            audioURL: String,
+            image: String, 
+            audio: String,
             serialNumber: UInt64,
-            releaseID: UInt64
+            releaseID: UInt64,
+            payouts: [BlockRecords.Payout]
         ){
-            self.id = BlockRecordsNFT.totalSupply
+            self.id = BlockRecordsSingle.totalSupply
 
             self.metadata = {
                 "name": name,
                 "literation": literation,
-                "image_url": imageURL,
-                "audio_url": audioURL
+                "image": image,
+                "audio": audio,
+                "serialNumber": serialNumber,
+                "releaseID": releaseID,
+                "payouts": payouts
             }
 
-            self.serialNumber = serialNumber
-            self.releaseID = releaseID
-
-            emit Event(type: "minted", metadata: {
-                "id" : self.id.toString(),
+            emit Minted(id: self.id, metadata:{
                 "name": name,
                 "literation": literation,
-                "image_url": imageURL,
-                "audio_url": audioURL,
+                "image": image,
+                "audio": audio,
                 "serial_number": serialNumber.toString(),
                 "release_id": releaseID.toString()
             })
 
             // increment id
-            BlockRecordsNFT.totalSupply = BlockRecordsNFT.totalSupply + (1 as UInt64)
+            BlockRecordsSingle.totalSupply = BlockRecordsSingle.totalSupply + (1 as UInt64)
         }
     }
 
     // other contracts owned by the account may mint singles
-    access(account) fun mintSingle(
+    access(account) fun mint(
         name: String, 
         literation: String, 
-        imageURL: String, 
-        audioURL: String,
+        image: String, 
+        audio: String,
         serialNumber: UInt64,
-        releaseID: UInt64
+        releaseID: UInt64,
+        payouts: [BlockRecords.Payout]
     ): @NFT {
-        return <- create BlockRecordsNFT.NFT(
+        return <- create BlockRecordsSingle.NFT(
             name: name, 
             literation: literation, 
-            imageURL: imageURL, 
-            audioURL: audioURL,
+            image: image, 
+            audio: audio,
             serialNumber: serialNumber,
-            releaseID: releaseID
+            releaseID: releaseID,
+            payouts: payouts
         )
     }
 
-    // this is the interface that users can cast their BlockRecordsNFT Collection as
-    // to allow others to deposit BlockRecordsNFT into their Collection. It also allows for reading
-    // the details of BlockRecordsNFT in the Collection.
+    // this is the interface that users can cast their BlockRecordsSingle Collection as
+    // to allow others to deposit BlockRecordsSingle into their Collection. It also allows for reading
+    // the details of BlockRecordsSingle in the Collection.
     pub resource interface CollectionPublic {
         pub fun deposit(token: @NonFungibleToken.NFT)
         pub fun getIDs(): [UInt64]
         pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT
-        pub fun borrowBlockRecordsNFT(id: UInt64): &BlockRecordsNFT.NFT? {
+        pub fun borrowSingle(id: UInt64): &BlockRecordsSingle.NFT? {
         // If the result isn't nil, the id of the returned reference
         // should be the same as the argument to the function
-        post {
-                (result == nil) || (result?.id == id) : "cannot borrow BlockRecordsNFT reference: The ID of the returned reference is incorrect"
+            post {
+                (result == nil) || (result?.id == id) : "cannot borrow BlockRecordsSingle reference: The ID of the returned reference is incorrect"
             }
         }
     }
 
-    // a collection of BlockRecordsNFT NFTs owned by an account
+    // a collection of BlockRecordsSingle NFTs owned by an account
     //
     pub resource Collection: CollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic {
 
@@ -132,12 +127,9 @@ pub contract BlockRecordsNFT: NonFungibleToken {
         pub fun withdraw(withdrawID: UInt64): @NonFungibleToken.NFT {
             let token <- self.ownedNFTs.remove(key: withdrawID) 
                 ?? panic("missing NFT")
-            let ownerAddress = self.owner?.address!.toString()
+            let ownerAddress = self.owner?.address!
 
-            emit Event(type: "withdrawn", metadata: {
-                "id" : token.id.toString(),
-                "owner_address": ownerAddress
-            })
+            emit Withdraw(id: token.id, from: ownerAddress)
 
             return <-token
         }
@@ -145,15 +137,13 @@ pub contract BlockRecordsNFT: NonFungibleToken {
         // takes an NFT and adds it to the collections dictionary
         // and adds the ID to the id array
         pub fun deposit(token: @NonFungibleToken.NFT) {
-            let token <- token as! @BlockRecordsNFT.NFT
+            let token <- token as! @BlockRecordsSingle.NFT
             let id: UInt64 = token.id
-            let ownerAddress = self.owner?.address!.toString()
             let oldToken <- self.ownedNFTs[id] <- token
 
-            emit Event(type: "deposited", metadata: {
-                "id" : id.toString(),
-                "owner_address": ownerAddress
-            })
+            let ownerAddress = self.owner?.address!
+
+            emit Deposit(id: id, to: ownerAddress)
 
             destroy oldToken
         }
@@ -169,13 +159,13 @@ pub contract BlockRecordsNFT: NonFungibleToken {
             return &self.ownedNFTs[id] as &NonFungibleToken.NFT
         }
 
-        // gets a reference to an NFT in the collection as a BlockRecordsNFT,
+        // gets a reference to an NFT in the collection as a BlockRecordsSingle,
         // exposing all of its fields (including the img).
-        // his is safe as there are no functions that can be called on the BlockRecordsNFT.
-        pub fun borrowBlockRecordsNFT(id: UInt64): &BlockRecordsNFT.NFT? {
+        // his is safe as there are no functions that can be called on the BlockRecordsSingle.
+        pub fun borrowSingle(id: UInt64): &BlockRecordsSingle.NFT? {
             if self.ownedNFTs[id] != nil {
                 let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
-                return ref as! &BlockRecordsNFT.NFT
+                return ref as! &BlockRecordsSingle.NFT
             } else {
                 return nil
             }
@@ -200,28 +190,23 @@ pub contract BlockRecordsNFT: NonFungibleToken {
         return <- create Collection()
     }
 
-    // get a reference to a BlockRecordsNFT from an account's Collection, if available.
+    // get a reference to a BlockRecordsSingle from an account's Collection, if available.
     //
-    pub fun fetch(_ from: Address, itemID: UInt64): &BlockRecordsNFT.NFT? {
-        let collection = getAccount(from).getCapability(BlockRecordsNFT.CollectionPublicPath)!.borrow<&BlockRecordsNFT.Collection{BlockRecordsNFT.CollectionPublic}>()
+    pub fun fetch(_ from: Address, itemID: UInt64): &BlockRecordsSingle.NFT? {
+        let collection = getAccount(from).getCapability(BlockRecordsSingle.CollectionPublicPath)!.borrow<&BlockRecordsSingle.Collection{BlockRecordsSingle.CollectionPublic}>()
             ?? panic("couldn't get collection")
         
-        // We trust BlockRecordsNFT.Collection.borowBlockRecords to get the correct itemID
+        // We trust BlockRecordsSingle.Collection.borowBlockRecords to get the correct itemID
         // (it checks it before returning it).
-        return collection.borrowBlockRecordsNFT(id: itemID)
+        return collection.borrowSingle(id: itemID)
     }
 
     init() {
-        self.CollectionStoragePath = /storage/BlockRecordsNFTCollection
-        self.CollectionPublicPath = /public/BlockRecordsNFTCollection
+        self.CollectionStoragePath = /storage/BlockRecordsSingleCollection
+        self.CollectionPublicPath = /public/BlockRecordsSingleCollection
         
         // total supply of all block records resources: releases, nfts, etc...
         self.totalSupply = 0
-
-        // supported NFT types
-        self.NFTTypes = [
-            "single"
-        ]
 
         emit ContractInitialized()
     }

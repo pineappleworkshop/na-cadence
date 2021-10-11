@@ -43,6 +43,8 @@ transaction(
         let releaseCollectionCap = account.getCapability<&BlockRecordsRelease.Collection>(releaseCollPrivPath)
         creatorReceiver.addCapability(cap: releaseCollectionCap, address: creatorAddress)
 
+        // add release collection capability to the marketplace
+        // todo: revise?
         let marketplaceCap = account.getCapability<&BlockRecordsMarketplace.Marketplace>(BlockRecordsMarketplace.MarketplacePrivatePath).borrow()!
         marketplaceCap.addReleaseCollectionCapability(cap: releaseCollectionCap)
     }

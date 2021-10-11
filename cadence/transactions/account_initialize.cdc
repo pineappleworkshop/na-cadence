@@ -1,5 +1,5 @@
 import NonFungibleToken from 0xNFT_CONTRACT_ADDRESS
-import BlockRecordsNFT from 0xSERVICE_ACCOUNT_ADDRESS
+import BlockRecordsSingle from 0xSERVICE_ACCOUNT_ADDRESS
 import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
 import FUSD from 0xFUSD_CONTRACT_ADDRESS
 import BlockRecordsSaleListing from 0xSERVICE_ACCOUNT_ADDRESS
@@ -8,20 +8,20 @@ transaction {
 
     prepare(acct: AuthAccount) {
     
-        // BlockRecordsNFT Collection
+        // BlockRecordsSingle Collection
         // account resource collection for nfts
         //
-        if acct.borrow<&BlockRecordsNFT.Collection>(from: /storage/BlockRecordsNFTCollection) != nil {
+        if acct.borrow<&BlockRecordsSingle.Collection>(from: /storage/BlockRecordsSingleCollection) != nil {
             return
         }
 
-        let collection <- BlockRecordsNFT.createEmptyCollection()
-        acct.save(<-collection, to: /storage/BlockRecordsNFTCollection)
+        let collection <- BlockRecordsSingle.createEmptyCollection()
+        acct.save(<-collection, to: /storage/BlockRecordsSingleCollection)
         
-        acct.unlink(/public/BlockRecordsNFTCollection)
-        acct.link<&{NonFungibleToken.CollectionPublic, BlockRecordsNFT.CollectionPublic}>(
-            /public/BlockRecordsNFTCollection,
-            target: /storage/BlockRecordsNFTCollection
+        acct.unlink(/public/BlockRecordsSingleCollection)
+        acct.link<&{NonFungibleToken.CollectionPublic, BlockRecordsSingle.CollectionPublic}>(
+            /public/BlockRecordsSingleCollection,
+            target: /storage/BlockRecordsSingleCollection
         )    
             
         // FUSD

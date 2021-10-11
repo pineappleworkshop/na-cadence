@@ -3,6 +3,9 @@ import NonFungibleToken from 0xSERVICE_ACCOUNT_ADDRESS
 import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
 import FUSD from 0xFUSD_CONTRACT_ADDRESS
 import BlockRecordsRelease from 0xSERVICE_ACCOUNT_ADDRESS
+import BlockRecords from 0xSERVICE_ACCOUNT_ADDRESS
+import BlockRecordsSingle from 0xSERVICE_ACCOUNT_ADDRESS
+import BlockRecordsStorefront from 0xSERVICE_ACCOUNT_ADDRESS
 
 /**
 
@@ -10,8 +13,8 @@ Marketplaces are storefronts for BlockRecords service accounts.
 
 potential "admins" will create and save the admin resource to their storage and expose
 its capability receiver function publicly. this allows the service account to create a unique
-Marketplace, and send that capability to the admin. the service account maintains the right to revoke this capability - blocking the
-admin's access to the marketplace - in the event that the admin violates our terms and agreements.
+Marketplace, and send a marketplace capability to the admin. the service account maintains the right to revoke 
+this capability - blocking the admin's access to the marketplace - in the event that the admin violates our terms and agreements.
 
 **/
 
@@ -20,7 +23,17 @@ pub contract BlockRecordsMarketplace {
     //events
     //
     pub event ContractInitialized()
-    pub event Event(type: String, metadata: {String: String})
+    
+    pub event MarketplaceCreated(
+        id: UInt64,
+        name: String
+        // todo: payout info
+    )
+    
+    pub event MarketplaceDestroyed(
+        id: UInt64,
+        name: String
+    )
 
     // named paths
     //
@@ -31,83 +44,162 @@ pub contract BlockRecordsMarketplace {
     pub let AdminPrivatePath: PrivatePath
     pub let AdminStoragePath: StoragePath
 
+    // the total number of BlockRecordsMarketplaces that have been created
+    //
+    pub var totalSupply: UInt64
+
     pub resource interface MarketplacePublic {
-        pub let name: String
-        pub let payout: Payout
-        pub fun borrowReleaseCollections(): [&BlockRecordsRelease.Collection]
-        pub fun borrowReleaseCollectionByProfileAddress(_ address: Address): &BlockRecordsRelease.Collection
-        pub fun borrowReleaseByNFTID(_ nftID: UInt64): &BlockRecordsRelease.Release
+        pub fun getID(): UInt64
+        pub fun getName(): String
+        pub fun getPayout(): BlockRecords.Payout
+        pub fun getReleaseCollectionIDs(): [UInt64]
+        pub fun getStorefrontIDs(): [UInt64]
+        pub fun borrowReleaseCollectionByID(_ id: UInt64): &BlockRecordsRelease.Collection
+        pub fun listStorefront(storefrontCapability: Capability<&BlockRecordsStorefront.Storefront{BlockRecordsStorefront.StorefrontPublic}>)
+        pub fun purchaseListingFromStorefront(listingID: UInt64, storefrontID: UInt64, payment: @FungibleToken.Vault): @NonFungibleToken.NFT
+        // todo: get storefront ids
+        // todo: borrow storefront by id
+        // todo: etc...
     }
 
     // any account in posession of a Marketplace capability will be able to create release collections
     // 
     pub resource Marketplace: MarketplacePublic {  
+        // id of the marketplace
+        pub let id: UInt64
 
         // name of the marketplace
         pub let name: String
 
-        // the sale fee cut of the marketplace
-        pub let payout: Payout
+        // sale fee cut of the marketplace
+        pub let payout: BlockRecords.Payout
 
-        // todo: change this to dict
-        access(account) var releaseCollectionCapabilities: [Capability<&BlockRecordsRelease.Collection>]
+        // service account can create a capability to this release collection
+        // then give cap to user so that they can create releases.
+        // note: this capability is revokable
+        pub var releaseCollections: @{UInt64: BlockRecordsRelease.Collection}
+
+        // todo (maybe): we can store references to users' storefronts
+        // so that we can list the sales in a central place
+        pub var storefronts: {UInt64: Capability<&BlockRecordsStorefront.Storefront{BlockRecordsStorefront.StorefrontPublic}>}
 
         init(
             name: String,
             fusdVault: Capability<&{FungibleToken.Receiver}>,
             percentFee: UFix64
         ){
+            self.id = BlockRecordsSingle.totalSupply
             self.name = name
+            self.releaseCollections <- {}
+            self.storefronts = {}
 
-            self.payout = Payout(
+            self.payout = BlockRecords.Payout(
                 fusdVault: fusdVault,
                 percentFee: percentFee
             )
 
-            self.releaseCollectionCapabilities = []
+            // todo: emit marketplace created
+
+            // increment id
+            BlockRecordsMarketplace.totalSupply = BlockRecordsMarketplace.totalSupply + (1 as UInt64)
         }
 
-        pub fun addReleaseCollectionCapability(cap: Capability<&BlockRecordsRelease.Collection>) {
-            self.releaseCollectionCapabilities.append(cap)
+        pub fun getID(): UInt64 {
+            return self.id
         }
 
-        pub fun borrowReleaseCollections(): [&BlockRecordsRelease.Collection] {
-            let releaseCollections: [&BlockRecordsRelease.Collection] = []
-            for rc in self.releaseCollectionCapabilities {
-                let releaseCollection = rc!.borrow()!
-                releaseCollections.append(releaseCollection)
+        pub fun getName(): String {
+            return self.name
+        }
+
+        pub fun getPayout(): BlockRecords.Payout {
+            return self.payout
+        }
+
+        // create release collection and add to release collection resource dictionary
+        // releases and their collections are to be stored in the marketplace rather than 
+        // in user accounts. this helps us maintain some level of control as to who is able
+        // to create on our platform
+        pub fun createAndAddReleaseCollection(
+            name: String,
+            description: String,
+            logo: String,
+            banner: String,
+            website: String,
+            socialMedias: [String]
+        ): UInt64 {
+            let releaseCollection <- BlockRecordsRelease.createReleaseCollection(
+                name: name,
+                description: description,
+                logo: logo,
+                banner: banner,
+                website: website,
+                socialMedias: socialMedias
+            )
+
+            let id = releaseCollection.id
+
+            // add release to release collection dictionary
+            let oldRC <- self.releaseCollections[id] <- releaseCollection
+            destroy oldRC
+
+            return id
+        }
+
+        // get all release collection ids
+        pub fun getReleaseCollectionIDs(): [UInt64] {
+            return self.releaseCollections.keys
+        }
+
+        // borrow release collection by id
+        pub fun borrowReleaseCollectionByID(_ id: UInt64): &BlockRecordsRelease.Collection {
+            pre {
+                self.releaseCollections[id] != nil : "release collection doesn't exist"
             }
-            return releaseCollections as [&BlockRecordsRelease.Collection]
+            return &self.releaseCollections[id] as &BlockRecordsRelease.Collection
         }
 
-        // borrow release collection by creator profile address
-        pub fun borrowReleaseCollectionByProfileAddress(_ address: Address) : &BlockRecordsRelease.Collection {
-            var releaseCollection: &BlockRecordsRelease.Collection? = nil
-            let releaseCollections = self.borrowReleaseCollections()
-            for rc in releaseCollections {
-                if rc.creatorProfile.address == address {
-                    releaseCollection = rc as &BlockRecordsRelease.Collection
-                    break
-                }
-            }
-            return releaseCollection! as &BlockRecordsRelease.Collection
+        // get all storefront ids
+        pub fun getStorefrontIDs(): [UInt64] {
+            return self.storefronts.keys
         }
 
-        // borrow release by nft id
-        pub fun borrowReleaseByNFTID(_ nftID: UInt64) : &BlockRecordsRelease.Release {
-            var releaseCollection: &BlockRecordsRelease.Collection? = nil
-            var release: &BlockRecordsRelease.Release? = nil
-            let releaseCollections = self.borrowReleaseCollections()
-            for rc in releaseCollections {
-                for key in rc.releases.keys {
-                    let r: &BlockRecordsRelease.Release = &rc.releases[key] as &BlockRecordsRelease.Release
-                    if r.nftIDs.contains(nftID) {
-                        release = r as &BlockRecordsRelease.Release
-                        break
-                    }
-                }
+        // users can list their storefronts so that they are viewable in the marketplace
+        pub fun listStorefront(storefrontCapability: Capability<&BlockRecordsStorefront.Storefront{BlockRecordsStorefront.StorefrontPublic}>) {
+            pre {
+                storefrontCapability.check() : "invalid storefront capability"
             }
-            return release! as &BlockRecordsRelease.Release
+            let storefront = storefrontCapability.borrow()!
+            self.storefronts[storefront.uuid] = storefrontCapability
+
+            // todo: emit storefront listed
+        }
+
+        // users can purchase listings from a storefront in the marketplace.
+        // payouts are distributed to the marketplace accordingly
+        // NOTE: a user can circumvent this marketplace payout by writing their own transaction
+        // to purchase a listing from a user directly. we are OK with this!
+        pub fun purchaseListingFromStorefront(listingID: UInt64, storefrontID: UInt64, payment: @FungibleToken.Vault): @NonFungibleToken.NFT {
+            pre {
+                self.storefronts[storefrontID] != nil: "could not find storefront with given id"
+                self.payout.receiver.check() : "could not get marketplace payout receiver"
+            }
+            let storefront = self.storefronts[storefrontID]!.borrow()!
+            let listing = storefront.borrowListing(listingResourceID: listingID)!
+            let listingDetails = listing.getDetails()
+
+            // distribute payout to the marketplace
+            let receiver = self.payout.receiver.borrow()!
+            let p <- payment.withdraw(amount: self.payout.percentFee * listingDetails.salePrice)
+            receiver.deposit(from: <-p)
+
+            // return nft to the buyer
+            let nft <- storefront.purchaseListing(listingResourceID: listingID, payment: <- payment)
+            return <- nft
+        }
+
+        destroy(){
+            destroy self.releaseCollections
         }
     }
 
@@ -120,11 +212,11 @@ pub contract BlockRecordsMarketplace {
           return <- create Admin()
     }
 
-    // resource that an admin would own to be able to create BlockRecordsRelease.Release Collections
+    // resource that an admin would own to be a marketplace admin
+    // should this be moved to BlockRecordsUser?
     // 
     pub resource Admin: AdminPublic {
-
-        //ownership of this capability allows for the creation of BlockRecordsRelease.Release Collections
+        //ownership of this capability allows for the creation of Release Collections
         access(account) var marketplaceCapability: Capability<&Marketplace>?
 
         init() {
@@ -141,38 +233,33 @@ pub contract BlockRecordsMarketplace {
 
         // create release collection
         pub fun createReleaseCollection(
-            creatorStageName: String,
-            creatorName: String,
-            creatorImageURL: String,
-            creatorAddress: Address
-        ): @BlockRecordsRelease.Collection {
-        return <- BlockRecordsRelease.createReleaseCollection(
-            creatorStageName: creatorStageName,
-            creatorName: creatorName,
-            creatorImageURL: creatorImageURL,
-            creatorAddress: creatorAddress
-        )}
-    }
+            name: String,
+            description: String,
+            logo: String,
+            banner: String,
+            website: String,
+            socialMedias: [String]
+        ): UInt64 {
+             pre {
+                self.marketplaceCapability != nil: "not an authorized admin"
+            }
 
-    // todo: move this struct to another smart contract
-    pub struct Payout {
-        
-        // the vault that on the payout will be distributed to
-        pub let fusdVault: Capability<&{FungibleToken.Receiver}>
-
-        // percentage percentFee of the sale that will be paid out to the fusd vault
-        pub let percentFee: UFix64 
-
-        init(
-            fusdVault: Capability<&{FungibleToken.Receiver}>,
-            percentFee: UFix64
-        ){
-            self.fusdVault = fusdVault
-            self.percentFee = percentFee
+            let mc = self.marketplaceCapability!.borrow()!
+            let releaseCollectionID = mc.createAndAddReleaseCollection(
+                name: name,
+                description: description,
+                logo: logo,
+                banner: banner,
+                website: website,
+                socialMedias: socialMedias
+            )
+            return releaseCollectionID
         }
     }
 
     init() {
+        self.totalSupply = 0
+
         self.MarketplaceStoragePath = /storage/BlockRecordsMarketplace
         self.MarketplacePublicPath = /public/BlockRecordsMarketplace
         self.MarketplacePrivatePath = /private/BlockRecordsMarketplace
@@ -180,19 +267,23 @@ pub contract BlockRecordsMarketplace {
         self.AdminPrivatePath = /private/BlockRecordsAdmin
         self.AdminStoragePath = /storage/BlockRecordsAdmin
 
-        // initialize FUSD vault for service account so that we can receive sale percentFees and check balance
-        self.account.save(<-FUSD.createEmptyVault(), to: /storage/fusdVault)
+        // marketplaces require FUSD vaults to receive their payouts
+        // (we assume that the service account has not initialized an FUSD vault yet) 
+        let fusdVaultStoragePath = /storage/FUSDVault
+        let fusdVaultReceiverPublicPath = /public/FUSDVaultReceiver
+        let fusdVaultBalancePublicPath = /public/FUSDVaultBalance
+        self.account.save(<- FUSD.createEmptyVault(), to: fusdVaultStoragePath)
         self.account.link<&FUSD.Vault{FungibleToken.Receiver}>(
-            /public/fusdReceiver,
-            target: /storage/fusdVault
+            fusdVaultReceiverPublicPath,
+            target: fusdVaultStoragePath
         )
         self.account.link<&FUSD.Vault{FungibleToken.Balance}>(
-            /public/fusdBalance,
-            target: /storage/fusdVault
+            fusdVaultBalancePublicPath,
+            target: fusdVaultStoragePath
         )
 
         // initialize and save marketplace resource to account storage
-        let marketplaceFUSDVault = self.account.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)!
+        let marketplaceFUSDVault = self.account.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(fusdVaultReceiverPublicPath)!
         let marketplace <- create Marketplace(
             name: "Block Records",
             fusdVault: marketplaceFUSDVault,
@@ -204,16 +295,13 @@ pub contract BlockRecordsMarketplace {
             target: self.MarketplaceStoragePath
         )
 
-        // todo: store public interface private?
         self.account.link<&BlockRecordsMarketplace.Marketplace{BlockRecordsMarketplace.MarketplacePublic}>(
             self.MarketplacePublicPath,
             target: self.MarketplaceStoragePath
         )       
-
-        // add marketplace capability to admin resource
-        let marketplaceCap = self.account.getCapability<&BlockRecordsMarketplace.Marketplace>(self.MarketplacePrivatePath)!
         
-        // initialize and save admin resource
+        // for simplicity, let's make the service account an admin
+        let marketplaceCap = self.account.getCapability<&BlockRecordsMarketplace.Marketplace>(self.MarketplacePrivatePath)!
         let admin <- create Admin()
         admin.addCapability(cap: marketplaceCap)
         self.account.save(<- admin, to: self.AdminStoragePath)

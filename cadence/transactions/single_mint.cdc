@@ -1,4 +1,4 @@
-import BlockRecordsNFT from 0xSERVICE_ACCOUNT_ADDRESS
+import BlockRecordsSingle from 0xSERVICE_ACCOUNT_ADDRESS
 import BlockRecordsRelease from 0xSERVICE_ACCOUNT_ADDRESS
 import NonFungibleToken from 0xNFT_CONTRACT_ADDRESS
 
@@ -16,12 +16,12 @@ transaction(
 
     prepare(signer: AuthAccount) {
         self.creator = signer.borrow<&BlockRecordsRelease.Creator>(from: BlockRecordsRelease.CreatorStoragePath)!
-        self.receiverCollection = signer.getCapability(BlockRecordsNFT.CollectionPublicPath)!.borrow<&{NonFungibleToken.CollectionPublic}>()
+        self.receiverCollection = signer.getCapability(BlockRecordsSingle.CollectionPublicPath)!.borrow<&{NonFungibleToken.CollectionPublic}>()
             ?? panic("Could not get receiver reference to the NFT Collection")
     }
 
     execute {
-        self.creator.mintSingle(
+        self.creator.mint(
             name: name, 
             type: type, 
             literation: literation, 

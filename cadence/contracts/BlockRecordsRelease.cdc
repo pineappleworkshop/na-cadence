@@ -2,8 +2,8 @@
 import NonFungibleToken from 0xSERVICE_ACCOUNT_ADDRESS
 import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
 import FUSD from 0xFUSD_CONTRACT_ADDRESS
-import BlockRecordsNFT from 0xSERVICE_ACCOUNT_ADDRESS
-import BlockRecordsMarketplace from 0xSERVICE_ACCOUNT_ADDRESS
+import BlockRecordsSingle from 0xSERVICE_ACCOUNT_ADDRESS
+import BlockRecords from 0xSERVICE_ACCOUNT_ADDRESS
 
 /** 
 
@@ -23,7 +23,16 @@ pub contract BlockRecordsRelease {
     //events
     //
     pub event ContractInitialized()
-    pub event Event(type: String, metadata: {String: String})
+    
+    pub event Created(
+        id: UInt64, 
+        metadata: {String: String}
+    )
+    
+    pub event CollectionCreated(
+        id: UInt64, 
+        metadata: {String: String}
+    )
 
     // named paths
     //
@@ -33,83 +42,107 @@ pub contract BlockRecordsRelease {
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath
     
-    // the total number of BlockRecordsReleases that have been created
-    //
+    // the total number of Release Collections and Releases that have been created
     pub var totalSupply: UInt64
 
     pub resource interface CollectionPublic {
-        pub fun borrowRelease(_ id: UInt64): &Release
+        pub fun getID(): UInt64
+        pub fun getName(): String
+        pub fun getDescription(): String
+        pub fun getLogo(): String
+        pub fun getBanner(): String
+        pub fun getWebsite(): String
+        pub fun getSocialMedias(): [String]
+        pub fun borrowReleases(): [&Release]
+        pub fun borrowReleaseByID(_ id: UInt64): &Release
     }
 
-    // todo: rename collection
     // any account in posession of a Collection will be able to mint BlockRecords NFTs
     // this is secure because "transactions cannot create resource types outside of containing contracts"
     pub resource Collection: CollectionPublic {  
-
         // unique id of the release collection
         pub let id: UInt64
 
-        // creator profile resource
-        pub var creatorProfile: CreatorProfile
+        // name of the release collection
+        pub let name: String
+        
+        // description of the release collection
+        pub let description: String
+
+        // logo image will be used for featuring your collection on the homepage, category pages, etc...
+        // 600 x 400 recommended
+        pub let logo: String
+
+        // banner image will appear at the top of your collection page
+        // 1400 x 1400 recommended
+        pub let banner: String
+
+        // url of promotional website
+        pub let website: String
+
+        // social media urls
+        pub let socialMedias: [String]
 
         // dictionary of releases in the collection
         pub var releases: @{UInt64: Release}
 
         init(
-            creatorStageName: String,
-            creatorName: String,
-            creatorImageURL: String,
-            creatorAddress: Address
+            name: String,
+            description: String,
+            logo: String,
+            banner: String,
+            website: String,
+            socialMedias: [String]
         ){
-
             self.id = BlockRecordsRelease.totalSupply
-
-            self.creatorProfile = CreatorProfile(
-                stageName: creatorStageName,
-                name: creatorName,
-                imageURL: creatorImageURL,
-                address: creatorAddress
-            )
-
-            // release collection was created for creator
-            emit Event(type: "collection_created", metadata: {
-                "id" : self.id.toString(),
-                "creator_stage_name": creatorStageName,
-                "creator_legal_name": creatorName,
-                "creator_image_url": creatorImageURL,
-                "creator_address": creatorAddress.toString()
-            })
-
+            self.name = name
+            self.description = description
+            self.logo = logo
+            self.banner = banner
+            self.website = website
+            self.socialMedias = socialMedias
             self.releases <- {}
+
+            emit CollectionCreated(id: self.id, metadata: {
+                "name": self.name,
+                "description": self.description,
+                "logo": self.logo,
+                "banner": self.banner,
+                "website": self.website
+                // todo: social medias
+            })
 
             // iterate supply
             BlockRecordsRelease.totalSupply = BlockRecordsRelease.totalSupply + (1 as UInt64)
         }
 
-        // refer to https://github.com/versus-flow/versus-contracts/blob/master/contracts/Versus.cdc#L429
+        // creates release,
+        // creates nft(s) associated w/ release
+        // deposits nfts in designated collection
+        // moves release to BlockRecords Release Collection
         pub fun createAndAddRelease(
             type: String,
             name: String, 
             literation: String, 
-            imageURL: String, 
-            audioURL: String,
+            image: String, 
+            audio: String,
             copiesCount: UInt64,
-            fusdVault: Capability<&{FungibleToken.Receiver}>,
-            percentFee: UFix64
+            payouts: [BlockRecords.Payout]
         ): UInt64 {
             pre {
-                fusdVault.check() == true : "Vault capability should exist"
+                // receiverCollection.check() == true : "receiver collection should exist"
+                // todo: verify that payout vaults exist
             }
 
             let release <- create Release(
                 type: type,
                 name: name, 
                 literation: literation, 
-                imageURL: imageURL, 
-                audioURL: audioURL,
+                image: image, 
+                audio: audio,
                 copiesCount: copiesCount,
-                fusdVault: fusdVault,
-                percentFee: percentFee
+                payouts: payouts,
+                releaseCollectionID: self.id
             )
 
             let id = release.id
@@ -121,9 +154,46 @@ pub contract BlockRecordsRelease {
             return id
         }
 
-        // todo: review this... should be pub or access(contract)?
-        // access(contract) fun getRelease(_ id:UInt64) : &Release {
-        pub fun borrowRelease(_ id: UInt64) : &Release {
+        pub fun getID(): UInt64 {
+            return self.id
+        }
+
+        pub fun getName(): String {
+            return self.name
+        }
+        
+        pub fun getDescription(): String {
+            return self.description
+        }
+        
+        pub fun getLogo(): String {
+            return self.logo
+        }
+        
+        pub fun getBanner(): String {
+            return self.banner
+        }
+
+        pub fun getWebsite(): String {
+            return self.website
+        }
+
+        pub fun getSocialMedias(): [String] {
+            return self.socialMedias
+        }
+
+        pub fun borrowReleases(): [&Release] {
+            let releases: [&Release] = []
+            let keys = self.releases.keys
+            for key in keys {
+                let release = &self.releases[key] as &Release
+                releases.append(release)
+            }
+
+            return releases
+        }
+
+        pub fun borrowReleaseByID(_ id: UInt64): &Release {
             pre {
                 self.releases[id] != nil : "release doesn't exist"
             }
@@ -137,264 +207,168 @@ pub contract BlockRecordsRelease {
 
     // other contracts owned by the account may create release collections
     access(account) fun createReleaseCollection(
-        creatorStageName: String,
-        creatorName: String,
-        creatorImageURL: String,
-        creatorAddress: Address
+        name: String,
+        description: String,
+        logo: String,
+        banner: String,
+        website: String,
+        socialMedias: [String]
     ): @Collection {
-    return <- create Collection(
-            creatorStageName: creatorStageName,
-            creatorName: creatorName,
-            creatorImageURL: creatorImageURL,
-            creatorAddress: creatorAddress
+        return <- create Collection(
+            name: name,
+            description: description,
+            logo: logo,
+            banner: banner,
+            website: website,
+            socialMedias: socialMedias
         )
     }
 
     pub resource interface ReleasePublic {
-        pub let id: UInt64
-        pub var nftIDs: [UInt64]
-        pub let metadata: {String: AnyStruct}
-        pub let type: String
-        pub var completed: Bool
-        pub let payout: BlockRecordsMarketplace.Payout
+        pub fun getID(): UInt64
+        pub fun getNFTIDs(): [UInt64]
+        pub fun getMetadata(): {String: AnyStruct}
+        pub fun getReleaseType(): String
+        pub fun getIsComplete(): Bool
     }
 
     // acts as the root resource for any NFT minted by a creator
     // all singles, albums, etc... must be associated with a release
     pub resource Release: ReleasePublic {
-
         // unique id of the release
         pub let id: UInt64
 
+        // metadata of the release
+        // this metadata is almost identical - only lacking serial number & release ID - to
+        // the metadata of nfts associated with this release.
+        // much like the stamp used to print a pokemon card
+        pub let metadata: {String: AnyStruct}
+
         // "type" of release
         pub let type: String
-
-        // metadata of the release
-        pub let metadata: {String: AnyStruct}
 
         // NFT copies count
         pub let copiesCount: UInt64
 
         // ids of nfts associated with release
-        pub var nftIDs: [UInt64]
+        pub let nftIDs: [UInt64]
 
-        // the sale fee cut for the release creator
-        pub let payout: BlockRecordsMarketplace.Payout
+        pub let releaseCollectionID: UInt64
 
-        // specifies that all NFTs that should be added, were added
-        pub var completed: Bool
+        // checks if nfts were minted for the release
+        pub var isComplete: Bool
 
         init(
             type: String,
             name: String, 
             literation: String, 
-            imageURL: String, 
-            audioURL: String,
+            image: String, 
+            audio: String,
             copiesCount: UInt64,
-            fusdVault: Capability<&{FungibleToken.Receiver}>,
-            percentFee: UFix64
+            payouts: [BlockRecords.Payout],
+            releaseCollectionID: UInt64
         ){
+            pre{
+                type == "single" : "release type invalid"
+                payouts.length > 0 : "at least one payout is required"
+                copiesCount > 0 : "number of copies must be greater than 0"
+            }
+
+            self.id = BlockRecordsRelease.totalSupply
             self.type = type
+            self.copiesCount = copiesCount
+            self.nftIDs = []
+            self.isComplete = false
+            self.releaseCollectionID = releaseCollectionID
 
             self.metadata = {
                 "name": name,
                 "literation": literation,
-                "image_url": imageURL,
-                "audio_url": audioURL
+                "image": image,
+                "audio": audio,
+                "payouts": payouts
             }
 
-            self.copiesCount = copiesCount
-
-            self.payout = BlockRecordsMarketplace.Payout(
-                fusdVault: fusdVault,
-                percentFee: percentFee
-            )
-
-            self.nftIDs = []
-            self.completed = false
-
-            self.id = BlockRecordsRelease.totalSupply
+            emit Created(id: self.id, metadata:{
+                "name": name,
+                "literation": literation,
+                "image": image,
+                "audio": audio,
+                "copies_count": copiesCount.toString()
+            })
 
             // iterate supply
             BlockRecordsRelease.totalSupply = BlockRecordsRelease.totalSupply + (1 as UInt64)
-
-            // emit event
-            emit Event(type: "created", metadata: {
-                "id" : self.id.toString(),
-                "name": name,
-                "literation": literation,
-                "image_url": imageURL,
-                "audio_url": audioURL,
-                "copies_count": copiesCount.toString(),
-                "percent_fee": percentFee.toString()
-            })
         }
 
-        pub fun complete(){
-                self.completed = true
+        pub fun getID(): UInt64 {
+            return self.id
         }
 
-        // mints a new BlockRecordsNFT, adds ID to release, and deposits into minter's nft collection
-        pub fun mintAndAddSingle(
-            name: String, 
-            literation: String, 
-            imageURL: String, 
-            audioURL: String,
-            serialNumber: UInt64,
-            receiverCollection: &{NonFungibleToken.CollectionPublic}
-        ){
+        pub fun getNFTIDs(): [UInt64] {
+            return self.nftIDs
+        }
+
+        pub fun getMetadata(): {String: AnyStruct} {
+            return self.metadata
+        }
+        
+        // "getReleaseType" because getType is already a function in cadence
+        pub fun getReleaseType(): String {
+            return self.type
+        }
+
+        pub fun getIsComplete(): Bool {
+            return self.isComplete
+        }
+
+        // create and deposit nfts to isComplete release
+        pub fun mintSingles(receiverCollection: &{NonFungibleToken.CollectionPublic}) {    
             pre {
-                !self.completed : "cannot add to completed release"
-                
-                // validate nft type
-                // BlockRecordsNFT.NFTTypes.contains(type) : "invalid nft type"
-            }
-                    
-            let single <- BlockRecordsNFT.mintSingle(
-                name: name, 
-                literation: literation, 
-                imageURL: imageURL, 
-                audioURL: audioURL,
-                serialNumber: serialNumber,
-                releaseID: self.id
-            )
-
-            // append id to release collection
-            self.nftIDs.append(single.id)
-
-            // deposit into minter's own collection
-            receiverCollection.deposit(
-                token: <- single
-            )
-        }
-    }
-
-    // potential creator accounts will create a public capability to this
-    // so that a BlockRecords admin can add the minter capability
-    pub resource interface CreatorPublic {
-        pub fun addCapability(cap: Capability<&Collection>, address: Address)
-    }
-
-    // accounts can create creator resource but, will not be able to mint without
-    // the Collection capability
-    pub fun createCreator(): @Creator {
-        return <- create Creator()
-    }
-
-    // resource that a creator would own to be able to mint their own NFTs
-    // 
-    pub resource Creator: CreatorPublic {
-        access(account) var releaseCollectionCapability: Capability<&Collection>?
-
-        init() {
-            self.releaseCollectionCapability = nil
-        }
-
-        pub fun addCapability(cap: Capability<&Collection>, address: Address) {
-            pre {
-                cap.check() : "invalid capability"
-                self.releaseCollectionCapability == nil : "capability already set"
+                // todo: this is pretty verbose
+                self.type == "single" : "release is not of type single"
+                self.metadata["name"]!.getType() == Type<String>() : "metadata field type missmatch or missing value for field: name"
+                self.metadata["literation"]!.getType() == Type<String>()  : "metadata field type missmatch or missing value for field: name"
+                self.metadata["image"]!.getType() == Type<String>()  : "metadata field type missmatch or missing value for field: name"
+                self.metadata["audio"]!.getType() == Type<String>()  : "metadata field type missmatch or missing value for field: name"
+                // todo: check if payouts are valid
+                // todo: check if receiver collection is valid
             }
             
-            self.releaseCollectionCapability = cap
-
-            let releaseCollection = self.releaseCollectionCapability!.borrow()!
-            let creator = releaseCollection.creatorProfile
-
-            // todo: rename name as name
-            // emitted when a creator is granted the capability to a collection,
-            // allowing them to mint BlockRecords NFTs
-            emit Event(type: "collection_capability_added", metadata: {
-                "collection_id": releaseCollection.id.toString(),
-                "creator_stage_name": creator.stageName,
-                "creator_legal_name": creator.name,
-                "creator_img_url": creator.imageURL,
-                "creator_address": creator.address.toString()
-            })
-
-        }
-
-        pub fun createRelease(
-            type: String,
-            name: String, 
-            literation: String, 
-            imageURL: String, 
-            audioURL: String,
-            copiesCount: UInt64,
-            fusdVault: Capability<&{FungibleToken.Receiver}>,
-            percentFee: UFix64,
-            receiverCollection: &{NonFungibleToken.CollectionPublic}
-        ){
-            pre {
-                self.releaseCollectionCapability != nil: "not an authorized creator"
-            }
-
-            // borrow release collection
-            let rc = self.releaseCollectionCapability!.borrow()!
-
-            // create release and add to release collection
-            let releaseID = rc.createAndAddRelease(
-                type: type,
-                name: name, 
-                literation: literation, 
-                imageURL: imageURL, 
-                audioURL: audioURL,
-                copiesCount: copiesCount,
-                fusdVault: fusdVault,
-                percentFee: percentFee
-            )
-            let release = rc.borrowRelease(releaseID)
-
-            // create nfts and add them to release collection
+            let name: String = self.metadata["name"]! as! String
+            let literation: String = self.metadata["literation"]! as! String
+            let image: String = self.metadata["image"]! as! String
+            let audio: String = self.metadata["audio"]! as! String
+            let payouts: [BlockRecords.Payout] = self.metadata["payouts"] as! [BlockRecords.Payout]
             var serialNumber: UInt64 = 1
-            while serialNumber <= copiesCount {
-                release.mintAndAddSingle(
+            
+            while serialNumber <= self.copiesCount {
+                let single <- BlockRecordsSingle.mint(
                     name: name, 
                     literation: literation, 
-                    imageURL: imageURL, 
-                    audioURL: audioURL,
-                    serialNumber: UInt64(serialNumber),
-                    receiverCollection: receiverCollection
+                    image: image, 
+                    audio: audio,
+                    serialNumber: serialNumber,
+                    releaseID: self.id,
+                    payouts: payouts
+                )
+
+                // append id to release collection
+                self.nftIDs.append(single.id)
+
+                // deposit into specified collection
+                receiverCollection.deposit(
+                    token: <- single
                 )
 
                 // increment serial number
                 serialNumber = serialNumber + 1
             }
+
+            self.isComplete = true
         }
-    }
 
-    // the creator's profile info
-    pub struct CreatorProfile {
-
-        // creator's stage name or pseudonym
-        pub var stageName: String
-
-        // todo: rename to name
-        // creator's legal full name
-        pub var name: String
-
-        // creator's desired profile picture url
-        pub var imageURL: String
-
-        // creator's account address
-        // this can be changed if the creator loses their credentials.
-        // just unlink the private capability and create a new one,
-        // then update creator profile struct in release collection.
-        // NOTE: it is important to keep this reference in the release collection resource *only*
-        // so there won't be discrepencies downstream if the creator's address changes
-        pub var address: Address
-
-        init(
-            stageName: String, 
-            name: String,
-            imageURL: String,
-            address: Address
-        ){
-            self.stageName = stageName
-            self.name = name
-            self.imageURL = imageURL
-            self.address = address
-        }
+        // pub fun mintAlbums
     }
         
     init() {

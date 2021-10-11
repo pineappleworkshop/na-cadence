@@ -10,10 +10,12 @@ const (
 	FUNGIBLE_TOKEN_CONTRACT_NAME = "FungibleToken"
 	FUSD_CONTRACT_NAME           = "FUSD"
 
-	BR_NFT_CONTRACT_NAME          = "BlockRecordsNFT"
-	BR_MARKETPLACE_CONTRACT_NAME  = "BlockRecordsMarketplace"
-	BR_RELEASE_CONTRACT_NAME      = "BlockRecordsRelease"
-	BR_SALE_LISTING_CONTRACT_NAME = "BlockRecordsSaleListing"
+	BR_CONTRACT_NAME             = "BlockRecords"
+	BR_MARKETPLACE_CONTRACT_NAME = "BlockRecordsMarketplace"
+	BR_RELEASE_CONTRACT_NAME     = "BlockRecordsRelease"
+	BR_SINGLE_CONTRACT_NAME      = "BlockRecordsSingle"
+	BR_STOREFRONT_CONTRACT_NAME  = "BlockRecordsStorefront"
+	BR_USER_CONTRACT_NAME        = "BlockRecordsUser"
 
 	// standard contracts
 	LOCAL_FILE_PATH_NON_FUNGIBLE_TOKEN_CONTRACT = "./cadence/contracts/NonFungibleToken.cdc"
@@ -21,10 +23,12 @@ const (
 	LOCAL_FILE_PATH_FUSD_CONTRACT               = "./cadence/contracts/FUSD.cdc"
 
 	// br contracts
-	LOCAL_FILE_PATH_BR_MARKETPLACE_CONTRACT  = "./cadence/contracts/BlockRecordsMarketplace.cdc"
-	LOCAL_FILE_PATH_BR_NFT_CONTRACT          = "./cadence/contracts/BlockRecordsNFT.cdc"
-	LOCAL_FILE_PATH_BR_RELEASE_CONTRACT      = "./cadence/contracts/BlockRecordsRelease.cdc"
-	LOCAL_FILE_PATH_BR_SALE_LISTING_CONTRACT = "./cadence/contracts/BlockRecordsSaleListing.cdc"
+	LOCAL_FILE_PATH_BR_CONTRACT             = "./cadence/contracts/BlockRecords.cdc"
+	LOCAL_FILE_PATH_BR_MARKETPLACE_CONTRACT = "./cadence/contracts/BlockRecordsMarketplace.cdc"
+	LOCAL_FILE_PATH_BR_RELEASE_CONTRACT     = "./cadence/contracts/BlockRecordsRelease.cdc"
+	LOCAL_FILE_PATH_BR_SINGLE_CONTRACT      = "./cadence/contracts/BlockRecordsSingle.cdc"
+	LOCAL_FILE_PATH_BR_STOREFRONT_CONTRACT  = "./cadence/contracts/BlockRecordsStorefront.cdc"
+	LOCAL_FILE_PATH_BR_USER_CONTRACT        = "./cadence/contracts/BlockRecordsUser.cdc"
 
 	// txs
 	LOCAL_FILE_PATH_SINGLE_MINT     = "./cadence/transactions/single_mint.cdc"

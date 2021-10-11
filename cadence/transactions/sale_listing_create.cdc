@@ -1,12 +1,12 @@
 import FungibleToken from 0xFUNGIBLE_TOKEN_CONTRACT_ADDRESS
 import NonFungibleToken from 0xNFT_CONTRACT_ADDRESS
-import BlockRecordsNFT from 0xSERVICE_ACCOUNT_ADDRESS
+import BlockRecordsSingle from 0xSERVICE_ACCOUNT_ADDRESS
 import BlockRecordsSaleListing from 0xSERVICE_ACCOUNT_ADDRESS
 import FUSD from 0xFUSD_CONTRACT_ADDRESS
 
 transaction(id: UInt64, price: UFix64) {
     let sellerFUSDVault: Capability<&FUSD.Vault{FungibleToken.Receiver}>
-    let BlockRecordsNFTCollection: Capability<&BlockRecordsNFT.Collection{NonFungibleToken.Provider, BlockRecordsNFT.CollectionPublic}>
+    let BlockRecordsSingleCollection: Capability<&BlockRecordsSingle.Collection{NonFungibleToken.Provider, BlockRecordsSingle.CollectionPublic}>
     let marketCollection: &BlockRecordsSaleListing.Collection
 
     prepare(signer: AuthAccount) {
@@ -16,13 +16,13 @@ transaction(id: UInt64, price: UFix64) {
         
         assert(self.sellerFUSDVault.borrow() != nil, message: "Missing or mis-typed FUSD receiver")
         
-        if !signer.getCapability<&BlockRecordsNFT.Collection{NonFungibleToken.Provider, BlockRecordsNFT.CollectionPublic}>(BlockRecordsCollectionProviderPrivatePath)!.check() {
-            signer.link<&BlockRecordsNFT.Collection{NonFungibleToken.Provider, BlockRecordsNFT.CollectionPublic}>(BlockRecordsCollectionProviderPrivatePath, target: BlockRecordsNFT.CollectionStoragePath)
+        if !signer.getCapability<&BlockRecordsSingle.Collection{NonFungibleToken.Provider, BlockRecordsSingle.CollectionPublic}>(BlockRecordsCollectionProviderPrivatePath)!.check() {
+            signer.link<&BlockRecordsSingle.Collection{NonFungibleToken.Provider, BlockRecordsSingle.CollectionPublic}>(BlockRecordsCollectionProviderPrivatePath, target: BlockRecordsSingle.CollectionStoragePath)
         }
 
-        self.BlockRecordsNFTCollection = signer.getCapability<&BlockRecordsNFT.Collection{NonFungibleToken.Provider, BlockRecordsNFT.CollectionPublic}>(BlockRecordsCollectionProviderPrivatePath)!
+        self.BlockRecordsSingleCollection = signer.getCapability<&BlockRecordsSingle.Collection{NonFungibleToken.Provider, BlockRecordsSingle.CollectionPublic}>(BlockRecordsCollectionProviderPrivatePath)!
 
-        assert(self.BlockRecordsNFTCollection.borrow() != nil, message: "Missing or mis-typed BlockRecordsNFTCollection provider")
+        assert(self.BlockRecordsSingleCollection.borrow() != nil, message: "Missing or mis-typed BlockRecordsSingleCollection provider")
         
         self.marketCollection = signer.borrow<&BlockRecordsSaleListing.Collection>(from: BlockRecordsSaleListing.CollectionStoragePath)
             ?? panic("Missing or mis-typed BlockRecordsSaleListing Collection")
@@ -33,7 +33,7 @@ transaction(id: UInt64, price: UFix64) {
     execute {
         let offer <- BlockRecordsSaleListing.createSaleListing (
             nftID: id,
-            sellerItemProvider: self.BlockRecordsNFTCollection,
+            sellerItemProvider: self.BlockRecordsSingleCollection,
             sellerPaymentReceiver: self.sellerFUSDVault,
             price: price
         )

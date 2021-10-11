@@ -12,10 +12,10 @@ const (
 	CLUSTER_FILE_PATH_MARKET_CONTRACT = "./go/bin/contracts/BlockRecordsMarket.cdc"
 	MARKET_CONTRACT_NAME              = "BlockRecordsMarket"
 
-	TEST_FILE_PATH_BR_NFT_CONTRACT    = "../cadence/contracts/BlockRecordsNFT.cdc"
-	LOCAL_FILE_PATH_BR_NFT_CONTRACT   = "./cadence/contracts/BlockRecordsNFT.cdc"
-	CLUSTER_FILE_PATH_BR_NFT_CONTRACT = "./go/bin/contracts/BlockRecordsNFT.cdc"
-	BR_NFT_CONTRACT_NAME              = "BlockRecordsNFT"
+	TEST_FILE_PATH_BR_SINGLE_CONTRACT    = "../cadence/contracts/BlockRecordsSingle.cdc"
+	LOCAL_FILE_PATH_BR_SINGLE_CONTRACT   = "./cadence/contracts/BlockRecordsSingle.cdc"
+	CLUSTER_FILE_PATH_BR_SINGLE_CONTRACT = "./go/bin/contracts/BlockRecordsSingle.cdc"
+	BR_SINGLE_CONTRACT_NAME              = "BlockRecordsSingle"
 
 	TEST_FILE_PATH_NON_FUNGIBLE_TOKEN_CONTRACT    = "../cadence/contracts/NonFungibleToken.cdc"
 	LOCAL_FILE_PATH_NON_FUNGIBLE_TOKEN_CONTRACT   = "./cadence/contracts/NonFungibleToken.cdc"

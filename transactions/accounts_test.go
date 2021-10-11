@@ -151,7 +151,7 @@ func TestCreateReleaseCollectionForNewCreator(t *testing.T) {
 // 									CopiesCount: cadence.NewInt(1),
 // 									ReleaseID:   cadence.UInt64(1),
 // 								}
-// 								txRes, err := MintSingle(config.Conf.FlowServiceAccountAddress, acctAddr.String(), privKey, nft)
+// 								txRes, err := mint(config.Conf.FlowServiceAccountAddress, acctAddr.String(), privKey, nft)
 // 								So(err, ShouldBeNil)
 // 								So(txRes, ShouldNotBeNil)
 // 								So(txRes.Error, ShouldNotBeNil)
