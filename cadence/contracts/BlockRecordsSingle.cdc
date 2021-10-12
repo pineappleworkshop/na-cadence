@@ -6,38 +6,27 @@ import BlockRecords from 0xSERVICE_ACCOUNT_ADDRESS
 
 /** 
 
-BlockRecordsSingle is the base NFT for BlockRecords. Eventually, we will have 
-a BlockRecordsAlbum smart contract as well that will allow users to collect and combine
-multiple singles to create a "full" album.
+## BlockRecordsSingle is the basic NFT for Block Records 
+
+Eventually, we will have a BlockRecordsAlbum smart contract as well that will
+allow users to collect and combine multiple singles to create a "full" album.
 
 **/
 
 pub contract BlockRecordsSingle: NonFungibleToken {
 
-    //events
-    //
     pub event ContractInitialized()
     pub event Withdraw(id: UInt64, from: Address?)
     pub event Deposit(id: UInt64, to: Address?)
     pub event Minted(id: UInt64, metadata: {String: String})
 
-    // named paths
-    //
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath
     pub let CollectionProviderPath: PrivatePath
 
     // the total number of BlockRecordsSingle that have been minted
-    //
     pub var totalSupply: UInt64
 
-    // todo: use this function to validate single metadata
-    pub fun validate() {
-        
-    }
-
-    // the BlockRecordsSingle NFT resource
-    //
     pub resource NFT: NonFungibleToken.INFT {
         
         // unique id of nft
@@ -124,10 +113,14 @@ pub contract BlockRecordsSingle: NonFungibleToken {
     // a collection of BlockRecordsSingle NFTs owned by an account
     //
     pub resource Collection: CollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic {
-
         // dictionary of NFT conforming tokens
         // NFT is a resource type with an `UInt64` ID field
         pub var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
+
+        init () {
+            self.ownedNFTs <- {}
+        }
+
 
         // removes an NFT from the collection and moves it to the caller
         pub fun withdraw(withdrawID: UInt64): @NonFungibleToken.NFT {
@@ -180,12 +173,6 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         destroy() {
             destroy self.ownedNFTs
         }
-
-        // initializer
-        //
-        init () {
-            self.ownedNFTs <- {}
-        }
     }
 
     // createEmptyCollection
@@ -211,7 +198,6 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         self.CollectionPublicPath = /public/BlockRecordsSingleCollection
         self.CollectionProviderPath = /private/BlockRecordsCollectionProvider
         
-        // total supply of all block records resources: releases, nfts, etc...
         self.totalSupply = 0
 
         emit ContractInitialized()

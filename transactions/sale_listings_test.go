@@ -20,7 +20,7 @@ func TestCreateSaleListing(t *testing.T) {
 		So(pubKey, ShouldNotBeNil)
 		So(privKey, ShouldNotBeNil)
 
-		Convey("create a new account on the flow blockchain", func() {
+		Convey("create a new account on the flow blockchain ", func() {
 			acctAddr, err := CreateAccount(config.Conf.FlowAccessNode, &pubKey, config.FLOW_SERVICE_ACCOUNT_SIG_ALG, config.FLOW_HASH_ALGO_NAME, nil, config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, config.FLOW_SERVICE_ACCOUNT_SIG_ALG, config.FLOW_GAS_LIMIT)
 			So(err, ShouldBeNil)
 			So(acctAddr, ShouldNotBeNil)

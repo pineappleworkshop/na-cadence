@@ -10,8 +10,6 @@ transaction(
     storefrontAddress: Address
 ) {
     let payment: @FungibleToken.Vault
-    let singleCollection: &BlockRecordsSingle.Collection{NonFungibleToken.Receiver}
-    let storefront: &BlockRecordsStorefront.Storefront{BlockRecordsStorefront.StorefrontPublic}
     let marketplace: &BlockRecordsMarketplace.Marketplace{BlockRecordsMarketplace.MarketplacePublic}
 
     prepare(signer: AuthAccount) {
@@ -37,7 +35,7 @@ transaction(
         let nft <- self.marketplace.purchaseListingFromStorefront(
             listingID: listingID,
             storefrontAddress: storefrontAddress,
-            payment: self.payment
+            payment: <- self.payment
         )
         destroy nft
     }

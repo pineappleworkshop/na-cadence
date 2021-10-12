@@ -7,7 +7,7 @@ import BlockRecords from 0xSERVICE_ACCOUNT_ADDRESS
 
 /** 
 
-Releases are the root resource of any BlockRecords nft.
+## Releases are the root resource of any BlockRecords nft.
 
 potential "creators" will create and save the creator resource to their storage and expose
 its capability receiver function publicly. this allows the service account to create a unique
@@ -20,30 +20,24 @@ and agreements.
 
 pub contract BlockRecordsRelease {
 
-    //events
-    //
     pub event ContractInitialized()
-    
-    pub event Created(
-        id: UInt64, 
-        metadata: {String: String}
-    )
-    
+    pub event Created(id: UInt64, metadata: {String: String})    
     pub event CollectionCreated(
-        id: UInt64, 
-        metadata: {String: String}
+        id: UInt64,
+        name: String,
+        description: String,
+        logo: String,
+        banner: String,
+        socialMedias: [String]
     )
 
-    // named paths
-    //
     pub let CreatorStoragePath: StoragePath
     pub let CreatorPublicPath: PublicPath
-
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath
     
     // the total number of Release Collections and Releases that have been created
-    pub var totalSupply: UInt64
+    access(contract) var totalSupply: UInt64
 
     pub resource interface CollectionOwner {
         pub fun setName(_ val: String) {
@@ -51,40 +45,33 @@ pub contract BlockRecordsRelease {
                 val.length <= 16: "name must be 30 or less characters"
             }
         }
-
         pub fun setDescription(_ val: String) {
             pre {
                 val.length <= 255: "description must be 255 characters or less"
             }
         }
-
         pub fun setLogo(_ val: String){
             pre {
                 val.length <= 255: "logo must be 255 characters or less"
             }
         }
-
         pub fun setBanner(_ val: String){
             pre {
                 val.length <= 255: "logo must be 255 characters or less"
             }
         }
-
         pub fun setWebsite(_ val: String){
             pre {
                 val.length <= 255: "logo must be 255 characters or less"
             }
         }
-
         // todo:
         // pub fun getSocialMedias(_ val: [String])  {
         //     pre {
         //         BlockRecordsUser.verifyTags(tags: val, tagLength:10, tagSize:3) : "cannot have more then 3 tags of length 10"
         //     }
         // }   
-
         pub fun borrowRelease(id: UInt64): &Release
-
         pub fun createAndAddRelease(
             type: String,
             name: String, 
@@ -154,23 +141,19 @@ pub contract BlockRecordsRelease {
             self.socialMedias = socialMedias
             self.releases <- {}
 
-            emit CollectionCreated(id: self.id, metadata: {
-                "name": self.name,
-                "description": self.description,
-                "logo": self.logo,
-                "banner": self.banner,
-                "website": self.website
-                // todo: social medias
-            })
+            emit CollectionCreated(
+                id: self.id,
+                name: name,
+                description: description,
+                logo: logo,
+                banner: banner,
+                socialMedias: socialMedias
+            )
 
             // iterate supply
             BlockRecordsRelease.totalSupply = BlockRecordsRelease.totalSupply + (1 as UInt64)
         }
 
-        // creates release,
-        // creates nft(s) associated w/ release
-        // deposits nfts in designated collection
-        // moves release to BlockRecords Release Collection
         pub fun createAndAddRelease(
             type: String,
             name: String, 
@@ -180,10 +163,6 @@ pub contract BlockRecordsRelease {
             copiesCount: Int,
             payouts: [BlockRecords.Payout]
         ): UInt64 {
-            pre {
-                // receiverCollection.check() == true : "receiver collection should exist"
-                // todo: verify that payout vaults exist
-            }
 
             let release <- create Release(
                 type: type,
@@ -276,7 +255,6 @@ pub contract BlockRecordsRelease {
         }
     }
 
-    // other contracts owned by the account may create release collections
     access(account) fun createReleaseCollection(
         name: String,
         description: String,
@@ -296,14 +274,14 @@ pub contract BlockRecordsRelease {
     }
 
     pub resource interface ReleasePublic {
-        pub fun getID(): UInt64
+        pub let id: UInt64
         pub fun getNFTIDs(): [UInt64]
-        pub fun getMetadata(): {String: AnyStruct}
-        pub fun getReleaseType(): String
+        pub let metadata: {String: AnyStruct}
+        pub let type: String
         pub fun getIsComplete(): Bool
     }
 
-    // acts as the root resource for any NFT minted by a creator
+    // The Release resource acts as the root resource for any NFT minted by a creator
     // all singles, albums, etc... must be associated with a release
     pub resource Release: ReleasePublic {
         // unique id of the release
@@ -322,7 +300,7 @@ pub contract BlockRecordsRelease {
         pub let copiesCount: Int
 
         // ids of nfts associated with release
-        pub let nftIDs: [UInt64]
+        access(self) var nftIDs: [UInt64]
 
         // the id of the release collection that the release belongs to
         pub let releaseCollectionID: UInt64
@@ -340,10 +318,15 @@ pub contract BlockRecordsRelease {
             payouts: [BlockRecords.Payout],
             releaseCollectionID: UInt64
         ){
-            pre{
-                type == "single" : "release type invalid"
-                // payouts.length > 0 : "at least one payout is required"
-                copiesCount > 0 : "number of copies must be greater than 0"
+            pre {
+                type == "single" : "release type invalid" // only singles for now
+                name.length <= 30: "name must be 30 or less characters"
+                literation.length <= 10000: "description must be 10,000 characters or less"
+                image.length <= 255: "description must be 255 characters or less"
+                audio.length <= 255: "description must be 255 characters or less"
+                image.length <= 255: "description must be 255 characters or less"
+                copiesCount <= 10000: "total copies count must be 10,000 or less"
+                // todo: validate all payout receivers exist
             }
 
             self.id = BlockRecordsRelease.totalSupply
@@ -394,28 +377,19 @@ pub contract BlockRecordsRelease {
             return self.isComplete
         }
 
-        // user can call this function multiple times 
+        // it might be necessary to call this function multiple times to complete a release -
+        // depending on how many nfts exist in the release
         pub fun mintSingles(count: Int, receiverCollection: &{NonFungibleToken.CollectionPublic}) {    
             pre {
-                // todo: this is pretty verbose
-                self.nftIDs.length + count <= self.copiesCount : "mint would exceed release copies count"
                 self.isComplete == false : "release is complete"
-                self.type == "single" : "release is not of type single"
-                self.metadata["name"]!.getType() == Type<String>() : "metadata field type missmatch or missing value for field: name"
-                self.metadata["literation"]!.getType() == Type<String>()  : "metadata field type missmatch or missing value for field: name"
-                self.metadata["image"]!.getType() == Type<String>()  : "metadata field type missmatch or missing value for field: name"
-                self.metadata["audio"]!.getType() == Type<String>()  : "metadata field type missmatch or missing value for field: name"
-                // todo: check if payouts are valid
-                // todo: check if receiver collection is valid
+                self.nftIDs.length + count <= self.copiesCount : "mint would exceed release copies count"
             }
             
+            // map metadata to single
             let name: String = self.metadata["name"]! as! String
             let literation: String = self.metadata["literation"]! as! String
             let image: String = self.metadata["image"]! as! String
             let audio: String = self.metadata["audio"]! as! String
-
-            // todo: what if no payouts?
-            // let payouts: [BlockRecords.Payout] = self.metadata["payouts"] as! [BlockRecords.Payout]
             let payouts: [BlockRecords.Payout] = [] as! [BlockRecords.Payout]
 
             var i = 1
@@ -438,7 +412,7 @@ pub contract BlockRecordsRelease {
                     token: <- single
                 )
 
-                // complete release
+                // release is complete when the nft count and copiesCount are equal
                 if self.nftIDs.length == self.copiesCount {
                     self.isComplete = true
                     break
@@ -449,7 +423,7 @@ pub contract BlockRecordsRelease {
             }
         }
 
-        // pub fun mintAlbums
+        // todo: pub fun mintAlbums
     }
         
     init() {

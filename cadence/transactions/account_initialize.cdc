@@ -40,6 +40,10 @@ transaction {
         if acct.borrow<&BlockRecordsStorefront.Storefront>(from: BlockRecordsStorefront.StorefrontStoragePath) == nil {
             let storefront <- BlockRecordsStorefront.createStorefront() as! @BlockRecordsStorefront.Storefront
             acct.save(<- storefront, to: BlockRecordsStorefront.StorefrontStoragePath)
+            acct.link<&BlockRecordsStorefront.Storefront{BlockRecordsStorefront.StorefrontMarketplace}>(
+                BlockRecordsStorefront.StorefrontMarketplacePath, 
+                target: BlockRecordsStorefront.StorefrontStoragePath
+            )
             acct.link<&BlockRecordsStorefront.Storefront{BlockRecordsStorefront.StorefrontPublic}>(
                 BlockRecordsStorefront.StorefrontPublicPath, 
                 target: BlockRecordsStorefront.StorefrontStoragePath
@@ -51,7 +55,7 @@ transaction {
         }
 
         // list storefront in marketplace
-        let storefrontCap = acct.getCapability<&BlockRecordsStorefront.Storefront{BlockRecordsStorefront.StorefrontPublic}>(BlockRecordsStorefront.StorefrontPublicPath)
+        let storefrontCap = acct.getCapability<&BlockRecordsStorefront.Storefront{BlockRecordsStorefront.StorefrontMarketplace}>(BlockRecordsStorefront.StorefrontMarketplacePath)
         let marketplace = getAccount(0xSERVICE_ACCOUNT_ADDRESS).getCapability<&BlockRecordsMarketplace.Marketplace{BlockRecordsMarketplace.MarketplacePublic}>(BlockRecordsMarketplace.MarketplacePublicPath)!.borrow()!
         marketplace.listStorefront(storefrontCapability: storefrontCap, address: acct.address)
 

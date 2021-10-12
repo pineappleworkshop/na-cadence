@@ -5,9 +5,7 @@ import FUSD from 0xFUSD_CONTRACT_ADDRESS
 
 /**
 
-BlockRecords Core Contract
-
-share structs, models, etc...
+This contract contains shared structs needed in multiple Block Records smart contracts.
 
 **/
 
@@ -18,10 +16,10 @@ pub contract BlockRecords {
     pub event ContractInitialized()
 
     pub struct Payout {
-        // the vault that on the payout will be distributed to
+        // the receiver that on the payout will be distributed to
         pub let receiver: Capability<&{FungibleToken.Receiver}>
 
-        // percentage percentFee of the sale that will be paid out to the fusd vault
+        // percentage fee of the sale that will be paid out to the fusd vault
         pub let percentFee: UFix64 
 
         init(
