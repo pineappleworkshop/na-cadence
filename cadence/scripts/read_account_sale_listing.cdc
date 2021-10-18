@@ -26,7 +26,7 @@ pub fun main(): SaleListing? {
     let blockRecordsCollection = seller.getCapability(BlockRecordsSingle.CollectionPublicPath)!.borrow<&{BlockRecordsSingle.BlockRecordsSingleCollectionPublic}>()
         ?? panic("Could not borrow BlockRecordsSingleCollectionPublic")
 
-    let blockRecordsSingleData = blockRecordsCollection.borrowBlockRecordsSingle(id: id)
+    let blockRecordsSingleData = blockRecordsCollection.borrowSingle(id: id)
         ?? panic("No such id in that collection")
 
     return SaleListing(initPrice: saleListingsData.price, initID: id, initMetadata: blockRecordsSingleData.metadata)

@@ -14,6 +14,7 @@ const (
 	LOCAL_FILE_PATH_READ_ACCOUNT_SINGLE   = "./cadence/scripts/read_account_single.cdc"
 	CLUSTER_FILE_PATH_READ_ACCOUNT_SINGLE = "./go/bin/cadence/scripts/read_account_single.cdc"
 
+	TEST_FILE_PATH_READ_ACCOUNT_SINGLES    = "../cadence/scripts/read_account_singles.cdc"
 	LOCAL_FILE_PATH_READ_ACCOUNT_SINGLES   = "./cadence/scripts/read_account_singles.cdc"
 	CLUSTER_FILE_PATH_READ_ACCOUNT_SINGLES = "./go/bin/cadence/scripts/read_account_singles.cdc"
 

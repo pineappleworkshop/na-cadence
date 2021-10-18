@@ -54,14 +54,18 @@ var deployContract = &cobra.Command{
 			contractFilePath = LOCAL_FILE_PATH_FUNGIBLE_TOKEN_CONTRACT
 		} else if name == FUSD_CONTRACT_NAME {
 			contractFilePath = LOCAL_FILE_PATH_FUSD_CONTRACT
-		} else if name == BR_NFT_CONTRACT_NAME {
-			contractFilePath = LOCAL_FILE_PATH_BR_NFT_CONTRACT
+		} else if name == BR_SINGLE_CONTRACT_NAME {
+			contractFilePath = LOCAL_FILE_PATH_BR_SINGLE_CONTRACT
 		} else if name == BR_MARKETPLACE_CONTRACT_NAME {
 			contractFilePath = LOCAL_FILE_PATH_BR_MARKETPLACE_CONTRACT
 		} else if name == BR_RELEASE_CONTRACT_NAME {
 			contractFilePath = LOCAL_FILE_PATH_BR_RELEASE_CONTRACT
-		} else if name == BR_SALE_LISTING_CONTRACT_NAME {
-			contractFilePath = LOCAL_FILE_PATH_BR_SALE_LISTING_CONTRACT
+		} else if name == BR_CONTRACT_NAME {
+			contractFilePath = LOCAL_FILE_PATH_BR_CONTRACT
+		} else if name == BR_STOREFRONT_CONTRACT_NAME {
+			contractFilePath = LOCAL_FILE_PATH_BR_STOREFRONT_CONTRACT
+		} else if name == BR_USER_CONTRACT_NAME {
+			contractFilePath = LOCAL_FILE_PATH_BR_USER_CONTRACT
 		} else if name == "" {
 			fmt.Println("must specify contract name")
 			return
@@ -94,14 +98,18 @@ var updateContract = &cobra.Command{
 			contractFilePath = LOCAL_FILE_PATH_FUNGIBLE_TOKEN_CONTRACT
 		} else if name == FUSD_CONTRACT_NAME {
 			contractFilePath = LOCAL_FILE_PATH_FUSD_CONTRACT
-		} else if name == BR_NFT_CONTRACT_NAME {
-			contractFilePath = LOCAL_FILE_PATH_BR_NFT_CONTRACT
+		} else if name == BR_SINGLE_CONTRACT_NAME {
+			contractFilePath = LOCAL_FILE_PATH_BR_SINGLE_CONTRACT
 		} else if name == BR_MARKETPLACE_CONTRACT_NAME {
 			contractFilePath = LOCAL_FILE_PATH_BR_MARKETPLACE_CONTRACT
 		} else if name == BR_RELEASE_CONTRACT_NAME {
 			contractFilePath = LOCAL_FILE_PATH_BR_RELEASE_CONTRACT
-		} else if name == BR_SALE_LISTING_CONTRACT_NAME {
-			contractFilePath = LOCAL_FILE_PATH_BR_SALE_LISTING_CONTRACT
+		} else if name == BR_CONTRACT_NAME {
+			contractFilePath = LOCAL_FILE_PATH_BR_CONTRACT
+		} else if name == BR_STOREFRONT_CONTRACT_NAME {
+			contractFilePath = LOCAL_FILE_PATH_BR_STOREFRONT_CONTRACT
+		} else if name == BR_USER_CONTRACT_NAME {
+			contractFilePath = LOCAL_FILE_PATH_BR_USER_CONTRACT
 		} else if name == "" {
 			fmt.Println("must specify contract name")
 			return
@@ -166,8 +174,19 @@ var deployAllContractsCmd = &cobra.Command{
 			}
 		}
 
-		// BlockRecordsNFT
-		result, err := DeployContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_BR_NFT_CONTRACT, BR_NFT_CONTRACT_NAME)
+		// BlockRecords
+		result, err := DeployContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_BR_CONTRACT, BR_CONTRACT_NAME)
+		if err != nil {
+			fmt.Println("error", err)
+		}
+		if result.Error != nil {
+			fmt.Println(result.Error.Error())
+		} else {
+			fmt.Println(result.Status.String())
+		}
+
+		// BlockRecordsSingle
+		result, err = DeployContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_BR_SINGLE_CONTRACT, BR_SINGLE_CONTRACT_NAME)
 		if err != nil {
 			fmt.Println("error", err)
 		}
@@ -199,8 +218,19 @@ var deployAllContractsCmd = &cobra.Command{
 			fmt.Println(result.Status.String())
 		}
 
-		// BlockRecordsSaleListing
-		result, err = DeployContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_BR_SALE_LISTING_CONTRACT, BR_SALE_LISTING_CONTRACT_NAME)
+		// BlockRecordsStorefront
+		result, err = DeployContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_BR_STOREFRONT_CONTRACT, BR_STOREFRONT_CONTRACT_NAME)
+		if err != nil {
+			fmt.Println("error", err)
+		}
+		if result.Error != nil {
+			fmt.Println(result.Error.Error())
+		} else {
+			fmt.Println(result.Status.String())
+		}
+
+		// BlockRecordsUser
+		result, err = DeployContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_BR_USER_CONTRACT, BR_USER_CONTRACT_NAME)
 		if err != nil {
 			fmt.Println("error", err)
 		}

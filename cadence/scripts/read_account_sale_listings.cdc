@@ -29,7 +29,7 @@ pub fun main(): [SaleListing?] {
     while i < saleListingIDs.length {
         let id = saleListingIDs[i]
         let saleListingData = marketCollection.borrowSaleListing(id: id) ?? panic("No such id in that market collection")
-        let blockRecordsSingleData = blockRecordsCollection.borrowBlockRecordsSingle(id: id)
+        let blockRecordsSingleData = blockRecordsCollection.borrowSingle(id: id)
             ?? panic("No such id in block record collection")
         let saleListing = SaleListing(initPrice: saleListingData.price, initID: id, initMetadata: blockRecordsSingleData.metadata)
         saleListings.append(saleListing)
