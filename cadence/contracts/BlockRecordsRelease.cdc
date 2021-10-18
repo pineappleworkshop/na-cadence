@@ -276,7 +276,7 @@ pub contract BlockRecordsRelease {
     pub resource interface ReleasePublic {
         pub let id: UInt64
         pub fun getNFTIDs(): [UInt64]
-        pub let metadata: {String: AnyStruct}
+        pub fun getMetadata(): {String: AnyStruct}
         pub let type: String
         pub fun getIsComplete(): Bool
     }
@@ -291,7 +291,7 @@ pub contract BlockRecordsRelease {
         // this metadata is almost identical - only lacking serial number & release ID - to
         // the metadata of nfts associated with this release.
         // much like the stamp used to print a pokemon card
-        pub let metadata: {String: AnyStruct}
+        access(self) let metadata: {String: AnyStruct}
 
         // "type" of release
         pub let type: String

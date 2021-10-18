@@ -19,10 +19,10 @@ pub fun main(id: UInt64): Single? {
         ?? panic("Could not borrow BlockRecordsSingleCollectionPublic")
 
     // borrow a reference to a specific BlockRecordsSingle in the collection
-    let blockRecordsSingleData = blockRecordsCollection.borrowBlockRecordsSingle(id: id)
+    let singleData = blockRecordsCollection.borrowSingle(id: id)
         ?? panic("No such id in that collection")
 
-    let single = Single(initID: blockRecordsSingleData.id, initMetadata: blockRecordsSingleData.metadata)
+    let single = Single(initID: singleData.id, initMetadata: singleData.getMetadata())
 
     return single
 }

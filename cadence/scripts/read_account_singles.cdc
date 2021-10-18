@@ -23,9 +23,10 @@ pub fun main(): [Single?]{
     var i = 0
     while i < ids.length {
         let id = ids[i]
-        let blockRecordsSingleData = blockRecordsCollection.borrowSingle(id: id)
+        // borrow a reference to a specific BlockRecordsSingle in the collection
+        let singleData = blockRecordsCollection.borrowSingle(id: id)
             ?? panic("No such id in that collection")
-        let single = Single(initID: blockRecordsSingleData.id, initMetadata: blockRecordsSingleData.metadata)
+        let single = Single(initID: singleData.id, initMetadata: singleData.getMetadata())
         singles.append(single)
         i = i + 1
     }

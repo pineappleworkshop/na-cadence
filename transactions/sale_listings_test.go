@@ -116,7 +116,7 @@ func TestBuySaleListing(t *testing.T) {
 	config.InitConf()
 	config.Conf.Env = config.TEST
 
-	Convey("%s: generate public and private keys", t, func() {
+	Convey("%s: generate public and private keys  ", t, func() {
 		pubKeyBuyer, privKeyBuyer, err := GenerateKeys(config.FLOW_SIG_ALGO_NAME)
 		So(err, ShouldBeNil)
 		So(pubKeyBuyer, ShouldNotBeNil)

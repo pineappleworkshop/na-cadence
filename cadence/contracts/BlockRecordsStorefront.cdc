@@ -7,6 +7,8 @@ import FUSD from 0xFUSD_CONTRACT_ADDRESS
 
 /* 
 
+INFO: This is a modified version of NFTStorefront.
+
 ## Storefronts facilitate sales for BlockRecords users (collectors and creators).
 
 Buyers can purchase these NFTs for sale by providing a capability to an FUSD vault
@@ -368,7 +370,7 @@ pub contract BlockRecordsStorefront {
             // and we must check the NFT resource it gives us to make sure that it is the correct one.
             assert(single.id == self.details.nftID, message: "withdrawn NFT does not have specified ID")
 
-            let payouts: [BlockRecords.Payout] = single.metadata["payouts"]! as! [BlockRecords.Payout]
+            let payouts: [BlockRecords.Payout] = single.getMetadata()["payouts"]! as! [BlockRecords.Payout]
 
             // distribute payouts
             for payout in payouts {
@@ -417,7 +419,7 @@ pub contract BlockRecordsStorefront {
             // and we must check the NFT resource it gives us to make sure that it is the correct one.
             assert(single.id == self.details.nftID, message: "withdrawn NFT does not have specified ID")
 
-            let payouts: [BlockRecords.Payout] = single.metadata["payouts"]! as! [BlockRecords.Payout]
+            let payouts: [BlockRecords.Payout] = single.getMetadata()["payouts"]! as! [BlockRecords.Payout]
 
             // distribute payouts
             for payout in payouts {

@@ -36,7 +36,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         // "This is not the long term way NFT metadata will be stored. It's a temporary
         // construct while we figure out a better way to do metadata." - flow team
         //
-        pub let metadata: {String: AnyStruct}
+        access(self) let metadata: {String: AnyStruct}
 
         init(
             name: String, 
@@ -71,6 +71,11 @@ pub contract BlockRecordsSingle: NonFungibleToken {
             // increment id
             BlockRecordsSingle.totalSupply = BlockRecordsSingle.totalSupply + (1 as UInt64)
         }
+
+        pub fun getMetadata(): {String: AnyStruct} {
+            return self.metadata
+        }
+
     }
 
     // other contracts owned by the account may mint singles
@@ -158,8 +163,7 @@ pub contract BlockRecordsSingle: NonFungibleToken {
         }
 
         // gets a reference to an NFT in the collection as a BlockRecordsSingle,
-        // exposing all of its fields (including the img).
-        // his is safe as there are no functions that can be called on the BlockRecordsSingle.
+        // this is safe as there are no functions that can be called on the BlockRecordsSingle.
         pub fun borrowSingle(id: UInt64): &BlockRecordsSingle.NFT? {
             if self.ownedNFTs[id] != nil {
                 let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
