@@ -2,6 +2,7 @@ package transactions
 
 import (
 	"na-cadence/config"
+	"os"
 	"testing"
 
 	"github.com/onflow/cadence"
@@ -9,8 +10,8 @@ import (
 )
 
 func TestCreatorCreateRelease(t *testing.T) {
+	os.Setenv(config.ENV, config.TEST)
 	config.InitConf()
-	config.Conf.Env = config.TEST
 
 	Convey("%s: generate public and private keys", t, func() {
 		pubKey, privKey, err := GenerateKeys(config.FLOW_SIG_ALGO_NAME)

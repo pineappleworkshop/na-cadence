@@ -3,6 +3,7 @@ package transactions
 import (
 	"na-cadence/config"
 	"na-cadence/scripts"
+	"os"
 	"strconv"
 	"testing"
 
@@ -11,8 +12,8 @@ import (
 )
 
 func TestCreateSaleListing(t *testing.T) {
+	os.Setenv(config.ENV, config.TEST)
 	config.InitConf()
-	config.Conf.Env = config.TEST
 
 	Convey("%s: generate public and private keys", t, func() {
 		pubKey, privKey, err := GenerateKeys(config.FLOW_SIG_ALGO_NAME)
@@ -113,8 +114,8 @@ func TestCreateSaleListing(t *testing.T) {
 }
 
 func TestBuySaleListing(t *testing.T) {
+	os.Setenv(config.ENV, config.TEST)
 	config.InitConf()
-	config.Conf.Env = config.TEST
 
 	Convey("%s: generate public and private keys  ", t, func() {
 		pubKeyBuyer, privKeyBuyer, err := GenerateKeys(config.FLOW_SIG_ALGO_NAME)

@@ -11,10 +11,16 @@ const (
 	EMULATOR = "emulator"
 	TESTNET  = "testnet"
 	MAINNET  = "mainnet"
+
+	// logging
+	CONTRACT_DEPLOYED_SUCCESS_MESSAGE = " deployed successfully"
+	CONTRACT_REMOVED_SUCCESS_MESSAGE  = " removed successfully"
+	CONTRACT_UPDATED_SUCCESS_MESSAGE  = " updated successfully"
+	CONTRACT_NOT_FOUND                = "contract not found"
 )
 
 func init() {
-	deployAllContractsCmd.Flags().StringVar(&env, "env", "", "specify environment: emulator, testnet, mainnet")
+	deployAllContractsCmd.Flags().StringVar(&flowEnv, "env", "", "specify environment: emulator, testnet, mainnet")
 	rootCmd.AddCommand(deployAllContractsCmd)
 
 	removeContractCmd.Flags().StringVar(&name, "name", "", "specify contract name")
@@ -38,7 +44,7 @@ var removeContractCmd = &cobra.Command{
 		if result.Error != nil {
 			fmt.Println(result.Error.Error())
 		} else {
-			fmt.Println(result.Status.String())
+			fmt.Println(name + CONTRACT_REMOVED_SUCCESS_MESSAGE)
 		}
 	},
 }
@@ -70,7 +76,7 @@ var deployContract = &cobra.Command{
 			fmt.Println("must specify contract name")
 			return
 		} else {
-			fmt.Println("contract not found")
+			fmt.Println(CONTRACT_NOT_FOUND)
 			return
 		}
 
@@ -81,7 +87,7 @@ var deployContract = &cobra.Command{
 		if result.Error != nil {
 			fmt.Println(result.Error.Error())
 		} else {
-			fmt.Println(result.Status.String())
+			fmt.Println(name + CONTRACT_DEPLOYED_SUCCESS_MESSAGE)
 		}
 	},
 }
@@ -114,7 +120,7 @@ var updateContract = &cobra.Command{
 			fmt.Println("must specify contract name")
 			return
 		} else {
-			fmt.Println("contract not found")
+			fmt.Println(CONTRACT_NOT_FOUND)
 			return
 		}
 
@@ -134,12 +140,12 @@ var deployAllContractsCmd = &cobra.Command{
 	Use:   "deploy-contracts",
 	Short: "deploy all contracts to service account",
 	Run: func(cmd *cobra.Command, args []string) {
-		if env == "" {
+		if flowEnv == "" {
 			fmt.Println("must specify the environment: emulator, testnet, mainnet")
 			return
 		}
 
-		if env == EMULATOR {
+		if flowEnv == EMULATOR {
 			// NonFungibleToken
 			result, err := DeployContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_NON_FUNGIBLE_TOKEN_CONTRACT, NFT_CONTRACT_NAME)
 			if err != nil {
@@ -148,7 +154,7 @@ var deployAllContractsCmd = &cobra.Command{
 			if result.Error != nil {
 				fmt.Println(result.Error.Error())
 			} else {
-				fmt.Println(result.Status.String())
+				fmt.Println(NFT_CONTRACT_NAME + CONTRACT_DEPLOYED_SUCCESS_MESSAGE)
 			}
 
 			// Fungibletoken
@@ -159,7 +165,7 @@ var deployAllContractsCmd = &cobra.Command{
 			if result.Error != nil {
 				fmt.Println(result.Error.Error())
 			} else {
-				fmt.Println(result.Status.String())
+				fmt.Println(FUNGIBLE_TOKEN_CONTRACT_NAME + CONTRACT_DEPLOYED_SUCCESS_MESSAGE)
 			}
 
 			// FUSD
@@ -170,74 +176,74 @@ var deployAllContractsCmd = &cobra.Command{
 			if result.Error != nil {
 				fmt.Println(result.Error.Error())
 			} else {
-				fmt.Println(result.Status.String())
+				fmt.Println(FUSD_CONTRACT_NAME + CONTRACT_DEPLOYED_SUCCESS_MESSAGE)
 			}
 		}
 
 		// BlockRecords
 		result, err := DeployContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_BR_CONTRACT, BR_CONTRACT_NAME)
 		if err != nil {
-			fmt.Println("error", err)
+			fmt.Println(err)
 		}
 		if result.Error != nil {
 			fmt.Println(result.Error.Error())
 		} else {
-			fmt.Println(result.Status.String())
+			fmt.Println(BR_CONTRACT_NAME + CONTRACT_DEPLOYED_SUCCESS_MESSAGE)
 		}
 
 		// BlockRecordsSingle
 		result, err = DeployContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_BR_SINGLE_CONTRACT, BR_SINGLE_CONTRACT_NAME)
 		if err != nil {
-			fmt.Println("error", err)
+			fmt.Println(err)
 		}
 		if result.Error != nil {
 			fmt.Println(result.Error.Error())
 		} else {
-			fmt.Println(result.Status.String())
+			fmt.Println(BR_SINGLE_CONTRACT_NAME + CONTRACT_DEPLOYED_SUCCESS_MESSAGE)
 		}
 
 		// BlockRecordsRelease
 		result, err = DeployContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_BR_RELEASE_CONTRACT, BR_RELEASE_CONTRACT_NAME)
 		if err != nil {
-			fmt.Println("error", err)
+			fmt.Println(err)
 		}
 		if result.Error != nil {
 			fmt.Println(result.Error.Error())
 		} else {
-			fmt.Println(result.Status.String())
-		}
-
-		// BlockRecordsMarketplace
-		result, err = DeployContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_BR_MARKETPLACE_CONTRACT, BR_MARKETPLACE_CONTRACT_NAME)
-		if err != nil {
-			fmt.Println("error", err)
-		}
-		if result.Error != nil {
-			fmt.Println(result.Error.Error())
-		} else {
-			fmt.Println(result.Status.String())
+			fmt.Println(BR_RELEASE_CONTRACT_NAME + CONTRACT_DEPLOYED_SUCCESS_MESSAGE)
 		}
 
 		// BlockRecordsStorefront
 		result, err = DeployContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_BR_STOREFRONT_CONTRACT, BR_STOREFRONT_CONTRACT_NAME)
 		if err != nil {
-			fmt.Println("error", err)
+			fmt.Println(err)
 		}
 		if result.Error != nil {
 			fmt.Println(result.Error.Error())
 		} else {
-			fmt.Println(result.Status.String())
+			fmt.Println(BR_STOREFRONT_CONTRACT_NAME + CONTRACT_DEPLOYED_SUCCESS_MESSAGE)
+		}
+
+		// BlockRecordsMarketplace
+		result, err = DeployContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_BR_MARKETPLACE_CONTRACT, BR_MARKETPLACE_CONTRACT_NAME)
+		if err != nil {
+			fmt.Println(err)
+		}
+		if result.Error != nil {
+			fmt.Println(result.Error.Error())
+		} else {
+			fmt.Println(BR_MARKETPLACE_CONTRACT_NAME + CONTRACT_DEPLOYED_SUCCESS_MESSAGE)
 		}
 
 		// BlockRecordsUser
 		result, err = DeployContract(config.Conf.FlowServiceAccountAddress, config.Conf.FlowServiceAccountPrivateKey, LOCAL_FILE_PATH_BR_USER_CONTRACT, BR_USER_CONTRACT_NAME)
 		if err != nil {
-			fmt.Println("error", err)
+			fmt.Println(err)
 		}
 		if result.Error != nil {
 			fmt.Println(result.Error.Error())
 		} else {
-			fmt.Println(result.Status.String())
+			fmt.Println(BR_USER_CONTRACT_NAME + CONTRACT_DEPLOYED_SUCCESS_MESSAGE)
 		}
 	},
 }

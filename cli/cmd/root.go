@@ -30,7 +30,7 @@ var (
 	receiverAddr string
 	acctAddr     string
 	amount       int
-	env          string
+	flowEnv      string
 	name         string
 )
 

@@ -1,44 +1,67 @@
 {
-  "emulators": {
-    "default": {
-      "port": 3569,
-      "serviceAccount": "emulator-account"
+    "emulators": {
+        "default": {
+            "port": 3569,
+            "serviceAccount": "emulator-account"
+        },
+        "testnet": {
+            "port": 9000,
+            "serviceAccount": "testnet-account"
+        }
     },
-    "testnet": {
-      "port": 9000,
-      "serviceAccount": "testnet-account"
+    "contracts": {
+        "NonFungibleToken": "./cadence/contracts/NonFungibleToken.cdc",
+        "Fungibletoken": "./cadence/contracts/FungibleToken.cdc",
+        "FUSD": "./cadence/contracts/FUSD.cdc",
+        "BlockRecords": "./cadence/contracts/BlockRecords.cdc",
+        "BlockRecordsSingle": "./cadence/contracts/BlockRecordsSingle.cdc",
+        "BlockRecordsStorefront": "./cadence/contracts/BlockRecordsStorefront.cdc",
+        "BlockRecordsMarketplace": "./cadence/contracts/BlockRecordsMarketplace.cdc",
+        "BlockRecordsUser": "./cadence/contracts/BlockRecordsUser.cdc"
+    },
+    "networks": {
+        "emulator": "35.184.219.149:3569",
+        "mainnet": "access.mainnet.nodes.onflow.org:9000",
+        "testnet": "access.devnet.nodes.onflow.org:9000"
+    },
+    "accounts": {
+        "service": {
+            "address": "f8d6e0586b0a20c7",
+            "keys": "68ee617d9bf67a4677af80aaca5a090fcda80ff2f4dbc340e0e36201fa1f1d8c"
+        },
+        "emulator-account": {
+            "address": "f8d6e0586b0a20c7",
+            "keys": "68ee617d9bf67a4677af80aaca5a090fcda80ff2f4dbc340e0e36201fa1f1d8c"
+        },
+        "testnet-account": {
+            "address": "0728411710f98d7b",
+            "keys": "d99f181c074b83c707311ab9f06f7ee4e1af69c19d66e2727fd5c75cdd932d46"
+        }
+    },
+    "deployments": {
+        "emulator": {
+            "emulator-account": [
+                "NonFungibleToken",
+                "Fungibletoken",
+                "FUSD",
+                "BlockRecords",
+                "BlockRecordsSingle",
+                "BlockRecordsStorefront",
+                "BlockRecordsMarketplace",
+                "BlockRecordsUser"
+            ]
+        },
+        "testnet": {
+            "testnet-account": [
+                "NonFungibleToken",
+                "Fungibletoken",
+                "FUSD",
+                "BlockRecords",
+                "BlockRecordsSingle",
+                "BlockRecordsStorefront",
+                "BlockRecordsMarketplace",
+                "BlockRecordsUser"
+            ]
+        }
     }
-  },
-  "contracts": {
-    "NonFungibleToken": "./cadence/contracts/NonFungibleToken.cdc",
-    "BlockRecordsSingle": "./cadence/contracts/BlockRecordsSingle.cdc",
-    "BlockRecordsMarket": "./cadence/contracts/BlockRecordsMarket.cdc"
-  },
-  "networks": {
-    "emulator": "35.184.219.149:3569",
-    "mainnet": "access.mainnet.nodes.onflow.org:9000",
-    "testnet": "access.devnet.nodes.onflow.org:9000"
-  },
-  "accounts": {
-    "service": {
-      "address": "f8d6e0586b0a20c7",
-      "keys": "68ee617d9bf67a4677af80aaca5a090fcda80ff2f4dbc340e0e36201fa1f1d8c"
-    },
-    "emulator-account": {
-      "address": "f8d6e0586b0a20c7",
-      "keys": "68ee617d9bf67a4677af80aaca5a090fcda80ff2f4dbc340e0e36201fa1f1d8c"
-    },
-    "testnet-account": {
-      "address": "0728411710f98d7b",
-      "keys": "d99f181c074b83c707311ab9f06f7ee4e1af69c19d66e2727fd5c75cdd932d46"
-    }
-  },
-  "deployments": {
-    "emulator": {
-      "emulator-account": ["NonFungibleToken", "BlockRecordsSingle"]
-    },
-    "testnet": {
-      "testnet-account": ["BlockRecordsSingle", "BlockRecordsMarket"]
-    }
-  }
 }

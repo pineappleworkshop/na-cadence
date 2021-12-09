@@ -7,20 +7,28 @@ import NonFungibleToken from 0xNFT_CONTRACT_ADDRESS
 
 /** 
 
-Heavily Inspired By: 
-    https://flow-view-source.com/testnet/account/0xba1132bc08f82fe2/contract/Ghost, 
-    https://github.com/versus-flow/versus-contracts/blob/master/contracts/Profile.cdc
+## BlockRecords Users represent collectors or creators using the BlockRecords platform
 
-BlockRecords Users represent collectors or creators using the BlockRecords platform
+## Users
 
-users can:
-- create a user profile: name, description, avatar, banner, tags, etc...
-- link multiple Wallets
-- link multiple Resource Collections
-- follow other users
+create a user profile: name, description, avatar, banner, tags, etc...
 
-TBD:
-- currently, users can be linked to a single Release Collection at a time
+link multiple Wallets, Resource Collections
+
+follow other users
+
+users who own a Resource Collection Capability are able to create releases
+
+## TODO:
+
+similarly to how the Marketplace lists storefronts and release collections, users
+users should be able to do the same
+
+## Heavily Inspired By: 
+
+https://flow-view-source.com/testnet/account/0xba1132bc08f82fe2/contract/Ghost
+
+https://github.com/versus-flow/versus-contracts/blob/master/contracts/Profile.cdc
 
 **/
 

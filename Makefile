@@ -1,3 +1,5 @@
+include .env
+
 service := na-cadence
 version := 0.0.6
 docker_org := pineappleworkshop
@@ -26,16 +28,18 @@ build-cli-linux:
 build-cli-osx:
 	go build main.go
 
-dev:
+run:
+	ENV=local
 	go run main.go
 
-test:
-	go test -v ./...
+run-workstation:
+	ENV=workstation
+	go run main.go
 
 flow-emulator:
 	flow emulator start
 
-flow-deploy-contracts-emulator:
+flow-deploy-contracts:
 	go run cli/main.go deploy-contracts --env emulator
 
 flow-deploy-contracts-testnet:
@@ -57,16 +61,19 @@ docker-push:
 docker-run:
 	@docker run -itp $(port):$(port)  $(docker-image)
 
-test-workstation:
+tests:
+	go test ./...
+
+tests-workstation:
 	go test ./test/... --env=workstation -v 3
 
-test-dev:
+tests-dev:
 	go test ./test/... --env=dev -v 3
 
-test-stage:
+tests-stage:
 	go test ./test/... --env=stage -v 3
 
-test-prod:
+tests-prod:
 	go test ./test/... --env=prod -v 3
 
 bumpversion-patch:

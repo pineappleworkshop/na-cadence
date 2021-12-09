@@ -1,17 +1,23 @@
-# na-cadence
+# Block Records Smart Contracts and Tests
 
-## Development Setup
+All of the cadence contracts and tests for the BlockRecords platform.
+
+## Setup Development Environment
 
 ```bash
 # install flow cli
 $ brew install flow-cli
+
 # install dependencies
 $ make init
+
+# create .env file
+$ cp .env.default .env
 ```
 
 ---
 
-## Start Emulator (to run emulator locally)
+## Start Flow Emulator
 
 ```bash
 # start the emulator
@@ -20,29 +26,33 @@ $ make flow-emulator
 
 ---
 
-## Deploy/Update All Contracts
+## Deploy All Contracts
 
 ```bash
 # deploy all contracts to emulator
-$ make flow-deploy-contracts-emulator
-# deploy all contracts to testnet
-$ make flow-deploy-contracts-testnet
-# deploy all contracts to mainnet
-$ make flow-deploy-contracts-mainnet
-
-# update all contracts on emulator 
-$ make flow-update-contracts-emulator
-# update all contracts on testnet
-$ make flow-update-contracts-testnet
-# update all contracts on mainnet 
-$ make flow-update-contracts-mainnet
+$ make flow-deploy-contracts
 ```
 
 ---
 
-## Start Service
+## Run Tests
+
+in order to run the tests, make sure to:
+
+1. setup development environment
+2. start flow emulator
+3. deploy all contracts
+
+```bash
+# run tests
+$ make tests
+```
+
+---
+
+## Run Service
 
 ```bash
 # start service
-$ make dev
+$ make run
 ```

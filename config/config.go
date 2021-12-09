@@ -18,7 +18,6 @@ func InitConf() {
 	if err := Conf.setupViper(); err != nil {
 		fmt.Println(err)
 	}
-	Conf.setupConfig()
 }
 
 // service config generate at build
@@ -37,8 +36,12 @@ type Config struct {
 
 // set environment
 func (c *Config) setEnv() {
-	var env = os.Getenv("ENV")
-	if env == "" || env == WORKSTATION {
+	var env = os.Getenv(ENV)
+	if env == TEST {
+		c.Env = TEST
+		c.ConsulHost = ""
+		c.ConsulPort = ""
+	} else if env == WORKSTATION {
 		c.Env = WORKSTATION
 		c.ConsulHost = CONSUL_HOST_DEV
 		c.ConsulPort = CONSUL_PORT_DEV
@@ -63,64 +66,77 @@ func (c *Config) setupViper() error {
 	if err := viper.AddRemoteProvider("consul", consulURL, CONSUL_KV); err != nil {
 		return err
 	}
-	viper.SetConfigType("json")
-	if err := viper.ReadRemoteConfig(); err != nil {
-		return err
+
+	// get environment vars from local .env
+	if c.Env == "" || c.Env == TEST {
+		if c.Env == TEST {
+			viper.SetConfigFile("../.env")
+		} else {
+			viper.SetConfigFile(".env")
+		}
+
+		if err := viper.ReadInConfig(); err != nil {
+			return err
+		}
+
+		c.IPFSAccessNodeURL = viper.GetString(IPFS_ACCESS_NODE_URL)
+		c.FlowAccessNode = viper.GetString(FLOW_ACCESS_NODE)
+		c.FlowServiceAccountAddress = viper.GetString(FLOW_SERVICE_ACCOUNT_ADDRESS)
+		c.FlowServiceAccountPrivateKey = viper.GetString(FLOW_SERVICE_ACCOUNT_PRIVATE_KEY)
+		c.FUSDContractAddress = viper.GetString(FUSD_CONTRACT_ADDRESS)
+		c.FungibleTokenContractAddress = viper.GetString(FUNGIBLE_TOKEN_CONTRACT_ADDRESS)
+		c.NonFungibleTokenContractAddress = viper.GetString(NON_FUNGIBLE_TOKEN_CONTRACT_ADDRESS)
+	} else {
+		// get environment vars from consul
+		viper.SetConfigType("json")
+		if err := viper.ReadRemoteConfig(); err != nil {
+			return err
+		}
+
+		ipfsAccessNodeURL, err := GetIPFSAccessNodeURL()
+		if err != nil {
+			return err
+		}
+		c.IPFSAccessNodeURL = *ipfsAccessNodeURL
+
+		flowAccessNode, err := GetFlowAccessNode()
+		if err != nil {
+			return err
+		}
+		c.FlowAccessNode = *flowAccessNode
+
+		flowServiceAccountAddress, err := GetFlowServiceAccountAddressess()
+		if err != nil {
+			return err
+		}
+		c.FlowServiceAccountAddress = *flowServiceAccountAddress
+
+		flowServiceAcctPrivateKey, err := GetFlowServiceAccountPrivateKey()
+		if err != nil {
+			return err
+		}
+		c.FlowServiceAccountPrivateKey = *flowServiceAcctPrivateKey
+
+		fusdContractAddress, err := GetFUSDContractAddress()
+		if err != nil {
+			return err
+		}
+		c.FUSDContractAddress = *fusdContractAddress
+
+		fungibleTokenContractAddress, err := GetFungibleTokenContractAddress()
+		if err != nil {
+			return err
+		}
+		c.FungibleTokenContractAddress = *fungibleTokenContractAddress
+
+		nonFungibleTokenContractAddress, err := GetNonFungibleTokenContractAddress()
+		if err != nil {
+			return err
+		}
+		c.NonFungibleTokenContractAddress = *nonFungibleTokenContractAddress
 	}
 
 	return nil
-}
-
-// setup config with premise to either running service on cluster vs locally
-func (c *Config) setupConfig() {
-	ipfsAccessNodeURL, err := GetIPFSAccessNodeURL()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	c.IPFSAccessNodeURL = *ipfsAccessNodeURL
-
-	flowAccessNode, err := GetFlowAccessNode()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	c.FlowAccessNode = *flowAccessNode
-
-	flowServiceAccountAddress, err := GetFlowServiceAccountAddressess()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	c.FlowServiceAccountAddress = *flowServiceAccountAddress
-
-	flowServiceAcctPrivateKey, err := GetFlowServiceAccountPrivateKey()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	c.FlowServiceAccountPrivateKey = *flowServiceAcctPrivateKey
-
-	fusdContractAddress, err := GetFUSDContractAddress()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	c.FUSDContractAddress = *fusdContractAddress
-
-	fungibleTokenContractAddress, err := GetFungibleTokenContractAddress()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	c.FungibleTokenContractAddress = *fungibleTokenContractAddress
-
-	nonFungibleTokenContractAddress, err := GetNonFungibleTokenContractAddress()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	c.NonFungibleTokenContractAddress = *nonFungibleTokenContractAddress
 }
 
 // get environment set at build

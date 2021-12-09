@@ -2,14 +2,15 @@ package transactions
 
 import (
 	"na-cadence/config"
+	"os"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestCreateAccount(t *testing.T) {
+	os.Setenv(config.ENV, config.TEST)
 	config.InitConf()
-	config.Conf.Env = config.TEST
 
 	Convey("%s: When generating keys", t, func() {
 		pubKey, privKey, err := GenerateKeys(config.FLOW_SIG_ALGO_NAME)
@@ -26,8 +27,8 @@ func TestCreateAccount(t *testing.T) {
 }
 
 func TestInitializeAccount(t *testing.T) {
+	os.Setenv(config.ENV, config.TEST)
 	config.InitConf()
-	config.Conf.Env = config.TEST
 
 	Convey("%s: When generating public and private keys", t, func() {
 		pubKey, privKey, err := GenerateKeys(config.FLOW_SIG_ALGO_NAME)

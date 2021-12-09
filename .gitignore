@@ -1,3 +1,5 @@
 ./flow.testnet.json
 .idea
 /cli/cmd/creds.go
+./DS_STORE
+.env
